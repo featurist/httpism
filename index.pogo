@@ -1,18 +1,10 @@
 request = require 'request'
 url utils = require 'url'
 
-(url) relative to (base url) =
-    if (base url && url)
-        url utils.resolve (base url, url)
-    else if (base url)
-        base url
-    else
-        url
-
 resource = {
     get!(url, headers: {}) =
         absolute url = (url) relative to (self.url)
-        response = request! (absolute url)
+        response = request!(absolute url)
         create resource (response)
 
     post!(url, body, headers: {}) = nil
@@ -22,8 +14,13 @@ resource = {
     options!(url, headers: {}) = nil
 }
 
-for @(field) in (resource)
-    module.exports.(field) = resource.(field)
+(url) relative to (base url) =
+    if (base url && url)
+        url utils.resolve (base url, url)
+    else if (base url)
+        base url
+    else
+        url
 
 create resource (response) =
     resource = Object.create (resource)
@@ -34,4 +31,12 @@ create resource (response) =
 
         resource.url = response.request.href
 
+    resource
+
+for @(field) in (resource)
+    exports.(field) = resource.(field)
+
+exports.resource (url) =
+    resource = create resource ()
+    resource.url = url
     resource
