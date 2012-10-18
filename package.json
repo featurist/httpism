@@ -1,0 +1,21 @@
+{
+  "name": "httpism",
+  "version": "0.0.1",
+  "description": "Resource savvy HTTP client",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test/*Spec.pogo"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/refractalize/httpism.git"
+  },
+  "keywords": [
+    "http"
+  ],
+  "author": "timmacfarlane@gmail.com",
+  "license": "BSD"
+}

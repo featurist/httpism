@@ -1,4 +1,4 @@
-nohttp = require './index'
+httpism = require './index'
 
-console.log (nohttp ('http://google.com/').get! ().get! ('/asdf'))
-console.log (nohttp ('http://google.com/').get! ().body)
+console.log (httpism ('http://google.com/').get! ().get! ('/asdf'))
+console.log (httpism ('http://google.com/').get! ().body)

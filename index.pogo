@@ -9,21 +9,29 @@ url utils = require 'url'
     else
         url
 
-module.exports (base url, response) =
-    resource = {
-        get! (url) =
-            if (url :: Function)
-                self.get (nil, url)
-                return
+resource = {
+    get!(url, headers: {}) =
+        absolute url = (url) relative to (self.url)
+        response = request! (absolute url)
+        create resource (response)
 
-            full url = (url) relative to (base url)
-            module.exports (full url, request! (full url))
+    post!(url, body, headers: {}) = nil
+    delete!(url, headers: {}) = nil
+    put!(url, body, headers: {}) = nil
+    head!(url, headers: {}) = nil
+    options!(url, headers: {}) = nil
+}
 
-        url = base url
-    }
+for @(field) in (resource)
+    module.exports.(field) = resource.(field)
 
+create resource (response) =
+    resource = Object.create (resource)
+    
     if (response)
         for each @(field) in ['body', 'statusCode', 'headers']
             resource.(field) = response.(field)
+
+        resource.url = response.request.href
 
     resource
