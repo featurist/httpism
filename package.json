@@ -16,7 +16,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "pogo -c index.pogo && mocha test/*Spec.pogo"
+    "test": "make test"
   },
   "repository": {
     "type": "git",
