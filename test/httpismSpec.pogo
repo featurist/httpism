@@ -6,7 +6,7 @@ describe 'httpism'
     server = nil
 
     before
-        app = express ()
+        app := express ()
 
         app.use(express.body parser ())
 
@@ -33,7 +33,7 @@ describe 'httpism'
             console.log (req.body)
             res.send 201 "posted #(req.body)"
 
-        server = app.listen 12345
+        server := app.listen 12345
 
     after
         server.close ()
