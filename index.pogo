@@ -1,7 +1,7 @@
 request = require 'request'
 url utils = require 'url'
 
-resource = {
+interface = {
     get!(url, headers: {}) =
         absolute url = (url) relative to (self.url)
         response = request!(absolute url)
@@ -23,7 +23,7 @@ resource = {
         url
 
 create resource (response) =
-    resource = Object.create (resource)
+    resource = Object.create (interface)
     
     if (response)
         for each @(field) in ['body', 'statusCode', 'headers']
@@ -33,8 +33,8 @@ create resource (response) =
 
     resource
 
-for @(field) in (resource)
-    exports.(field) = resource.(field)
+for @(member) in (interface)
+    exports.(member) = interface.(member)
 
 exports.resource (url) =
     resource = create resource ()
