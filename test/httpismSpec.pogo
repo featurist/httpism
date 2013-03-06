@@ -8,7 +8,13 @@ describe 'httpism'
     before
         app := express ()
 
-        app.use(express.body parser ())
+        app.use @(req, res, next)
+            data = ''
+            req.set encoding 'utf8'
+            req.on 'data' @(chunk) @{ data := data + chunk }
+            req.on 'end'
+                req.body = data
+                next()
 
         app.get '/' @(req, res)
             res.header 'content-type' 'text/plain'
@@ -30,8 +36,12 @@ describe 'httpism'
             res.send 'redirected asdf'
 
         app.post '/post' @(req, res)
-            console.log (req.body)
+            res.header 'content-type' 'text/plain'
             res.send 201 "posted #(req.body)"
+
+        app.put '/put' @(req, res)
+            res.header 'content-type' 'text/plain'
+            res.send 200 "putted #(req.body)"
 
         server := app.listen 12345
 
@@ -41,7 +51,6 @@ describe 'httpism'
     describe 'get'
         it 'can get a resource'
             root = httpism.get! 'http://localhost:12345/'
-
             root.url.should == 'http://localhost:12345/'
             root.status code.should.equal 200
             root.body.should.equal 'hi'
@@ -50,7 +59,6 @@ describe 'httpism'
         it 'can get a relative resource'
             root = httpism.get! 'http://localhost:12345/'
             asdf = root.get! 'asdf'
-
             asdf.url.should == 'http://localhost:12345/asdf'
             asdf.status code.should.equal 200
             asdf.body.should.equal 'asdf'
@@ -59,13 +67,27 @@ describe 'httpism'
         it 'follows redirects'
             redirected = httpism.get! 'http://localhost:12345/redirect'
             redirected.url.should == 'http://localhost:12345/root/'
-
             asdf = redirected.get! 'asdf'
-
             asdf.url.should == 'http://localhost:12345/root/asdf'
             asdf.status code.should.equal 200
             asdf.body.should.equal 'redirected asdf'
             asdf.headers.'content-type'.should.equal 'text/plain'
+
+    describe 'post'
+        it 'can post a resource'
+            root = httpism.post! 'http://localhost:12345/post' { body = 'zomg' }
+            root.url.should == 'http://localhost:12345/'
+            root.status code.should.equal 201
+            root.body.should.equal 'posted zomg'
+            root.headers.'content-type'.should.equal 'text/plain'
+    
+    describe 'put'
+        it 'can put a resource'
+            root = httpism.put! 'http://localhost:12345/put' { body = 'gosh' }
+            root.url.should == 'http://localhost:12345/'
+            root.status code.should.equal 200
+            root.body.should.equal 'putted gosh'
+            root.headers.'content-type'.should.equal 'text/plain'
 
     describe 'resource'
         it 'returns a resource without making a request'
