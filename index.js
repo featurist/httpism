@@ -4,7 +4,18 @@
     request = require("request");
     urlUtils = require("url");
     interface = {
-        get: function(url, gen1_options, continuation) {
+        get: function(url, options, continuation) {
+            var self = this;
+            var gen1_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen1_arguments[0];
+            options = gen1_arguments[1];
+            self.send("get", url, options, continuation);
+        },
+        post: function(url, options, continuation) {
             var self = this;
             var gen2_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
             continuation = arguments[arguments.length - 1];
@@ -12,91 +23,62 @@
                 throw new Error("asynchronous function called synchronously");
             }
             url = gen2_arguments[0];
-            gen1_options = gen2_arguments[1];
-            var headers;
-            headers = gen1_options !== void 0 && Object.prototype.hasOwnProperty.call(gen1_options, "headers") && gen1_options.headers !== void 0 ? gen1_options.headers : {};
-            var absoluteUrl;
-            absoluteUrl = relativeTo(url, self.url);
-            request(absoluteUrl, function(gen3_error, gen4_asyncResult) {
-                var response;
-                if (gen3_error) {
-                    continuation(gen3_error);
-                } else {
-                    try {
-                        response = gen4_asyncResult;
-                        continuation(void 0, createResource(response));
-                    } catch (gen5_exception) {
-                        continuation(gen5_exception);
-                    }
-                }
+            options = gen2_arguments[1];
+            self.send("post", url, options, continuation);
+        },
+        put: function(url, options, continuation) {
+            var self = this;
+            var gen3_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen3_arguments[0];
+            options = gen3_arguments[1];
+            self.send("put", url, options, continuation);
+        },
+        "delete": function(url, options, continuation) {
+            var self = this;
+            var gen4_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen4_arguments[0];
+            options = gen4_arguments[1];
+            self.send("delete", url, options, continuation);
+        },
+        head: function(url, options, continuation) {
+            var self = this;
+            var gen5_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen5_arguments[0];
+            options = gen5_arguments[1];
+            self.send("head", url, options, continuation);
+        },
+        options: function(url, options, continuation) {
+            var self = this;
+            var gen6_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen6_arguments[0];
+            options = gen6_arguments[1];
+            self.send("options", url, options, continuation);
+        },
+        send: function(verb, url, options, callback) {
+            var self = this;
+            var opts;
+            opts = options || {};
+            opts.method = verb;
+            opts.url = relativeTo(url, self.url);
+            return request(opts, function(err, response, body) {
+                return callback(err, err || createResource(response, body));
             });
-        },
-        post: function(url, body, gen6_options, continuation) {
-            var self = this;
-            var gen7_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen7_arguments[0];
-            body = gen7_arguments[1];
-            gen6_options = gen7_arguments[2];
-            var headers;
-            headers = gen6_options !== void 0 && Object.prototype.hasOwnProperty.call(gen6_options, "headers") && gen6_options.headers !== void 0 ? gen6_options.headers : {};
-            continuation(void 0, void 0);
-        },
-        "delete": function(url, gen8_options, continuation) {
-            var self = this;
-            var gen9_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen9_arguments[0];
-            gen8_options = gen9_arguments[1];
-            var headers;
-            headers = gen8_options !== void 0 && Object.prototype.hasOwnProperty.call(gen8_options, "headers") && gen8_options.headers !== void 0 ? gen8_options.headers : {};
-            continuation(void 0, void 0);
-        },
-        put: function(url, body, gen10_options, continuation) {
-            var self = this;
-            var gen11_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen11_arguments[0];
-            body = gen11_arguments[1];
-            gen10_options = gen11_arguments[2];
-            var headers;
-            headers = gen10_options !== void 0 && Object.prototype.hasOwnProperty.call(gen10_options, "headers") && gen10_options.headers !== void 0 ? gen10_options.headers : {};
-            continuation(void 0, void 0);
-        },
-        head: function(url, gen12_options, continuation) {
-            var self = this;
-            var gen13_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen13_arguments[0];
-            gen12_options = gen13_arguments[1];
-            var headers;
-            headers = gen12_options !== void 0 && Object.prototype.hasOwnProperty.call(gen12_options, "headers") && gen12_options.headers !== void 0 ? gen12_options.headers : {};
-            continuation(void 0, void 0);
-        },
-        options: function(url, gen14_options, continuation) {
-            var self = this;
-            var gen15_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen15_arguments[0];
-            gen14_options = gen15_arguments[1];
-            var headers;
-            headers = gen14_options !== void 0 && Object.prototype.hasOwnProperty.call(gen14_options, "headers") && gen14_options.headers !== void 0 ? gen14_options.headers : {};
-            continuation(void 0, void 0);
         }
     };
     relativeTo = function(url, baseUrl) {
@@ -108,16 +90,17 @@
             return url;
         }
     };
-    createResource = function(response) {
-        var resource, gen16_items, gen17_i, field;
+    createResource = function(response, body) {
+        var resource, gen7_items, gen8_i, field;
         resource = Object.create(interface);
         if (response) {
-            gen16_items = [ "body", "statusCode", "headers" ];
-            for (gen17_i = 0; gen17_i < gen16_items.length; ++gen17_i) {
-                field = gen16_items[gen17_i];
+            gen7_items = [ "body", "statusCode", "headers" ];
+            for (gen8_i = 0; gen8_i < gen7_items.length; ++gen8_i) {
+                field = gen7_items[gen8_i];
                 resource[field] = response[field];
             }
             resource.url = response.request.href;
+            resource.body = body;
         }
         return resource;
     };
