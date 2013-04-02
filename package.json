@@ -25,6 +25,17 @@
   "keywords": [
     "http"
   ],
-  "author": "timmacfarlane@gmail.com",
+  "author": {
+    "email": "timmacfarlane@gmail.com",
+    "name": "Tim Macfarlane",
+    "url": "http://blog.refractalize.org/"
+  },
+  "contributors": [
+    {
+      "name": "Josh Chisholm",
+      "email": "joshchisholm@gmail.com",
+      "url": "http://featurist.co.uk/"
+    }
+  ],
   "license": "BSD"
 }
