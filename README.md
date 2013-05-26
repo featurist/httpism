@@ -35,6 +35,21 @@ Or
     resource.status code
     resource.headers
 
+### Middleware
+    
+    middleware (request) =
+        intercept request (options, cb) =
+            // something interesting, then...
+            request (options, cb)
+    
+    resource = httpism.resource 'http://www.google.com' [
+      middleware A
+      middleware B
+    ]
+    response = resource.get!  // applies A then B
+    response.get! '/another'  // applies A then B
+
+
 # This is just for fun.
 
 Of course, I don't mean for anybody to _actually_ use this!
