@@ -27,7 +27,7 @@ Or
 
 ### POST
 
-    new resource = resource.post! (body)
+    new resource = resource.post! { body = "whatever" }
 
 ### Resource
 
