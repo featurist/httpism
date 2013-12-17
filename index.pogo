@@ -13,8 +13,12 @@ interface = {
         opts = options || {}
         opts.method = verb
         opts.url = (url) relative to (self.url)
-        request (opts) @(err, response, body)
-            callback(err, err || create resource (response, body))
+        requester = self.requester || request
+        requester (opts) @(err, response, body)
+            if (err)
+                callback(err)
+            else
+                callback(nil, create resource (requester, response, body))
 }
 
 (url) relative to (base url) =
@@ -25,8 +29,9 @@ interface = {
     else
         url
 
-create resource (response, body) =
+create resource (requester, response, body) =
     resource = Object.create (interface)
+    resource.requester = requester
     
     if (response)
         for each @(field) in ['body', 'statusCode', 'headers']
@@ -37,10 +42,18 @@ create resource (response, body) =
 
     resource
 
+make requester from (middleware) =
+    requester = request
+    for each @(wrapper) in (middleware)
+        requester := wrapper (requester)
+    
+    requester
+
 for @(member) in (interface)
     exports.(member) = interface.(member)
 
-exports.resource (url) =
-    resource = create resource ()
+exports.resource (url, middleware) =
+    requester = make requester from (middleware || [])
+    resource = create resource (requester)
     resource.url = url
     resource

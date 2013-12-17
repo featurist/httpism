@@ -1,6 +1,6 @@
 (function() {
     var self = this;
-    var request, urlUtils, interface, relativeTo, createResource, member;
+    var request, urlUtils, interface, relativeTo, createResource, makeRequesterFrom, member;
     request = require("request");
     urlUtils = require("url");
     interface = {
@@ -72,12 +72,17 @@
         },
         send: function(verb, url, options, callback) {
             var self = this;
-            var opts;
+            var opts, requester;
             opts = options || {};
             opts.method = verb;
             opts.url = relativeTo(url, self.url);
-            return request(opts, function(err, response, body) {
-                return callback(err, err || createResource(response, body));
+            requester = self.requester || request;
+            return requester(opts, function(err, response, body) {
+                if (err) {
+                    return callback(err);
+                } else {
+                    return callback(void 0, createResource(requester, response, body));
+                }
             });
         }
     };
@@ -90,9 +95,10 @@
             return url;
         }
     };
-    createResource = function(response, body) {
+    createResource = function(requester, response, body) {
         var resource, gen7_items, gen8_i, field;
         resource = Object.create(interface);
+        resource.requester = requester;
         if (response) {
             gen7_items = [ "body", "statusCode", "headers" ];
             for (gen8_i = 0; gen8_i < gen7_items.length; ++gen8_i) {
@@ -104,15 +110,26 @@
         }
         return resource;
     };
+    makeRequesterFrom = function(middleware) {
+        var requester, gen9_items, gen10_i, wrapper;
+        requester = request;
+        gen9_items = middleware;
+        for (gen10_i = 0; gen10_i < gen9_items.length; ++gen10_i) {
+            wrapper = gen9_items[gen10_i];
+            requester = wrapper(requester);
+        }
+        return requester;
+    };
     for (member in interface) {
         (function(member) {
             exports[member] = interface[member];
         })(member);
     }
-    exports.resource = function(url) {
+    exports.resource = function(url, middleware) {
         var self = this;
-        var resource;
-        resource = createResource();
+        var requester, resource;
+        requester = makeRequesterFrom(middleware || []);
+        resource = createResource(requester);
         resource.url = url;
         return resource;
     };
