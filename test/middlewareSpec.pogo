@@ -44,3 +44,12 @@ describe 'httpism, with middleware'
             second = resource.get!
             first.body.should.equal "response 1"
             second.body.should.equal "response 1"
+
+    describe 'get, with vcr middleware added later'
+        it 'gets the resource once, then gets the cached resource'
+            vcr = require './vcr'.vcr
+            resource = httpism.resource 'http://localhost:12345/'.with middleware (vcr)
+            first  = resource.get!
+            second = resource.get!
+            first.body.should.equal "response 1"
+            second.body.should.equal "response 1"

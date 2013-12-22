@@ -1,9 +1,13 @@
 (function() {
     var self = this;
-    var request, urlUtils, interface, relativeTo, createResource, makeRequesterFrom, member;
+    var request, urlUtils, Resource, relativeTo, createResource, makeRequesterFrom, member;
     request = require("request");
     urlUtils = require("url");
-    interface = {
+    Resource = function(requester) {
+        this.requester = requester;
+        return this;
+    };
+    Resource.prototype = {
         get: function(url, options, continuation) {
             var self = this;
             var gen1_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
@@ -70,11 +74,11 @@
             options = gen6_arguments[1];
             self.send("options", url, options, continuation);
         },
-        send: function(verb, url, options, callback) {
+        send: function(method, url, options, callback) {
             var self = this;
             var opts, requester;
             opts = options || {};
-            opts.method = verb;
+            opts.method = method;
             opts.url = relativeTo(url, self.url);
             requester = self.requester || request;
             return requester(opts, function(err, response, body) {
@@ -84,6 +88,11 @@
                     return callback(void 0, createResource(requester, response, body));
                 }
             });
+        },
+        withMiddleware: function() {
+            var self = this;
+            var middleware = Array.prototype.slice.call(arguments, 0, arguments.length);
+            return exports.resource(self.url, middleware);
         }
     };
     relativeTo = function(url, baseUrl) {
@@ -97,8 +106,7 @@
     };
     createResource = function(requester, response, body) {
         var resource, gen7_items, gen8_i, field;
-        resource = Object.create(interface);
-        resource.requester = requester;
+        resource = new Resource(requester);
         if (response) {
             gen7_items = [ "body", "statusCode", "headers" ];
             for (gen8_i = 0; gen8_i < gen7_items.length; ++gen8_i) {
@@ -120,9 +128,9 @@
         }
         return requester;
     };
-    for (member in interface) {
+    for (member in Resource.prototype) {
         (function(member) {
-            exports[member] = interface[member];
+            exports[member] = Resource.prototype[member];
         })(member);
     }
     exports.resource = function(url, middleware) {
