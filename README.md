@@ -8,7 +8,11 @@ The idea is that you can point `httpism` at a resource, identified by a URL, the
 
     httpism = require 'httpism'
 
-    resource = httpism.get! 'http://example.com/'
+    home page = httpism.get! 'http://example.com/'
+
+    articles = home page.resource '/articles'
+
+    articles.get!
 
 ### GET
 
