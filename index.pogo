@@ -4,11 +4,10 @@ url utils = require 'url'
 Resource (agent, response, body) =
     this.agent = agent || request
     if (response)
-        for each @(field) in ['body', 'statusCode', 'headers']
-            this.(field) = response.(field)
-
         this.url = response.request.href
         this.body = body
+        this.status code = response.status code
+        this.headers = response.headers
 
     this
 
@@ -49,6 +48,12 @@ Resource.prototype = {
         else
             url
 
+    add middleware (middleware) =
+        for each @(wrapper) in (middleware)
+            self.agent := wrapper (self.agent)
+
+        self
+
     with middleware (middleware, ...) =
         self.resource(self.url, middleware)
 
@@ -56,12 +61,6 @@ Resource.prototype = {
         self.with middleware @(request)
             send (options, cb) =
                 transform (request, options, cb)
-
-    add middleware (middleware) =
-        for each @(wrapper) in (middleware)
-            self.agent := wrapper (self.agent)
-
-        self
 
     with request transform (transformer) =
         self.use @(agent, options, cb)
