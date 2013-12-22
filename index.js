@@ -17,9 +17,9 @@
     var request, urlUtils, Resource;
     request = require("request");
     urlUtils = require("url");
-    Resource = function(requester, response, body) {
+    Resource = function(agent, response, body) {
         var gen2_items, gen3_i, field;
-        this.requester = requester || request;
+        this.agent = agent || request;
         if (response) {
             gen2_items = [ "body", "statusCode", "headers" ];
             for (gen3_i = 0; gen3_i < gen2_items.length; ++gen3_i) {
@@ -83,7 +83,7 @@
         resource: function(url, middleware) {
             var self = this;
             var resource;
-            resource = new Resource();
+            resource = new Resource(self.agent);
             resource.addMiddleware(middleware || []);
             resource.url = self.relativeUrl(url);
             return resource;
@@ -98,11 +98,11 @@
             opts = options || {};
             opts.method = method;
             opts.url = self.relativeUrl(url);
-            return self.requester(opts, function(err, response, body) {
+            return self.agent(opts, function(err, response, body) {
                 if (err) {
                     return callback(err);
                 } else {
-                    return callback(void 0, new Resource(self.requester, response, body));
+                    return callback(void 0, new Resource(self.agent, response, body));
                 }
             });
         },
@@ -127,7 +127,7 @@
             gen10_items = middleware;
             for (gen11_i = 0; gen11_i < gen10_items.length; ++gen11_i) {
                 wrapper = gen10_items[gen11_i];
-                self.requester = wrapper(self.requester);
+                self.agent = wrapper(self.agent);
             }
             return self;
         },

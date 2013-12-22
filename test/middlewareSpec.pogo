@@ -21,20 +21,30 @@ describe 'httpism, with middleware'
     after
         server.close ()
 
+    appender (char) =
+        middleware (request) =
+            append (options, cb) =
+                request (options) @(err, response, body)
+                    cb(err, response, body + char)
+
     describe 'get, with a list of middleware'
         it 'applies each middleware in turn'
-            appender (char) =
-                middleware (request) =
-                    append (options, cb) =
-                        request (options) @(err, response, body)
-                            cb(err, response, body + char)
-
             list = [appender 'x', appender 'y', appender 'z']
             resource = httpism.resource 'http://localhost:12345/' (list)
             first  = resource.get!
             second = resource.get!
             first.body.should.equal "response 1xyz"
             second.body.should.equal "response 2xyz"
+
+    describe 'get, with a list of middleware added independently'
+        it 'applies each middleware in turn'
+            resource = httpism.resource 'http://localhost:12345/'
+            resource := resource.with middleware (appender 'x')
+            resource := resource.with middleware (appender 'y')
+            first  = resource.get!
+            second = resource.get!
+            first.body.should.equal "response 1xy"
+            second.body.should.equal "response 2xy"
 
     describe 'get, with vcr middleware'
         it 'gets the resource once, then gets the cached resource'

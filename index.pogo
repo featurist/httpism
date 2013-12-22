@@ -1,8 +1,8 @@
 request = require 'request'
 url utils = require 'url'
 
-Resource (requester, response, body) =
-    this.requester = requester || request
+Resource (agent, response, body) =
+    this.agent = agent || request
     if (response)
         for each @(field) in ['body', 'statusCode', 'headers']
             this.(field) = response.(field)
@@ -22,7 +22,7 @@ Resource.prototype = {
     options! (url, options) = self.send! 'options' (url, options)
 
     resource (url, middleware) =
-        resource = @new Resource ()
+        resource = @new Resource (self.agent)
         resource.add middleware (middleware || [])
         resource.url = self.relative url (url)
         resource
@@ -35,11 +35,11 @@ Resource.prototype = {
         opts = options || {}
         opts.method = method
         opts.url = self.relative url (url)
-        self.requester (opts) @(err, response, body)
+        self.agent (opts) @(err, response, body)
             if (err)
                 callback(err)
             else
-                callback(nil, @new Resource (self.requester, response, body))
+                callback(nil, @new Resource (self.agent, response, body))
 
     relative url (url) =
         if (self.url && url)
@@ -54,7 +54,7 @@ Resource.prototype = {
 
     add middleware (middleware) =
         for each @(wrapper) in (middleware)
-            self.requester := wrapper (self.requester)
+            self.agent := wrapper (self.agent)
 
         self
 
