@@ -121,6 +121,15 @@
             var middleware = Array.prototype.slice.call(arguments, 0, arguments.length);
             return self.resource(self.url, middleware);
         },
+        use: function(transform) {
+            var self = this;
+            return self.withMiddleware(function(request) {
+                var send;
+                return send = function(options, cb) {
+                    return transform(request, options, cb);
+                };
+            });
+        },
         addMiddleware: function(middleware) {
             var self = this;
             var gen10_items, gen11_i, wrapper;
@@ -131,22 +140,30 @@
             }
             return self;
         },
+        withRequestTransform: function(transformer) {
+            var self = this;
+            return self.use(function(agent, options, cb) {
+                transformer(options);
+                return agent(options, cb);
+            });
+        },
+        withResponseTransform: function(transformer) {
+            var self = this;
+            return self.use(function(agent, options, cb) {
+                return agent(options, function(err, response, body) {
+                    return transformer(err, response, body, cb);
+                });
+            });
+        },
         withResponseBodyParser: function(contentType, parser) {
             var self = this;
-            var parseResponseBody;
-            parseResponseBody = function(request) {
-                var send;
-                return send = function(options, cb) {
-                    return request(options, function(err, response, body) {
-                        if (response.headers["content-type"] === contentType) {
-                            return cb(err, response, parser(body));
-                        } else {
-                            return cb(err, response, body);
-                        }
-                    });
-                };
-            };
-            return self.withMiddleware(parseResponseBody);
+            return self.withResponseTransform(function(err, response, body, cb) {
+                if (response.headers["content-type"] === contentType) {
+                    return cb(err, response, parser(body));
+                } else {
+                    return cb(err, response, body);
+                }
+            });
         },
         withJsonResponseBodyParser: function() {
             var self = this;
@@ -154,17 +171,11 @@
         },
         withRequestBodyFormatter: function(formatter) {
             var self = this;
-            var formatRequestBody;
-            formatRequestBody = function(request) {
-                var send;
-                return send = function(options, cb) {
-                    if (typeof options.body !== "undefined") {
-                        options.body = formatter(options.body);
-                    }
-                    return request(options, cb);
-                };
-            };
-            return self.withMiddleware(formatRequestBody);
+            return self.withRequestTransform(function(options) {
+                if (typeof options.body !== "undefined") {
+                    return options.body = formatter(options.body);
+                }
+            });
         }
     };
     module.exports = new Resource();

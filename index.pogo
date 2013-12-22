@@ -52,35 +52,41 @@ Resource.prototype = {
     with middleware (middleware, ...) =
         self.resource(self.url, middleware)
 
+    use (transform) =
+        self.with middleware @(request)
+            send (options, cb) =
+                transform (request, options, cb)
+
     add middleware (middleware) =
         for each @(wrapper) in (middleware)
             self.agent := wrapper (self.agent)
 
         self
 
-    with response body parser (content type, parser) =
-        parse response body (request) =
-            send (options, cb) =
-                request (options) @(err, response, body)
-                    if (response.headers.'content-type' == content type)
-                        cb (err, response, parser (body))
-                    else
-                        cb (err, response, body)
+    with request transform (transformer) =
+        self.use @(agent, options, cb)
+            transformer (options)
+            agent (options, cb)
 
-        self.with middleware (parse response body)
+    with response transform (transformer) =
+        self.use @(agent, options, cb)
+            agent (options) @(err, response, body)
+                transformer (err, response, body, cb)
+
+    with response body parser (content type, parser) =
+        self.with response transform @(err, response, body, cb)
+            if (response.headers.'content-type' == content type)
+                cb (err, response, parser (body))
+            else
+                cb (err, response, body)
 
     with json response body parser () =
         self.with response body parser 'application/json' (JSON.parse)
 
     with request body formatter (formatter) =
-        format request body (request) =
-            send (options, cb) =
-                if (typeof(options.body) != 'undefined')
-                    options.body = formatter (options.body)
-
-                request (options, cb)
-
-        self.with middleware (format request body)
+        self.with request transform @(options)
+            if (typeof(options.body) != 'undefined')
+                options.body = formatter (options.body)
 
 }
 
