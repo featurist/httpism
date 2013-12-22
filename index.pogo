@@ -7,8 +7,8 @@ interface = {
     put!     (url, options) = self.send! 'put'     (url, options)
     delete!  (url, options) = self.send! 'delete'  (url, options)
     head!    (url, options) = self.send! 'head'    (url, options)
-    options! (url, options) = self.send! 'options' (url, options)    
-        
+    options! (url, options) = self.send! 'options' (url, options)
+
     send (verb, url, options, callback) =
         opts = options || {}
         opts.method = verb
@@ -32,7 +32,7 @@ interface = {
 create resource (requester, response, body) =
     resource = Object.create (interface)
     resource.requester = requester
-    
+
     if (response)
         for each @(field) in ['body', 'statusCode', 'headers']
             resource.(field) = response.(field)
@@ -46,7 +46,7 @@ make requester from (middleware) =
     requester = request
     for each @(wrapper) in (middleware)
         requester := wrapper (requester)
-    
+
     requester
 
 for @(member) in (interface)

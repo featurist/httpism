@@ -5,9 +5,9 @@ describe 'httpism, with middleware'
     app = nil
     server = nil
     count = 0
-    
+
     before each @{ count := 0 }
-    
+
     before
         app := express ()
 
@@ -28,14 +28,14 @@ describe 'httpism, with middleware'
                     append (options, cb) =
                         request (options) @(err, response, body)
                             cb(err, response, body + char)
-            
+
             list = [appender 'x', appender 'y', appender 'z']
             resource = httpism.resource 'http://localhost:12345/' (list)
             first  = resource.get!
             second = resource.get!
             first.body.should.equal "response 1xyz"
-            second.body.should.equal "response 2xyz"            
-    
+            second.body.should.equal "response 2xyz"
+
     describe 'get, with vcr middleware'
         it 'gets the resource once, then gets the cached resource'
             vcr = require './vcr'.vcr
