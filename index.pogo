@@ -65,6 +65,9 @@ Resource.prototype = {
 
         self.with middleware (parse response body)
 
+    with json response body parser () =
+        self.with response body parser 'application/json' (JSON.parse)
+
 }
 
 module.exports = @new Resource()

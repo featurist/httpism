@@ -143,6 +143,10 @@
                 };
             };
             return self.withMiddleware(parseResponseBody);
+        },
+        withJsonResponseBodyParser: function() {
+            var self = this;
+            return self.withResponseBodyParser("application/json", JSON.parse);
         }
     };
     module.exports = new Resource();
