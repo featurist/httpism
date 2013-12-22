@@ -21,7 +21,7 @@ describe 'httpism'
     after
         server.close ()
 
-    describe 'getting a json resource with a custom body parser'
+    describe 'parsing an integer response with a custom body parser'
 
         it 'parses the response body'
             res = httpism.resource 'http://localhost:12666/'
@@ -29,7 +29,7 @@ describe 'httpism'
             root = res.get! 'int'
             root.body.should.equal 123
 
-    describe 'getting a json resource with a json body parser'
+    describe 'parsing a json response with a json body parser'
 
         it 'parses the response body'
             res = httpism.resource 'http://localhost:12666/'

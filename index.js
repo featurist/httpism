@@ -91,6 +91,10 @@
         send: function(method, url, options, callback) {
             var self = this;
             var opts;
+            if (typeof url === "object") {
+                options = url;
+                url = self.url;
+            }
             opts = options || {};
             opts.method = method;
             opts.url = self.relativeUrl(url);
@@ -147,6 +151,18 @@
         withJsonResponseBodyParser: function() {
             var self = this;
             return self.withResponseBodyParser("application/json", JSON.parse);
+        },
+        withRequestBodyFormatter: function(formatter) {
+            var self = this;
+            var formatRequestBody;
+            formatRequestBody = function(request) {
+                var send;
+                return send = function(options, cb) {
+                    options.body = formatter(options.body);
+                    return request(options, cb);
+                };
+            };
+            return self.withMiddleware(formatRequestBody);
         }
     };
     module.exports = new Resource();

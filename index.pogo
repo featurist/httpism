@@ -28,6 +28,10 @@ Resource.prototype = {
         resource
 
     send (method, url, options, callback) =
+        if (typeof(url) == 'object')
+            options := url
+            url := self.url
+
         opts = options || {}
         opts.method = method
         opts.url = self.relative url (url)
@@ -67,6 +71,14 @@ Resource.prototype = {
 
     with json response body parser () =
         self.with response body parser 'application/json' (JSON.parse)
+
+    with request body formatter (formatter) =
+        format request body (request) =
+            send (options, cb) =
+                options.body = formatter (options.body)
+                request (options, cb)
+
+        self.with middleware (format request body)
 
 }
 

@@ -94,12 +94,18 @@ describe 'httpism'
             resource = httpism.resource 'http://localhost:12345/nothinghere'
             resource.url.should.equal 'http://localhost:12345/nothinghere'
 
-        it 'can be used to GET things'
+        it 'can be used to GET things with a path'
             resource = httpism.resource 'http://localhost:12345/nothinghere'
             resource.url.should.equal 'http://localhost:12345/nothinghere'
             asdf = resource.get! 'asdf'
             asdf.url.should.equal 'http://localhost:12345/asdf'
             asdf.body.should.equal 'asdf'
+
+        it 'can be used to POST things without a path, but other custom request options'
+            resource = httpism.resource 'http://localhost:12345/post'
+            asdf = resource.post! { body = 'zomg' }
+            asdf.url.should.equal 'http://localhost:12345/post'
+            asdf.body.should.equal 'posted zomg'
 
         describe '.resource (chaining)'
             resource = httpism.resource 'http://localhost:12345/'.resource 'nothinghere'
