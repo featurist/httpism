@@ -54,6 +54,17 @@ Resource.prototype = {
 
         self
 
+    with response body parser (content type, parser) =
+        parse response body (request) =
+            send (options, cb) =
+                request (options) @(err, response, body)
+                    if (response.headers.'content-type' == content type)
+                        cb (err, response, parser (body))
+                    else
+                        cb (err, response, body)
+
+        self.with middleware (parse response body)
+
 }
 
 module.exports = @new Resource()

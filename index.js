@@ -130,6 +130,23 @@
                 self.requester = wrapper(self.requester);
             }
             return self;
+        },
+        withResponseBodyParser: function(contentType, parser) {
+            var self = this;
+            var parseResponseBody;
+            parseResponseBody = function(request) {
+                var send;
+                return send = function(options, cb) {
+                    return request(options, function(err, response, body) {
+                        if (response.headers["content-type"] === contentType) {
+                            return cb(err, response, parser(body));
+                        } else {
+                            return cb(err, response, body);
+                        }
+                    });
+                };
+            };
+            return self.withMiddleware(parseResponseBody);
         }
     };
     module.exports = new Resource();

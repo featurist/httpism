@@ -20,14 +20,7 @@ describe 'httpism'
     describe 'getting a resource that responds with content-type application/json'
 
         it 'parses the response body'
-            middleware (request) =
-                send (options, cb) =
-                    request (options) @(err, response, body)
-                        if (response.headers.'content-type' == 'application/json')
-                            cb (err, response, JSON.parse (body))
-                        else
-                            cb (err, response, body)
-
-            res = httpism.resource 'http://localhost:12666/' [middleware]
+            res = httpism.resource 'http://localhost:12666/'
+            res := res.with response body parser 'application/json' (JSON.parse)
             root = res.get!
             root.body.greeting.should.equal "hello"

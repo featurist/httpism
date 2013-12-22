@@ -10,13 +10,6 @@ The idea is that you can point `httpism` at a resource, identified by a URL, the
 
     resource = httpism.get! 'http://example.com/'
 
-### Content-Types
-
-    httpism.content types = {
-        'application/json' (response) =
-            JSON.parse (response.body)
-    }
-
 ### GET
 
     the resource = resource.get! ()
@@ -28,6 +21,12 @@ Or
 ### POST
 
     new resource = resource.post! { body = "whatever" }
+
+
+### Content-Types
+
+    r = resource.with response body parser 'application/json' (JSON.parse)
+    result of json parse = r.get! 'people.json'.body
 
 ### Resource
 
@@ -43,8 +42,8 @@ Or
             request (options, cb)
 
     resource = httpism.resource 'http://www.google.com' [
-      middleware A
-      middleware B
+        middleware A
+        middleware B
     ]
     response = resource.get!  // applies A then B
     response.get! '/another'  // applies A then B
