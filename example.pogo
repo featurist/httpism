@@ -1,4 +1,7 @@
 httpism = require './index'
 
-console.log (httpism ('http://google.com/').get! ().get! ('/asdf'))
-console.log (httpism ('http://google.com/').get! ().body)
+google = httpism.resource 'http://google.com/'
+search results = google.get! 'search?q=httpism'
+console.log (search results.body)
+
+process.exit 0
