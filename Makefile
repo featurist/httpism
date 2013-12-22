@@ -1,7 +1,9 @@
-index.js: index.pogo
-	pogo -c index.pogo
+all: compile test
 
-test: .VIRTUAL_TEST
+compile: index.pogo
+	./node_modules/.bin/pogo -c index.pogo
 
-.VIRTUAL_TEST: index.js
-	mocha test/*Spec.pogo
+test:
+	./node_modules/.bin/mocha test/*Spec.pogo
+
+.PHONY: test
