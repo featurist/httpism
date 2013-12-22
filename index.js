@@ -129,10 +129,10 @@
         },
         use: function(transform) {
             var self = this;
-            return self.withMiddleware(function(request) {
+            return self.withMiddleware(function(agent) {
                 var send;
                 return send = function(options, cb) {
-                    return transform(request, options, cb);
+                    return transform(agent, options, cb);
                 };
             });
         },

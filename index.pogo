@@ -3,6 +3,7 @@ url utils = require 'url'
 
 Resource (agent, response, body) =
     this.agent = agent || request
+
     if (response)
         this.url = response.request.href
         this.body = body
@@ -38,7 +39,7 @@ Resource.prototype = {
             if (err)
                 callback(err)
             else
-                callback(nil, @new Resource (self.agent, response, body))
+                callback(nil, @new Resource(self.agent, response, body))
 
     relative url (url) =
         if (self.url && url)
@@ -58,9 +59,9 @@ Resource.prototype = {
         self.resource(self.url, middleware)
 
     use (transform) =
-        self.with middleware @(request)
+        self.with middleware @(agent)
             send (options, cb) =
-                transform (request, options, cb)
+                transform (agent, options, cb)
 
     with request transform (transformer) =
         self.use @(agent, options, cb)

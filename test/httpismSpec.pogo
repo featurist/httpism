@@ -39,6 +39,10 @@ describe 'httpism'
             res.header 'content-type' 'text/plain'
             res.send 201 "posted #(req.body)"
 
+        app.post '/json' @(req, res)
+            res.header 'content-type' 'application/json'
+            res.send 200 (JSON.stringify({ posted = JSON.parse(req.body) }))
+
         app.put '/put' @(req, res)
             res.header 'content-type' 'text/plain'
             res.send 200 "putted #(req.body)"
@@ -101,11 +105,25 @@ describe 'httpism'
             asdf.url.should.equal 'http://localhost:12345/asdf'
             asdf.body.should.equal 'asdf'
 
+        it 'can be used to POST things with a path and other custom request options'
+            resource = httpism.resource 'http://localhost:12345/'
+            asdf = resource.post! 'post' { body = 'zomg' }
+            asdf.url.should.equal 'http://localhost:12345/post'
+            asdf.body.should.equal 'posted zomg'
+
         it 'can be used to POST things without a path, but other custom request options'
             resource = httpism.resource 'http://localhost:12345/post'
             asdf = resource.post! { body = 'zomg' }
             asdf.url.should.equal 'http://localhost:12345/post'
             asdf.body.should.equal 'posted zomg'
+
+        it 'can be used to POST JSON'
+            resource = httpism.resource 'http://localhost:12345/json'
+            resource := resource.with request body formatter (JSON.stringify)
+            resource := resource.with response body parser ('application/json', JSON.parse)
+            response = resource.post! { body = { foo = 'bar' } }
+            response.url.should.equal 'http://localhost:12345/json'
+            response.body.should.eql { posted = { foo = "bar" }}
 
         describe '.resource (chaining)'
             resource = httpism.resource 'http://localhost:12345/'.resource 'nothinghere'
