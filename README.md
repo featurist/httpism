@@ -52,6 +52,19 @@ Or
     response = resource.get!  // applies A then B
     response.get! '/another'  // applies A then B
 
+### JavaScript Example
+
+    var httpism = require("httpism");
+
+    var google = httpism.resource("http://google.com/");
+
+    google.get("search?q=httpism", function (err, response) {
+      if (err) {
+        throw err;
+      }
+      console.log(response.body);
+    });
+
 ### License
 
 BSD
