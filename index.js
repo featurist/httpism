@@ -158,7 +158,9 @@
             formatRequestBody = function(request) {
                 var send;
                 return send = function(options, cb) {
-                    options.body = formatter(options.body);
+                    if (typeof options.body !== "undefined") {
+                        options.body = formatter(options.body);
+                    }
                     return request(options, cb);
                 };
             };

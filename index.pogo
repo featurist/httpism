@@ -75,7 +75,9 @@ Resource.prototype = {
     with request body formatter (formatter) =
         format request body (request) =
             send (options, cb) =
-                options.body = formatter (options.body)
+                if (typeof(options.body) != 'undefined')
+                    options.body = formatter (options.body)
+
                 request (options, cb)
 
         self.with middleware (format request body)
