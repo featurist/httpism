@@ -2,10 +2,11 @@ request = require 'request'
 url utils = require 'url'
 
 Resource (requester) =
-    this.requester = requester
+    this.requester = requester || request
     this
 
 Resource.prototype = {
+
     get!     (url, options) = self.send! 'get'     (url, options)
     post!    (url, options) = self.send! 'post'    (url, options)
     put!     (url, options) = self.send! 'put'     (url, options)
@@ -13,28 +14,34 @@ Resource.prototype = {
     head!    (url, options) = self.send! 'head'    (url, options)
     options! (url, options) = self.send! 'options' (url, options)
 
+    resource (url, middleware) =
+        requester = make requester from (middleware || [])
+        resource = create resource (requester)
+        resource.url = url
+        resource
+
     send (method, url, options, callback) =
         opts = options || {}
         opts.method = method
-        opts.url = (url) relative to (self.url)
-        requester = self.requester || request
-        requester (opts) @(err, response, body)
+        opts.url = self.relative url (url)
+        self.requester (opts) @(err, response, body)
             if (err)
                 callback(err)
             else
-                callback(nil, create resource (requester, response, body))
+                callback(nil, create resource (self.requester, response, body))
+
+    relative url (url) =
+        if (self.url && url)
+            url utils.resolve (self.url, url)
+        else if (self.url)
+            self.url
+        else
+            url
 
     with middleware (middleware, ...) =
-        exports.resource(self.url, middleware)
-}
+        self.resource(self.url, middleware)
 
-(url) relative to (base url) =
-    if (base url && url)
-        url utils.resolve (base url, url)
-    else if (base url)
-        base url
-    else
-        url
+}
 
 create resource (requester, response, body) =
     resource = @new Resource(requester)
@@ -55,11 +62,4 @@ make requester from (middleware) =
 
     requester
 
-for @(member) in (Resource.prototype)
-    exports.(member) = Resource.prototype.(member)
-
-exports.resource (url, middleware) =
-    requester = make requester from (middleware || [])
-    resource = create resource (requester)
-    resource.url = url
-    resource
+module.exports = @new Resource()

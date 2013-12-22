@@ -36,12 +36,12 @@ Or
     resource.headers
 
 ### Middleware
-    
+
     middleware (request) =
         intercept request (options, cb) =
-            // something interesting, then...
+            // inspect or modify request options, then...
             request (options, cb)
-    
+
     resource = httpism.resource 'http://www.google.com' [
       middleware A
       middleware B

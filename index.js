@@ -1,10 +1,10 @@
 (function() {
     var self = this;
-    var request, urlUtils, Resource, relativeTo, createResource, makeRequesterFrom, member;
+    var request, urlUtils, Resource, createResource, makeRequesterFrom;
     request = require("request");
     urlUtils = require("url");
     Resource = function(requester) {
-        this.requester = requester;
+        this.requester = requester || request;
         return this;
     };
     Resource.prototype = {
@@ -74,34 +74,42 @@
             options = gen6_arguments[1];
             self.send("options", url, options, continuation);
         },
+        resource: function(url, middleware) {
+            var self = this;
+            var requester, resource;
+            requester = makeRequesterFrom(middleware || []);
+            resource = createResource(requester);
+            resource.url = url;
+            return resource;
+        },
         send: function(method, url, options, callback) {
             var self = this;
-            var opts, requester;
+            var opts;
             opts = options || {};
             opts.method = method;
-            opts.url = relativeTo(url, self.url);
-            requester = self.requester || request;
-            return requester(opts, function(err, response, body) {
+            opts.url = self.relativeUrl(url);
+            return self.requester(opts, function(err, response, body) {
                 if (err) {
                     return callback(err);
                 } else {
-                    return callback(void 0, createResource(requester, response, body));
+                    return callback(void 0, createResource(self.requester, response, body));
                 }
             });
+        },
+        relativeUrl: function(url) {
+            var self = this;
+            if (self.url && url) {
+                return urlUtils.resolve(self.url, url);
+            } else if (self.url) {
+                return self.url;
+            } else {
+                return url;
+            }
         },
         withMiddleware: function() {
             var self = this;
             var middleware = Array.prototype.slice.call(arguments, 0, arguments.length);
-            return exports.resource(self.url, middleware);
-        }
-    };
-    relativeTo = function(url, baseUrl) {
-        if (baseUrl && url) {
-            return urlUtils.resolve(baseUrl, url);
-        } else if (baseUrl) {
-            return baseUrl;
-        } else {
-            return url;
+            return self.resource(self.url, middleware);
         }
     };
     createResource = function(requester, response, body) {
@@ -128,17 +136,5 @@
         }
         return requester;
     };
-    for (member in Resource.prototype) {
-        (function(member) {
-            exports[member] = Resource.prototype[member];
-        })(member);
-    }
-    exports.resource = function(url, middleware) {
-        var self = this;
-        var requester, resource;
-        requester = makeRequesterFrom(middleware || []);
-        resource = createResource(requester);
-        resource.url = url;
-        return resource;
-    };
+    module.exports = new Resource();
 }).call(this);
