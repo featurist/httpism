@@ -38,7 +38,7 @@ describe 'httpism'
                         JSON.parse(response.body).request method.should.equal (http verb)
                         done()
 
-        describe "httpism.resource(url, [middleware]).#(method)"
+        describe "httpism.resource(url, [middleware]).#(method)!"
 
             it "executes the middleware" @(done)
 
@@ -56,4 +56,3 @@ describe 'httpism'
                         response.body.should.exist
                         JSON.parse(response.body).request headers.foo.should.equal 'bar'
                         done()
-

@@ -1,8 +1,15 @@
 request = require 'request'
 url utils = require 'url'
 
-Resource (requester) =
+Resource (requester, response, body) =
     this.requester = requester || request
+    if (response)
+        for each @(field) in ['body', 'statusCode', 'headers']
+            this.(field) = response.(field)
+
+        this.url = response.request.href
+        this.body = body
+
     this
 
 Resource.prototype = {
@@ -15,9 +22,9 @@ Resource.prototype = {
     options! (url, options) = self.send! 'options' (url, options)
 
     resource (url, middleware) =
-        requester = make requester from (middleware || [])
-        resource = create resource (requester)
-        resource.url = url
+        resource = @new Resource ()
+        resource.add middleware (middleware || [])
+        resource.url = self.relative url (url)
         resource
 
     send (method, url, options, callback) =
@@ -28,7 +35,7 @@ Resource.prototype = {
             if (err)
                 callback(err)
             else
-                callback(nil, create resource (self.requester, response, body))
+                callback(nil, @new Resource (self.requester, response, body))
 
     relative url (url) =
         if (self.url && url)
@@ -41,25 +48,12 @@ Resource.prototype = {
     with middleware (middleware, ...) =
         self.resource(self.url, middleware)
 
+    add middleware (middleware) =
+        for each @(wrapper) in (middleware)
+            self.requester := wrapper (self.requester)
+
+        self
+
 }
-
-create resource (requester, response, body) =
-    resource = @new Resource(requester)
-
-    if (response)
-        for each @(field) in ['body', 'statusCode', 'headers']
-            resource.(field) = response.(field)
-
-        resource.url = response.request.href
-        resource.body = body
-
-    resource
-
-make requester from (middleware) =
-    requester = request
-    for each @(wrapper) in (middleware)
-        requester := wrapper (requester)
-
-    requester
 
 module.exports = @new Resource()

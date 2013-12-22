@@ -80,7 +80,7 @@ describe 'httpism'
             root.status code.should.equal 201
             root.body.should.equal 'posted zomg'
             root.headers.'content-type'.should.equal 'text/plain'
-    
+
     describe 'put'
         it 'can put a resource'
             root = httpism.put! 'http://localhost:12345/put' { body = 'gosh' }
@@ -100,3 +100,7 @@ describe 'httpism'
             asdf = resource.get! 'asdf'
             asdf.url.should.equal 'http://localhost:12345/asdf'
             asdf.body.should.equal 'asdf'
+
+        describe '.resource (chaining)'
+            resource = httpism.resource 'http://localhost:12345/'.resource 'nothinghere'
+            resource.url.should.equal 'http://localhost:12345/nothinghere'

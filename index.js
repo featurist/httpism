@@ -1,36 +1,24 @@
 (function() {
     var self = this;
-    var request, urlUtils, Resource, createResource, makeRequesterFrom;
+    var request, urlUtils, Resource;
     request = require("request");
     urlUtils = require("url");
-    Resource = function(requester) {
+    Resource = function(requester, response, body) {
+        var gen1_items, gen2_i, field;
         this.requester = requester || request;
+        if (response) {
+            gen1_items = [ "body", "statusCode", "headers" ];
+            for (gen2_i = 0; gen2_i < gen1_items.length; ++gen2_i) {
+                field = gen1_items[gen2_i];
+                this[field] = response[field];
+            }
+            this.url = response.request.href;
+            this.body = body;
+        }
         return this;
     };
     Resource.prototype = {
         get: function(url, options, continuation) {
-            var self = this;
-            var gen1_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen1_arguments[0];
-            options = gen1_arguments[1];
-            self.send("get", url, options, continuation);
-        },
-        post: function(url, options, continuation) {
-            var self = this;
-            var gen2_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = arguments[arguments.length - 1];
-            if (!(continuation instanceof Function)) {
-                throw new Error("asynchronous function called synchronously");
-            }
-            url = gen2_arguments[0];
-            options = gen2_arguments[1];
-            self.send("post", url, options, continuation);
-        },
-        put: function(url, options, continuation) {
             var self = this;
             var gen3_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
             continuation = arguments[arguments.length - 1];
@@ -39,9 +27,9 @@
             }
             url = gen3_arguments[0];
             options = gen3_arguments[1];
-            self.send("put", url, options, continuation);
+            self.send("get", url, options, continuation);
         },
-        "delete": function(url, options, continuation) {
+        post: function(url, options, continuation) {
             var self = this;
             var gen4_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
             continuation = arguments[arguments.length - 1];
@@ -50,9 +38,9 @@
             }
             url = gen4_arguments[0];
             options = gen4_arguments[1];
-            self.send("delete", url, options, continuation);
+            self.send("post", url, options, continuation);
         },
-        head: function(url, options, continuation) {
+        put: function(url, options, continuation) {
             var self = this;
             var gen5_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
             continuation = arguments[arguments.length - 1];
@@ -61,9 +49,9 @@
             }
             url = gen5_arguments[0];
             options = gen5_arguments[1];
-            self.send("head", url, options, continuation);
+            self.send("put", url, options, continuation);
         },
-        options: function(url, options, continuation) {
+        "delete": function(url, options, continuation) {
             var self = this;
             var gen6_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
             continuation = arguments[arguments.length - 1];
@@ -72,14 +60,36 @@
             }
             url = gen6_arguments[0];
             options = gen6_arguments[1];
+            self.send("delete", url, options, continuation);
+        },
+        head: function(url, options, continuation) {
+            var self = this;
+            var gen7_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen7_arguments[0];
+            options = gen7_arguments[1];
+            self.send("head", url, options, continuation);
+        },
+        options: function(url, options, continuation) {
+            var self = this;
+            var gen8_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = arguments[arguments.length - 1];
+            if (!(continuation instanceof Function)) {
+                throw new Error("asynchronous function called synchronously");
+            }
+            url = gen8_arguments[0];
+            options = gen8_arguments[1];
             self.send("options", url, options, continuation);
         },
         resource: function(url, middleware) {
             var self = this;
-            var requester, resource;
-            requester = makeRequesterFrom(middleware || []);
-            resource = createResource(requester);
-            resource.url = url;
+            var resource;
+            resource = new Resource();
+            resource.addMiddleware(middleware || []);
+            resource.url = self.relativeUrl(url);
             return resource;
         },
         send: function(method, url, options, callback) {
@@ -92,7 +102,7 @@
                 if (err) {
                     return callback(err);
                 } else {
-                    return callback(void 0, createResource(self.requester, response, body));
+                    return callback(void 0, new Resource(self.requester, response, body));
                 }
             });
         },
@@ -110,31 +120,17 @@
             var self = this;
             var middleware = Array.prototype.slice.call(arguments, 0, arguments.length);
             return self.resource(self.url, middleware);
-        }
-    };
-    createResource = function(requester, response, body) {
-        var resource, gen7_items, gen8_i, field;
-        resource = new Resource(requester);
-        if (response) {
-            gen7_items = [ "body", "statusCode", "headers" ];
-            for (gen8_i = 0; gen8_i < gen7_items.length; ++gen8_i) {
-                field = gen7_items[gen8_i];
-                resource[field] = response[field];
+        },
+        addMiddleware: function(middleware) {
+            var self = this;
+            var gen9_items, gen10_i, wrapper;
+            gen9_items = middleware;
+            for (gen10_i = 0; gen10_i < gen9_items.length; ++gen10_i) {
+                wrapper = gen9_items[gen10_i];
+                self.requester = wrapper(self.requester);
             }
-            resource.url = response.request.href;
-            resource.body = body;
+            return self;
         }
-        return resource;
-    };
-    makeRequesterFrom = function(middleware) {
-        var requester, gen9_items, gen10_i, wrapper;
-        requester = request;
-        gen9_items = middleware;
-        for (gen10_i = 0; gen10_i < gen9_items.length; ++gen10_i) {
-            wrapper = gen9_items[gen10_i];
-            requester = wrapper(requester);
-        }
-        return requester;
     };
     module.exports = new Resource();
 }).call(this);
