@@ -74,7 +74,7 @@ Resource.prototype = {
 
     with response body parser (content type, parser) =
         self.with response transform @(err, response, body, cb)
-            if (response.headers.'content-type' == content type)
+            if (!err && (response.headers.'content-type' == content type))
                 cb (err, response, parser (body))
             else
                 cb (err, response, body)

@@ -154,7 +154,7 @@
         withResponseBodyParser: function(contentType, parser) {
             var self = this;
             return self.withResponseTransform(function(err, response, body, cb) {
-                if (response.headers["content-type"] === contentType) {
+                if (!err && response.headers["content-type"] === contentType) {
                     return cb(err, response, parser(body));
                 } else {
                     return cb(err, response, body);

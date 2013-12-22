@@ -36,3 +36,11 @@ describe 'httpism'
             res := res.with json response body parser()
             root = res.get! 'json'
             root.body.greeting.should.equal "hello"
+
+        it 'ignores error responses'
+            res = httpism.resource 'http://localhost:12999/'
+            res := res.with json response body parser()
+            try
+                res.get! 'json'
+            catch (e)
+                e.code.should.equal 'ECONNREFUSED'
