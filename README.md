@@ -52,7 +52,6 @@ Or
     response = resource.get!  // applies A then B
     response.get! '/another'  // applies A then B
 
+### License
 
-# This is just for fun.
-
-Of course, I don't mean for anybody to _actually_ use this!
+BSD
