@@ -1,5 +1,7 @@
 # HTTPism
 
+[![travis-ci](https://secure.travis-ci.org/featurist/httpism.png?branch=master)](https://travis-ci.org/featurist/httpism)
+
 ## Hypermedia
 
 The idea is that you can point `httpism` at a resource, identified by a URL, then call `GET` or `POST` on it, then follow a link in the returned resource, and make another `GET` or `POST`, or any other kind of verb. Follow the hypermedia links, that's what its all about right?
@@ -25,7 +27,6 @@ Or
 ### POST
 
     new resource = resource.post! { body = "whatever" }
-
 
 ### Content Types
 
