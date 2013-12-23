@@ -27,6 +27,7 @@
         }
         return this;
     };
+    Resource.methods = [ "get", "post", "put", "delete", "patch", "head", "options" ];
     Resource.prototype = {
         get: function(url, options, continuation) {
             var self = this;
@@ -76,6 +77,14 @@
             options = gen7_arguments[1];
             return self.send("options", url, options, continuation);
         },
+        patch: function(url, options, continuation) {
+            var self = this;
+            var gen8_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = gen1_continuationOrDefault(arguments);
+            url = gen8_arguments[0];
+            options = gen8_arguments[1];
+            return self.send("patch", url, options, continuation);
+        },
         resource: function(url, middleware) {
             var self = this;
             var resource;
@@ -114,10 +123,10 @@
         },
         addMiddleware: function(middleware) {
             var self = this;
-            var gen8_items, gen9_i, wrapper;
-            gen8_items = middleware;
-            for (gen9_i = 0; gen9_i < gen8_items.length; ++gen9_i) {
-                wrapper = gen8_items[gen9_i];
+            var gen9_items, gen10_i, wrapper;
+            gen9_items = middleware;
+            for (gen10_i = 0; gen10_i < gen9_items.length; ++gen10_i) {
+                wrapper = gen9_items[gen10_i];
                 self.agent = wrapper(self.agent);
             }
             return self;
@@ -172,6 +181,14 @@
                     return options.body = formatter(options.body);
                 }
             });
+        },
+        inspect: function() {
+            var self = this;
+            if (self.statusCode) {
+                return "[Response url=" + self.url + ", statusCode=" + self.statusCode + "]";
+            } else {
+                return "[Resource url=" + self.url + "]";
+            }
         }
     };
     module.exports = new Resource();

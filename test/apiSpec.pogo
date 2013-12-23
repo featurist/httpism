@@ -19,7 +19,7 @@ describe 'httpism'
     after
         server.close ()
 
-    methods = ['get', 'put', 'post', 'delete', 'options']
+    methods = ['get', 'put', 'post', 'delete', 'head', 'options', 'patch']
 
     for each @(method) in (methods)
 

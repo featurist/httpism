@@ -125,6 +125,11 @@ describe 'httpism'
             response.url.should.equal 'http://localhost:12345/json'
             response.body.should.eql { posted = { foo = "bar" }}
 
-        describe '.resource (chaining)'
+        it 'creates new resources'
             resource = httpism.resource 'http://localhost:12345/'.resource 'nothinghere'
             resource.url.should.equal 'http://localhost:12345/nothinghere'
+
+        it 'has a friendly inspect method'
+            resource = httpism.resource 'http://localhost:12345/asdf'
+            resource.inspect().should.equal "[Resource url=http://localhost:12345/asdf]"
+            resource.get!.inspect().should.equal "[Response url=http://localhost:12345/asdf, statusCode=200]"

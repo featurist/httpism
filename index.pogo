@@ -12,6 +12,8 @@ Resource (agent, response, body) =
 
     this
 
+Resource.methods = ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']
+
 Resource.prototype = {
 
     get!     (url, options) = self.send! 'get'     (url, options)
@@ -20,6 +22,7 @@ Resource.prototype = {
     delete!  (url, options) = self.send! 'delete'  (url, options)
     head!    (url, options) = self.send! 'head'    (url, options)
     options! (url, options) = self.send! 'options' (url, options)
+    patch!   (url, options) = self.send! 'patch'   (url, options)
 
     resource (url, middleware) =
         resource = @new Resource (self.agent)
@@ -87,6 +90,12 @@ Resource.prototype = {
         self.with request transform @(options)
             if (typeof(options.body) != 'undefined')
                 options.body = formatter (options.body)
+
+    inspect () =
+        if (self.status code)
+            "[Response url=#(self.url), statusCode=#(self.status code)]"
+        else
+            "[Resource url=#(self.url)]"
 
 }
 
