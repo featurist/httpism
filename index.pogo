@@ -12,17 +12,7 @@ Resource (agent, response, body) =
 
     this
 
-Resource.methods = ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']
-
 Resource.prototype = {
-
-    get!     (url, options) = self.send! 'get'     (url, options)
-    post!    (url, options) = self.send! 'post'    (url, options)
-    put!     (url, options) = self.send! 'put'     (url, options)
-    delete!  (url, options) = self.send! 'delete'  (url, options)
-    head!    (url, options) = self.send! 'head'    (url, options)
-    options! (url, options) = self.send! 'options' (url, options)
-    patch!   (url, options) = self.send! 'patch'   (url, options)
 
     resource (url, middleware) =
         resource = @new Resource (self.agent)
@@ -98,5 +88,11 @@ Resource.prototype = {
             "[Resource url=#(self.url)]"
 
 }
+
+sender (method) =
+    send! (url, options) = this.send! (method, url, options)
+
+for each @(method) in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']
+    Resource.prototype.(method) = sender (method)
 
 module.exports = @new Resource()

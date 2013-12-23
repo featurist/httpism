@@ -14,7 +14,7 @@
         }
     };
     var self = this;
-    var request, urlUtils, Resource;
+    var request, urlUtils, Resource, sender, gen2_items, gen3_i, method;
     request = require("request");
     urlUtils = require("url");
     Resource = function(agent, response, body) {
@@ -27,64 +27,7 @@
         }
         return this;
     };
-    Resource.methods = [ "get", "post", "put", "delete", "patch", "head", "options" ];
     Resource.prototype = {
-        get: function(url, options, continuation) {
-            var self = this;
-            var gen2_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen2_arguments[0];
-            options = gen2_arguments[1];
-            return self.send("get", url, options, continuation);
-        },
-        post: function(url, options, continuation) {
-            var self = this;
-            var gen3_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen3_arguments[0];
-            options = gen3_arguments[1];
-            return self.send("post", url, options, continuation);
-        },
-        put: function(url, options, continuation) {
-            var self = this;
-            var gen4_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen4_arguments[0];
-            options = gen4_arguments[1];
-            return self.send("put", url, options, continuation);
-        },
-        "delete": function(url, options, continuation) {
-            var self = this;
-            var gen5_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen5_arguments[0];
-            options = gen5_arguments[1];
-            return self.send("delete", url, options, continuation);
-        },
-        head: function(url, options, continuation) {
-            var self = this;
-            var gen6_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen6_arguments[0];
-            options = gen6_arguments[1];
-            return self.send("head", url, options, continuation);
-        },
-        options: function(url, options, continuation) {
-            var self = this;
-            var gen7_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen7_arguments[0];
-            options = gen7_arguments[1];
-            return self.send("options", url, options, continuation);
-        },
-        patch: function(url, options, continuation) {
-            var self = this;
-            var gen8_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            continuation = gen1_continuationOrDefault(arguments);
-            url = gen8_arguments[0];
-            options = gen8_arguments[1];
-            return self.send("patch", url, options, continuation);
-        },
         resource: function(url, middleware) {
             var self = this;
             var resource;
@@ -123,10 +66,10 @@
         },
         addMiddleware: function(middleware) {
             var self = this;
-            var gen9_items, gen10_i, wrapper;
-            gen9_items = middleware;
-            for (gen10_i = 0; gen10_i < gen9_items.length; ++gen10_i) {
-                wrapper = gen9_items[gen10_i];
+            var gen4_items, gen5_i, wrapper;
+            gen4_items = middleware;
+            for (gen5_i = 0; gen5_i < gen4_items.length; ++gen5_i) {
+                wrapper = gen4_items[gen5_i];
                 self.agent = wrapper(self.agent);
             }
             return self;
@@ -191,5 +134,20 @@
             }
         }
     };
+    sender = function(method) {
+        var send;
+        return send = function(url, options, continuation) {
+            var gen6_arguments = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            continuation = gen1_continuationOrDefault(arguments);
+            url = gen6_arguments[0];
+            options = gen6_arguments[1];
+            return this.send(method, url, options, continuation);
+        };
+    };
+    gen2_items = [ "get", "post", "put", "delete", "patch", "head", "options" ];
+    for (gen3_i = 0; gen3_i < gen2_items.length; ++gen3_i) {
+        method = gen2_items[gen3_i];
+        Resource.prototype[method] = sender(method);
+    }
     module.exports = new Resource();
 }).call(this);
