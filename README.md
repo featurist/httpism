@@ -27,10 +27,14 @@ Or
     new resource = resource.post! { body = "whatever" }
 
 
-### Content-Types
+### Content Types
 
-    r = resource.with response body parser 'application/json' (JSON.parse)
-    result of json parse = r.get! 'people.json'.body
+    returns json = resource.with response body parser 'application/json' (JSON.parse)
+    body = returns json.get! 'people.json'.body
+
+    an object = { colour = 'red' }
+    accepts json = resource.with request body formatter (JSON.stringify)
+    accepts json.post! { body = an object }
 
 ### Resource
 
