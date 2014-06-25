@@ -119,8 +119,6 @@ describe 'httpism'
 
         it 'can be used to POST JSON'
             resource = httpism.resource 'http://localhost:12345/json'
-            resource := resource.with request body formatter (JSON.stringify)
-            resource := resource.with response body parser ('application/json', JSON.parse)
             response = resource.post! { body = { foo = 'bar' } }
             response.url.should.equal 'http://localhost:12345/json'
             response.body.should.eql { posted = { foo = "bar" }}

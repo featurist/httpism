@@ -14,13 +14,21 @@
         }
     };
     var self = this;
-    var request, urlUtils, Resource, sender, gen2_items, gen3_i, method;
+    var request, needle, urlUtils, sendUsingNeedle, Resource, sender, gen2_items, gen3_i, method;
     request = require("request");
+    needle = require("needle");
     urlUtils = require("url");
-    Resource = function(agent, response, body) {
-        this.agent = agent || request;
+    sendUsingNeedle = function(options, callback) {
+        if (typeof options.follow !== "undefined") {
+            options.follow = true;
+        }
+        console.log(options);
+        return needle.request(options.method, options.url, options.body, options, callback);
+    };
+    Resource = function(agent, url, response, body) {
+        this.agent = agent || sendUsingNeedle;
+        this.url = url;
         if (response) {
-            this.url = response.request.href;
             this.body = body;
             this.statusCode = response.statusCode;
             this.headers = response.headers;
@@ -31,9 +39,8 @@
         resource: function(url, middleware) {
             var self = this;
             var resource;
-            resource = new Resource(self.agent);
+            resource = new Resource(self.agent, self.relativeUrl(url));
             resource.addMiddleware(middleware || []);
-            resource.url = self.relativeUrl(url);
             return resource;
         },
         send: function(method, url, options, callback) {
@@ -47,10 +54,11 @@
             opts.method = method;
             opts.url = self.relativeUrl(url);
             return self.agent(opts, function(err, response, body) {
+                console.log(response.url);
                 if (err) {
                     return callback(err);
                 } else {
-                    return callback(void 0, new Resource(self.agent, response, body));
+                    return callback(void 0, new Resource(self.agent, opts.url, response, body));
                 }
             });
         },
@@ -112,10 +120,6 @@
                     return cb(err, response, body);
                 }
             });
-        },
-        withJsonResponseBodyParser: function() {
-            var self = this;
-            return self.withResponseBodyParser("application/json", JSON.parse);
         },
         withRequestBodyFormatter: function(formatter) {
             var self = this;

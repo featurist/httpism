@@ -32,7 +32,7 @@ describe 'httpism'
             res.post! '/' { body = 123 }
             bodies.should.eql ['123']
 
-        it 'does not formats a non-existent request body'
+        it 'does not format a non-existent request body'
             bodies := []
             res = httpism.resource 'http://localhost:12667/'
             counter (x) = x.to string() + '!'

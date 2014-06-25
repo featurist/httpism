@@ -4,7 +4,8 @@
   "description": "Resource savvy HTTP client",
   "main": "index.js",
   "dependencies": {
-    "request": "2.x"
+    "request": "2.x",
+    "needle": "~0.6.6"
   },
   "devDependencies": {
     "should": "~2.1.1",

@@ -28,19 +28,3 @@ describe 'httpism'
             res := res.with response body parser 'application/integer' (Number)
             root = res.get! 'int'
             root.body.should.equal 123
-
-    describe 'parsing a json response with a json body parser'
-
-        it 'parses the response body'
-            res = httpism.resource 'http://localhost:12666/'
-            res := res.with json response body parser()
-            root = res.get! 'json'
-            root.body.greeting.should.equal "hello"
-
-        it 'ignores error responses'
-            res = httpism.resource 'http://localhost:12999/'
-            res := res.with json response body parser()
-            try
-                res.get! 'json'
-            catch (e)
-                e.code.should.equal 'ECONNREFUSED'

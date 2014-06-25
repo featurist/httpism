@@ -1,11 +1,20 @@
 request = require 'request'
+needle = require 'needle'
 url utils = require 'url'
 
-Resource (agent, response, body) =
-    this.agent = agent || request
+send using needle (options, callback) =
+    if (typeof (options.follow) != 'undefined')
+        options.follow = true
+
+    console.log (options)
+
+    needle.request (options.method, options.url, options.body, options, callback)
+
+Resource (agent, url, response, body) =
+    this.agent = agent || send using needle
+    this.url = url
 
     if (response)
-        this.url = response.request.href
         this.body = body
         this.status code = response.status code
         this.headers = response.headers
@@ -15,9 +24,8 @@ Resource (agent, response, body) =
 Resource.prototype = {
 
     resource (url, middleware) =
-        resource = @new Resource (self.agent)
+        resource = @new Resource (self.agent, self.relative url (url))
         resource.add middleware (middleware || [])
-        resource.url = self.relative url (url)
         resource
 
     send (method, url, options, callback) =
@@ -29,10 +37,11 @@ Resource.prototype = {
         opts.method = method
         opts.url = self.relative url (url)
         self.agent (opts) @(err, response, body)
+            console.log (response.url)
             if (err)
-                callback(err)
+                callback (err)
             else
-                callback(nil, @new Resource(self.agent, response, body))
+                callback (nil, @new Resource(self.agent, opts.url, response, body))
 
     relative url (url) =
         if (self.url && url)
@@ -68,13 +77,10 @@ Resource.prototype = {
 
     with response body parser (content type, parser) =
         self.with response transform @(err, response, body, cb)
-            if (!err && (response.headers.'content-type' == content type))
+            if (!err @and (response.headers.'content-type' == content type))
                 cb (err, response, parser (body))
             else
                 cb (err, response, body)
-
-    with json response body parser () =
-        self.with response body parser 'application/json' (JSON.parse)
 
     with request body formatter (formatter) =
         self.with request transform @(options)
