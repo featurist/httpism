@@ -70,9 +70,9 @@ describe 'httpism'
 
         it 'follows redirects'
             redirected = httpism.get! 'http://localhost:12345/redirect'
-            redirected.url.should == 'http://localhost:12345/root/'
+            redirected.url.should.eql 'http://localhost:12345/root/'
             asdf = redirected.get! 'asdf'
-            asdf.url.should == 'http://localhost:12345/root/asdf'
+            asdf.url.should.eql 'http://localhost:12345/root/asdf'
             asdf.status code.should.equal 200
             asdf.body.should.equal 'redirected asdf'
             asdf.headers.'content-type'.should.equal 'text/plain'
