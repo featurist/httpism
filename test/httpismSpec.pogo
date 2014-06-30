@@ -1,134 +1,84 @@
-httpism = require '../'
+httpism = require '../index.pogo'
 express = require 'express'
+bodyParser = require 'body-parser'
+require 'chai'.should()
 
 describe 'httpism'
-    app = nil
-    server = nil
+  server = nil
+  app = nil
+  port = 12345
+  baseurl = "http://localhost:#(port)"
 
-    before
-        app := express ()
+  beforeEach
+    app := express()
+    server := app.listen (port)
 
-        app.use @(req, res, next)
-            data = ''
-            req.set encoding 'utf8'
-            req.on 'data' @(chunk) @{ data := data + chunk }
-            req.on 'end'
-                req.body = data
-                next()
+  afterEach
+    server.close()
 
-        app.get '/' @(req, res)
-            res.header 'content-type' 'text/plain'
-            res.send 'hi'
+  context 'a server that responds with JSON to GET requests'
+    beforeEach
+      app.get '/' @(req, res)
+        res.send {method = req.method, path = req.path}
 
-        app.get '/asdf' @(req, res)
-            res.header 'content-type' 'text/plain'
-            res.send 'asdf'
+    it 'can make GET requests'
+      response = httpism.json.get (baseurl)!
 
-        app.get '/redirect' @(req, res)
-            res.redirect '/root/'
+      response.body.should.eql {method = 'GET', path = '/'}
 
-        app.get '/root/' @(req, res)
-            res.header 'content-type' 'text/plain'
-            res.send 'redirected root'
+  context 'a server that responds to JSON POST requests'
+    beforeEach
+      app.use(bodyParser.json())
+      app.post '/' @(req, res)
+        res.send {method = req.method, path = req.path, body = req.body}
 
-        app.get '/root/asdf' @(req, res)
-            res.header 'content-type' 'text/plain'
-            res.send 'redirected asdf'
+    it 'can make JSON POST requests'
+      response = httpism.json.post (baseurl, { joke = 'a chicken...' })!
 
-        app.post '/post' @(req, res)
-            res.header 'content-type' 'text/plain'
-            res.send 201 "posted #(req.body)"
+      response.body.should.eql {method = 'POST', path = '/', body = { joke = 'a chicken...' }}
 
-        app.post '/json' @(req, res)
-            res.header 'content-type' 'application/json'
-            res.send 200 (JSON.stringify({ posted = JSON.parse(req.body) }))
+  context 'a server that responds to JSON PUT requests'
+    beforeEach
+      app.use(bodyParser.json())
+      app.put '/' @(req, res)
+        res.send {method = req.method, path = req.path, body = req.body}
 
-        app.put '/put' @(req, res)
-            res.header 'content-type' 'text/plain'
-            res.send 200 "putted #(req.body)"
+    it 'can make JSON PUT requests'
+      response = httpism.json.put (baseurl, { joke = 'a chicken...' })!
 
-        server := app.listen 12345
+      response.body.should.eql {method = 'PUT', path = '/', body = { joke = 'a chicken...' }}
 
-    after
-        server.close ()
+  context 'a server that returns headers on GET'
+    beforeEach
+      app.get '/' @(req, res)
+        res.send {joke = req.headers.joke}
 
-    describe 'get'
-        it 'can get a resource'
-            root = httpism.get! 'http://localhost:12345/'
-            root.url.should == 'http://localhost:12345/'
-            root.status code.should.equal 200
-            root.body.should.equal 'hi'
-            root.headers.'content-type'.should.equal 'text/plain'
+    it 'can make a new client that adds headers'
+      client = httpism.json.client @(request, next)
+        request.headers.joke = 'a chicken...'
+        next (request)!
 
-        it 'can get a relative resource'
-            root = httpism.get! 'http://localhost:12345/'
-            asdf = root.get! 'asdf'
-            asdf.url.should == 'http://localhost:12345/asdf'
-            asdf.status code.should.equal 200
-            asdf.body.should.equal 'asdf'
-            asdf.headers.'content-type'.should.equal 'text/plain'
+      response = client.get (baseurl)!
 
-        it 'follows redirects'
-            redirected = httpism.get! 'http://localhost:12345/redirect'
-            redirected.body.should.eql 'redirected root'
-            redirected.url.should.eql 'http://localhost:12345/root/'
-            asdf = redirected.get! 'asdf'
-            asdf.url.should.eql 'http://localhost:12345/root/asdf'
-            asdf.status code.should.equal 200
-            asdf.body.should.equal 'redirected asdf'
-            asdf.headers.'content-type'.should.equal 'text/plain'
+      response.body.should.eql {joke = 'a chicken...'}
 
-    describe 'post'
-        it 'can post a resource'
-            root = httpism.post! 'http://localhost:12345/post' { body = 'zomg' }
-            root.url.should == 'http://localhost:12345/'
-            root.status code.should.equal 201
-            root.body.should.equal 'posted zomg'
-            root.headers.'content-type'.should.equal 'text/plain'
+  describe 'responses act as clients'
+    context 'server with resources'
+      beforeEach
+        pathResponse (req, res) =
+          res.send {path = req.path}
+          
+        app.get '/' (pathResponse)
+        app.get '/rootfile' (pathResponse)
+        app.get '/path/' (pathResponse)
+        app.get '/path/file' (pathResponse)
 
-    describe 'put'
-        it 'can put a resource'
-            root = httpism.put! 'http://localhost:12345/put' { body = 'gosh' }
-            root.url.should == 'http://localhost:12345/'
-            root.status code.should.equal 200
-            root.body.should.equal 'putted gosh'
-            root.headers.'content-type'.should.equal 'text/plain'
+      it 'all subsequent requests are relative to original'
+        api = httpism.json.resource (baseurl)
+        path = api.get '/path/'!
 
-    describe 'resource'
-        it 'returns a resource without making a request'
-            resource = httpism.resource 'http://localhost:12345/nothinghere'
-            resource.url.should.equal 'http://localhost:12345/nothinghere'
-
-        it 'can be used to GET things with a path'
-            resource = httpism.resource 'http://localhost:12345/nothinghere'
-            resource.url.should.equal 'http://localhost:12345/nothinghere'
-            asdf = resource.get! 'asdf'
-            asdf.url.should.equal 'http://localhost:12345/asdf'
-            asdf.body.should.equal 'asdf'
-
-        it 'can be used to POST things with a path and other custom request options'
-            resource = httpism.resource 'http://localhost:12345/'
-            asdf = resource.post! 'post' { body = 'zomg' }
-            asdf.url.should.equal 'http://localhost:12345/post'
-            asdf.body.should.equal 'posted zomg'
-
-        it 'can be used to POST things without a path, but other custom request options'
-            resource = httpism.resource 'http://localhost:12345/post'
-            asdf = resource.post! { body = 'zomg' }
-            asdf.url.should.equal 'http://localhost:12345/post'
-            asdf.body.should.equal 'posted zomg'
-
-        it.only 'can be used to POST JSON'
-            resource = httpism.resource 'http://localhost:12345/json'
-            response = resource.post! "" { foo = 'bar' }
-            response.url.should.equal 'http://localhost:12345/json'
-            response.body.should.eql { posted = { foo = "bar" }}
-
-        it 'creates new resources'
-            resource = httpism.resource 'http://localhost:12345/'.resource 'nothinghere'
-            resource.url.should.equal 'http://localhost:12345/nothinghere'
-
-        it 'has a friendly inspect method'
-            resource = httpism.resource 'http://localhost:12345/asdf'
-            resource.inspect().should.equal "[Resource url=http://localhost:12345/asdf]"
-            resource.get!.inspect().should.equal "[Response url=http://localhost:12345/asdf, statusCode=200]"
+        path.body.path.should.equal '/path/'
+        path.get ''!.body.path.should.equal '/path/'
+        path.get 'file'!.body.path.should.equal '/path/file'
+        path.get '/'!.body.path.should.equal '/'
+        path.get '../rootfile'!.body.path.should.equal '/rootfile'

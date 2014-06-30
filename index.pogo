@@ -1,118 +1,117 @@
-request = require 'request'
-needle = require 'needle'
+http = require 'http'
 urlUtils = require 'url'
+_ = require 'underscore'
 
-sendUsingNeedle (options) =
-    if (typeof (options.follow) == 'undefined')
-        options.follow = true
+client (middlewares, ...) =
+  send =
+    sendToMiddleware (middlewares, index) =
+      middleware = middlewares.(index)
+      if (middleware)
+        @(request)
+          middleware (request, sendToMiddleware (middlewares, index + 1))
+      else
+        nil
 
-    console.log ('request options', options)
+    sendToMiddleware (middlewares, 0)
 
-    needle.request (options.method, options.url, options.body, options, ^)!
+  resource (response) =
+    resolveUrl (url) =
+      if (response.url)
+        urlUtils.resolve (response.url, url)
+      else
+        url
 
-Resource (agent, url, response, body) =
-    this.agent = agent || sendUsingNeedle
-    this.url = url
+    sendRequest (method, url, body) = 
+      resource (send {method = method, url = resolveUrl (url), body = body, headers = {}}!)
 
-    if (response)
-        this.body = body
-        this.statusCode = response.statusCode
-        this.headers = response.headers
+    res = {
+      client (newMiddlewares, ...) =
+        client (newMiddlewares.concat (middlewares), ...)
 
-    this
+      resource (url) =
+        resource {url = url}
+    }
 
-Resource.prototype = {
+    handle (method) =
+      res.(method) (url, body) = sendRequest (method.toUpperCase(), url, body)!
 
-    resource (url, middleware) =
-        resource = @new Resource (self.agent, self.relativeUrl (url))
-        resource.addMiddleware (middleware || [])
-        resource
+    handle 'get'
+    handle 'post'
+    handle 'put'
 
-    send (method, url, options) =
-      sendBody (method, url, nil, options)!
+    _.extend (res, response)
 
-    sendBody (method, url, body, options) =
-      console.log ('method', method)
-      console.log ('url', url)
-      console.log ('body', body)
-      console.log ('options', options)
-      if (typeof(url) == 'object')
-        options := url
-        url := self.url
+  resource {}
 
-      opts = options || {}
-      opts.method = method
-      opts.url = self.relativeUrl (url)
-      opts.body = body
-      response = self.agent (opts)!
-      @new Resource (
-        self.agent
-        urlUtils.resolve(opts.url, response.req.path)
-        response
-        response.body
-      )
+stream (s) toString =
+  promise @(result, error)
+    s.setEncoding 'utf-8'
 
-    relativeUrl (url) =
-        if (self.url && url)
-            urlUtils.resolve (self.url, url)
-        else if (self.url)
-            self.url
-        else
-            url
+    string = ''
 
-    addMiddleware (middleware) =
-        for each @(wrapper) in (middleware)
-            self.agent := wrapper (self.agent)
+    s.on 'data' @(d)
+      string := string + d
 
-        self
+    s.on 'end'
+      result (string)
 
-    withMiddleware (middleware, ...) =
-        self.resource(self.url, middleware)
+    s.on 'error' @(e)
+      error (e)
 
-    use (transform) =
-        self.withMiddleware @(agent)
-            send (options, cb) =
-                transform (agent, options, cb)
+jsonResponse (request, next) =
+  response = next (request)!
+  if (r/^\s*application\/json\s*($|;)/.test (response.headers.'content-type'))
+    response.body = JSON.parse(response.body)
+    response
+  else
+    response
 
-    withRequestTransform (transformer) =
-        self.use @(agent, options, cb)
-            transformer (options)
-            agent (options, cb)
+stringRequest (request, next)! =
+  if (request.body)
+    body = request.body
+    request.body = {
+      pipe (stream) =
+        stream.write(body)
+        stream.end()
+    }
 
-    withResponseTransform (transformer) =
-        self.use @(agent, options, cb)
-            agent (options) @(err, response, body)
-                transformer (err, response, body, cb)
+  next (request)!
 
-    withResponseBodyParser (contentType, parser) =
-        self.withResponseTransform @(err, response, body, cb)
-            if (@not err @and (response.headers.'content-type' == contentType))
-                cb (err, response, parser (body))
-            else
-                cb (err, response, body)
+stringResponse (request, next)! =
+  response = next (request)!
+  response.body = stream (response.body) toString!
+  response
 
-    withRequestBodyFormatter (formatter) =
-        self.withRequestTransform @(options)
-            if (typeof(options.body) != 'undefined')
-                options.body = formatter (options.body)
+jsonRequest (request, next)! =
+  if (request.body)
+    request.body = JSON.stringify (request.body)
+    request.headers.'content-type' = 'application/json'
 
-    inspect () =
-        if (self.statusCode)
-            "[Response url=#(self.url), statusCode=#(self.statusCode)]"
-        else
-            "[Resource url=#(self.url)]"
-}
+  next (request)!
 
-for each @(m) in ['get', 'delete', 'head']
-    @(m) @{
-      Resource.prototype.(m) (args, ...) =
-        self.send! (method, args, ...)
-    }(m)
+nodeSend (request) =
+  promise @(result, error)
+    url = urlUtils.parse(request.url)
+    req = http.request {
+      hostname = url.hostname
+      port = url.port
+      method = request.method
+      path = url.path
+      headers = request.headers
+    } @(res)
+      result {
+        statusCode = res.statusCode
+        url = request.url
+        headers = res.headers
+        body = res
+      }
 
-for each @(method) in ['post', 'put', 'patch', 'options']
-    @(method) @{
-      Resource.prototype.(method) (args, ...) =
-        self.sendBody! (method, args, ...)
-    }(method)
+    req.on 'error' @(e)
+      error (e)
 
-module.exports = @new Resource()
+    if (request.body)
+      request.body.pipe (req)
+    else
+      req.end()
+
+exports.json = client (jsonRequest, jsonResponse, stringRequest, stringResponse, nodeSend)
