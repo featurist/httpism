@@ -2,13 +2,13 @@ request = require 'request'
 needle = require 'needle'
 urlUtils = require 'url'
 
-sendUsingNeedle (options, callback) =
-    if (typeof (options.follow) != 'undefined')
+sendUsingNeedle (options) =
+    if (typeof (options.follow) == 'undefined')
         options.follow = true
 
-    console.log (options)
+    console.log ('request options', options)
 
-    needle.request (options.method, options.url, options.body, options, callback)
+    needle.request (options.method, options.url, options.body, options, ^)!
 
 Resource (agent, url, response, body) =
     this.agent = agent || sendUsingNeedle
@@ -28,20 +28,29 @@ Resource.prototype = {
         resource.addMiddleware (middleware || [])
         resource
 
-    send (method, url, options, callback) =
-        if (typeof(url) == 'object')
-            options := url
-            url := self.url
+    send (method, url, options) =
+      sendBody (method, url, nil, options)!
 
-        opts = options || {}
-        opts.method = method
-        opts.url = self.relativeUrl (url)
-        self.agent (opts) @(err, response, body)
-            console.log (response.url)
-            if (err)
-                callback (err)
-            else
-                callback (nil, @new Resource(self.agent, opts.url, response, body))
+    sendBody (method, url, body, options) =
+      console.log ('method', method)
+      console.log ('url', url)
+      console.log ('body', body)
+      console.log ('options', options)
+      if (typeof(url) == 'object')
+        options := url
+        url := self.url
+
+      opts = options || {}
+      opts.method = method
+      opts.url = self.relativeUrl (url)
+      opts.body = body
+      response = self.agent (opts)!
+      @new Resource (
+        self.agent
+        urlUtils.resolve(opts.url, response.req.path)
+        response
+        response.body
+      )
 
     relativeUrl (url) =
         if (self.url && url)
@@ -77,7 +86,7 @@ Resource.prototype = {
 
     withResponseBodyParser (contentType, parser) =
         self.withResponseTransform @(err, response, body, cb)
-            if (!err @and (response.headers.'content-type' == contentType))
+            if (@not err @and (response.headers.'content-type' == contentType))
                 cb (err, response, parser (body))
             else
                 cb (err, response, body)
@@ -92,13 +101,18 @@ Resource.prototype = {
             "[Response url=#(self.url), statusCode=#(self.statusCode)]"
         else
             "[Resource url=#(self.url)]"
-
 }
 
-sender (method) =
-    send! (url, options) = this.send! (method, url, options)
+for each @(m) in ['get', 'delete', 'head']
+    @(m) @{
+      Resource.prototype.(m) (args, ...) =
+        self.send! (method, args, ...)
+    }(m)
 
-for each @(method) in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']
-    Resource.prototype.(method) = sender (method)
+for each @(method) in ['post', 'put', 'patch', 'options']
+    @(method) @{
+      Resource.prototype.(method) (args, ...) =
+        self.sendBody! (method, args, ...)
+    }(method)
 
 module.exports = @new Resource()

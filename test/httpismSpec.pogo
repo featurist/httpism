@@ -70,6 +70,7 @@ describe 'httpism'
 
         it 'follows redirects'
             redirected = httpism.get! 'http://localhost:12345/redirect'
+            redirected.body.should.eql 'redirected root'
             redirected.url.should.eql 'http://localhost:12345/root/'
             asdf = redirected.get! 'asdf'
             asdf.url.should.eql 'http://localhost:12345/root/asdf'
@@ -117,9 +118,9 @@ describe 'httpism'
             asdf.url.should.equal 'http://localhost:12345/post'
             asdf.body.should.equal 'posted zomg'
 
-        it 'can be used to POST JSON'
+        it.only 'can be used to POST JSON'
             resource = httpism.resource 'http://localhost:12345/json'
-            response = resource.post! { body = { foo = 'bar' } }
+            response = resource.post! "" { foo = 'bar' }
             response.url.should.equal 'http://localhost:12345/json'
             response.body.should.eql { posted = { foo = "bar" }}
 
