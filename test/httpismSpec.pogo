@@ -2,6 +2,7 @@ httpism = require '../index.pogo'
 express = require 'express'
 bodyParser = require 'body-parser'
 require 'chai'.should()
+assert = require 'chai'.assert
 
 describe 'httpism'
   server = nil
@@ -11,6 +12,7 @@ describe 'httpism'
 
   beforeEach
     app := express()
+    app.use(bodyParser.json())
     server := app.listen (port)
 
   afterEach
@@ -28,7 +30,6 @@ describe 'httpism'
 
   context 'a server that responds to JSON POST requests'
     beforeEach
-      app.use(bodyParser.json())
       app.post '/' @(req, res)
         res.send {method = req.method, path = req.path, body = req.body}
 
@@ -62,12 +63,47 @@ describe 'httpism'
 
       response.body.should.eql {joke = 'a chicken...'}
 
+  describe 'exceptions'
+    beforeEach
+      app.get '/400' @(req, res)
+        res.send 400 {message = 'oh dear'}
+
+    it 'throws exceptions on 400-500 status codes, by default'
+      try
+        httpism.json.resource (baseurl).get '/400'!
+        assert.fail 'expected an exception to be thrown'
+      catch (e)
+        e.statusCode.should.equal 400
+        e.body.message.should.equal 'oh dear'
+
+    it "doesn't throw exceptions on 400-500 status codes, when specified"
+      response = httpism.json.resource (baseurl).get ('/400', exceptions: false)!
+      response.body.message.should.equal 'oh dear'
+
+  describe 'options'
+    client = nil
+    beforeEach
+      client := httpism.json.client @(request, next)
+        request.body = request.options
+        next (request)!
+      (a: 'a')
+
+      app.post '/' @(req, res)
+        res.send (req.body)
+
+    it 'clients have options, which can be overwritten on each request'
+      root = client.resource (baseurl)
+      response = root.post '' (nil, b: 'b')!
+      response.body.should.eql {a = 'a', b = 'b'}
+      response.post '' (nil, c: 'c')!.body.should.eql {a = 'a', c = 'c'}
+      root.post '' (nil)!.body.should.eql {a = 'a'}
+
   describe 'responses act as clients'
     context 'server with resources'
       beforeEach
         pathResponse (req, res) =
           res.send {path = req.path}
-          
+
         app.get '/' (pathResponse)
         app.get '/rootfile' (pathResponse)
         app.get '/path/' (pathResponse)
@@ -82,3 +118,5 @@ describe 'httpism'
         path.get 'file'!.body.path.should.equal '/path/file'
         path.get '/'!.body.path.should.equal '/'
         path.get '../rootfile'!.body.path.should.equal '/rootfile'
+
+        path.resource 'file'.get ''!.body.path.should.equal '/path/file'

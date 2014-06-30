@@ -2,7 +2,48 @@ http = require 'http'
 urlUtils = require 'url'
 _ = require 'underscore'
 
-client (middlewares, ...) =
+coerceArray (i) =
+  if (i :: Array)
+    i
+  else
+    [i]
+
+merge (x) into (y) =
+  if (x :: Object)
+    r = {}
+
+    for each @(ykey) in (Object.keys(y))
+      r.(ykey) = y.(ykey)
+
+    for each @(xkey) in (Object.keys(x))
+      r.(xkey) = x.(xkey)
+  
+    r
+  else
+    y
+
+parseClientArguments (middlewares, options) =
+  if ((middlewares :: Array) @or (middlewares :: Function))
+    {
+      middlewares = coerceArray (middlewares)
+      options = options @or {}
+    }
+  else if (middlewares :: Object)
+    {
+      middlewares = []
+      options = middlewares
+    }
+  else
+    {
+      middlewares = []
+      options = {}
+    }
+
+client (middlewares, clientOptions) =
+  args = parseClientArguments (middlewares, clientOptions)
+  middlewares := args.middlewares
+  clientOptions := args.options
+
   send =
     sendToMiddleware (middlewares, index) =
       middleware = middlewares.(index)
@@ -21,27 +62,40 @@ client (middlewares, ...) =
       else
         url
 
-    sendRequest (method, url, body) = 
-      resource (send {method = method, url = resolveUrl (url), body = body, headers = {}}!)
+    sendRequest (method, url, body, options) =
+      options := merge (options) into (clientOptions)
+      response = send {
+        method = method
+        url = resolveUrl (url)
+        body = body
+        headers = {}
+        options = options
+      }!
+
+      resource (response)
 
     res = {
-      client (newMiddlewares, ...) =
-        client (newMiddlewares.concat (middlewares), ...)
+      client (newMiddlewares, options) =
+        args = parseClientArguments (newMiddlewares, options)
+        client (coerceArray (args.middlewares).concat (middlewares), merge (args.options) into (clientOptions))
 
       resource (url) =
-        resource {url = url}
+        resource {url = resolveUrl (url)}
     }
 
-    handle (method) =
-      res.(method) (url, body) = sendRequest (method.toUpperCase(), url, body)!
+    sends (method) =
+      res.(method) (url, options) = sendRequest (method.toUpperCase(), url, nil, options)!
 
-    handle 'get'
-    handle 'post'
-    handle 'put'
+    sends (method) withBody =
+      res.(method) (url, body, options) = sendRequest (method.toUpperCase(), url, body, options)!
+
+    sends 'get'
+    sends 'post' withBody
+    sends 'put' withBody
 
     _.extend (res, response)
 
-  resource {}
+  resource ({}, {})
 
 stream (s) toString =
   promise @(result, error)
@@ -89,6 +143,14 @@ jsonRequest (request, next)! =
 
   next (request)!
 
+exceptionResponse (request, next)! =
+  response = next (request)!
+  if (response.statusCode >= 400 @and request.options.exceptions != false)
+    error = _.extend (@new Error ("#(request.method) #(request.url) => #(response.statusCode) #(http.STATUS_CODES.(response.statusCode))"), response)
+    @throw error
+  else
+    response
+
 nodeSend (request) =
   promise @(result, error)
     url = urlUtils.parse(request.url)
@@ -114,4 +176,15 @@ nodeSend (request) =
     else
       req.end()
 
-exports.json = client (jsonRequest, jsonResponse, stringRequest, stringResponse, nodeSend)
+logger (request, next) =
+  if (request.options.log)
+    console.log (request)
+
+  response = next (request)!
+
+  if (request.options.log)
+    console.log (response)
+
+  response
+
+exports.json = client [exceptionResponse, jsonRequest, jsonResponse, stringRequest, stringResponse, logger, nodeSend]
