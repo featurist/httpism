@@ -244,19 +244,20 @@
         });
     };
     logger = function(request, next) {
-        var gen15_asyncResult, response;
+        var log, gen15_asyncResult, response;
         return new Promise(function(gen6_onFulfilled) {
-            if (request.options.log) {
+            log = request.options.log;
+            if (log === true || log === "request") {
                 console.log(request);
             }
             gen6_onFulfilled(Promise.resolve(next(request)).then(function(gen15_asyncResult) {
                 response = gen15_asyncResult;
-                if (request.options.log) {
+                if (log === true || log === "response") {
                     console.log(response);
                 }
                 return response;
             }));
         });
     };
-    exports.json = client([ exceptionResponse, jsonRequest, jsonResponse, stringRequest, stringResponse, logger, nodeSend ]);
+    exports.json = client([ exceptionResponse, jsonRequest, jsonResponse, logger, stringRequest, stringResponse, nodeSend ]);
 }).call(this);

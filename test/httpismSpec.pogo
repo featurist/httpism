@@ -73,6 +73,7 @@ describe 'httpism'
         httpism.json.resource (baseurl).get '/400'!
         assert.fail 'expected an exception to be thrown'
       catch (e)
+        e.message.should.equal "GET #(baseurl)/400 => 400 Bad Request"
         e.statusCode.should.equal 400
         e.body.message.should.equal 'oh dear'
 

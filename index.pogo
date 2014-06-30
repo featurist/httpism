@@ -177,14 +177,15 @@ nodeSend (request) =
       req.end()
 
 logger (request, next) =
-  if (request.options.log)
+  log = request.options.log
+  if (log == true @or log == 'request')
     console.log (request)
 
   response = next (request)!
 
-  if (request.options.log)
+  if (log == true @or log == 'response')
     console.log (response)
 
   response
 
-exports.json = client [exceptionResponse, jsonRequest, jsonResponse, stringRequest, stringResponse, logger, nodeSend]
+exports.json = client [exceptionResponse, jsonRequest, jsonResponse, logger, stringRequest, stringResponse, nodeSend]
