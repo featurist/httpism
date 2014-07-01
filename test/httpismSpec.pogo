@@ -63,7 +63,7 @@ describe 'httpism'
       response = httpism.get (baseurl, headers: {'x-header' = 'haha'})!
       response.body.'x-header'.should.equal 'haha'
 
-  describe 'text responses'
+  describe 'text'
     itReturnsAStringForContentType (mimeType) =
       it "returns a string if the content-type is #(mimeType)"
         app.get '/' @(req, res)
@@ -78,6 +78,16 @@ describe 'httpism'
     itReturnsAStringForContentType 'text/css'
     itReturnsAStringForContentType 'text/javascript'
     itReturnsAStringForContentType 'application/javascript'
+
+    it 'will upload a string as text/plain'
+      app.post '/text' @(req, res)
+        res.header 'x-content-type' (req.headers.'content-type')
+        res.header 'content-type' 'text/plain'
+        req.pipe(res)
+
+      response = httpism.post "#(baseurl)/text" 'content as string'!
+      response.headers.'x-content-type'.should.equal 'text/plain'
+      response.body.should.equal 'content as string'
 
   describe 'apis'
     it 'can make a new client that adds headers'

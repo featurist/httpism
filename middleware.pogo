@@ -132,6 +132,11 @@ exports.headers (request, next)! =
   next ()!
 
 exports.text (request, next)! =
+  if (request.body :: String)
+    request.body = exports.string (request.body) toStream
+    if (@not exports.(request) contentTypeIsText)
+      request.headers.'content-type' = 'text/plain'
+
   response = next()!
 
   if (exports.(response) contentTypeIsText @or exports.(response) contentTypeIs 'application/javascript')
