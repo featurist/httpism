@@ -1,11 +1,11 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, https, urlUtils, _, client, toArray, mergeInto, parseClientArguments, streamToString, consumeStream, responseContentTypeIs, responseContentTypeIsText, jsonResponse, stringToStream, jsonRequest, exceptionResponse, nodeRequest, nodeSend, logger, redirectResponse, headersRequest, textResponse;
-    http = require("http");
-    https = require("https");
+    var urlUtils, _, middleware, mergeInto, client, toArray, parseClientArguments;
     urlUtils = require("url");
     _ = require("underscore");
+    middleware = require("./middleware");
+    mergeInto = require("./mergeInto");
     client = function(clientUrl, clientOptions, middlewares) {
         var send, resource;
         send = function() {
@@ -111,71 +111,50 @@
             return [];
         }
     };
-    mergeInto = function(x, y) {
-        var r, gen6_items, gen7_i, ykey, gen8_items, gen9_i, xkey;
-        if (x && y) {
-            r = {};
-            gen6_items = Object.keys(y);
-            for (gen7_i = 0; gen7_i < gen6_items.length; ++gen7_i) {
-                ykey = gen6_items[gen7_i];
-                r[ykey] = y[ykey];
-            }
-            gen8_items = Object.keys(x);
-            for (gen9_i = 0; gen9_i < gen8_items.length; ++gen9_i) {
-                xkey = gen8_items[gen9_i];
-                r[xkey] = x[xkey];
-            }
-            return r;
-        } else if (y) {
-            return y;
-        } else {
-            return x;
-        }
-    };
     parseClientArguments = function() {
         var args = Array.prototype.slice.call(arguments, 0, arguments.length);
         var url, middlewares, options;
         url = function() {
-            var gen10_results, gen11_items, gen12_i, arg;
-            gen10_results = [];
-            gen11_items = args;
-            for (gen12_i = 0; gen12_i < gen11_items.length; ++gen12_i) {
-                arg = gen11_items[gen12_i];
+            var gen6_results, gen7_items, gen8_i, arg;
+            gen6_results = [];
+            gen7_items = args;
+            for (gen8_i = 0; gen8_i < gen7_items.length; ++gen8_i) {
+                arg = gen7_items[gen8_i];
                 (function(arg) {
                     if (typeof arg === "string") {
-                        return gen10_results.push(arg);
+                        return gen6_results.push(arg);
                     }
                 })(arg);
             }
-            return gen10_results;
+            return gen6_results;
         }()[0];
         middlewares = toArray(function() {
-            var gen13_results, gen14_items, gen15_i, arg;
-            gen13_results = [];
-            gen14_items = args;
-            for (gen15_i = 0; gen15_i < gen14_items.length; ++gen15_i) {
-                arg = gen14_items[gen15_i];
+            var gen9_results, gen10_items, gen11_i, arg;
+            gen9_results = [];
+            gen10_items = args;
+            for (gen11_i = 0; gen11_i < gen10_items.length; ++gen11_i) {
+                arg = gen10_items[gen11_i];
                 (function(arg) {
                     if (arg instanceof Array || arg instanceof Function) {
-                        return gen13_results.push(arg);
+                        return gen9_results.push(arg);
                     }
                 })(arg);
             }
-            return gen13_results;
+            return gen9_results;
         }()[0]);
         options = function() {
-            var gen16_results, gen17_items, gen18_i, arg;
-            gen16_results = [];
-            gen17_items = args;
-            for (gen18_i = 0; gen18_i < gen17_items.length; ++gen18_i) {
-                arg = gen17_items[gen18_i];
+            var gen12_results, gen13_items, gen14_i, arg;
+            gen12_results = [];
+            gen13_items = args;
+            for (gen14_i = 0; gen14_i < gen13_items.length; ++gen14_i) {
+                arg = gen13_items[gen14_i];
                 (function(arg) {
                     if (!(arg instanceof Array) && !(arg instanceof Function) && arg instanceof Object) {
-                        return gen16_results.push(arg);
+                        return gen12_results.push(arg);
                     }
                 })(arg);
             }
-            return gen16_results;
+            return gen12_results;
         }()[0] || {};
         return {
             middlewares: middlewares,
@@ -183,203 +162,6 @@
             url: url
         };
     };
-    streamToString = function(s) {
-        return new Promise(function(result, error) {
-            var strings;
-            s.setEncoding("utf-8");
-            strings = [];
-            s.on("data", function(d) {
-                return strings.push(d);
-            });
-            s.on("end", function() {
-                return result(strings.join(""));
-            });
-            return s.on("error", function(e) {
-                return error(e);
-            });
-        });
-    };
-    consumeStream = function(s) {
-        return new Promise(function(gen2_onFulfilled) {
-            gen2_onFulfilled(new Promise(function(result, error) {
-                s.on("end", function() {
-                    return result();
-                });
-                s.on("error", function(e) {
-                    return error(e);
-                });
-                return s.resume();
-            }));
-        });
-    };
-    responseContentTypeIs = function(response, expectedContentType) {
-        var re;
-        re = new RegExp("^\\s*" + expectedContentType + "\\s*($|;)");
-        return re.test(response.headers["content-type"]);
-    };
-    responseContentTypeIsText = function(response) {
-        return responseContentTypeIs(response, "text/.*");
-    };
-    jsonResponse = function(request, next) {
-        var gen19_asyncResult, response, gen20_asyncResult;
-        return new Promise(function(gen2_onFulfilled) {
-            gen2_onFulfilled(Promise.resolve(next()).then(function(gen19_asyncResult) {
-                response = gen19_asyncResult;
-                return Promise.resolve(function() {
-                    if (responseContentTypeIs(response, "application/json")) {
-                        return new Promise(function(gen2_onFulfilled) {
-                            gen2_onFulfilled(Promise.resolve(streamToString(response.body)).then(function(gen21_asyncResult) {
-                                response.body = JSON.parse(gen21_asyncResult);
-                                return response;
-                            }));
-                        });
-                    } else {
-                        return response;
-                    }
-                }());
-            }));
-        });
-    };
-    stringToStream = function(s) {
-        return {
-            pipe: function(stream) {
-                var self = this;
-                stream.write(s);
-                return stream.end();
-            }
-        };
-    };
-    jsonRequest = function(request, next) {
-        var gen22_asyncResult;
-        return new Promise(function(gen2_onFulfilled) {
-            if (request.body) {
-                request.body = stringToStream(JSON.stringify(request.body));
-                request.headers["content-type"] = "application/json";
-            }
-            request.headers.accept = "application/json";
-            gen2_onFulfilled(Promise.resolve(next()));
-        });
-    };
-    exceptionResponse = function(request, next) {
-        var gen23_asyncResult, response, error;
-        return new Promise(function(gen2_onFulfilled) {
-            gen2_onFulfilled(Promise.resolve(next()).then(function(gen23_asyncResult) {
-                response = gen23_asyncResult;
-                if (response.statusCode >= 400 && request.options.exceptions !== false) {
-                    error = _.extend(new Error(request.method + " " + request.url + " => " + response.statusCode + " " + http.STATUS_CODES[response.statusCode]), response);
-                    throw error;
-                } else {
-                    return response;
-                }
-            }));
-        });
-    };
-    nodeRequest = function(request, options, protocol, withResponse) {
-        if (protocol === "https:") {
-            return https.request(mergeInto(request, options.https), withResponse);
-        } else {
-            return http.request(mergeInto(request, options.http), withResponse);
-        }
-    };
-    nodeSend = function(request) {
-        return new Promise(function(result, error) {
-            var url, req;
-            url = urlUtils.parse(request.url);
-            req = nodeRequest({
-                hostname: url.hostname,
-                port: url.port,
-                method: request.method,
-                path: url.path,
-                headers: request.headers
-            }, request.options, url.protocol, function(res) {
-                return result({
-                    statusCode: res.statusCode,
-                    url: request.url,
-                    headers: res.headers,
-                    body: res
-                });
-            });
-            req.on("error", function(e) {
-                return error(e);
-            });
-            if (request.body) {
-                return request.body.pipe(req);
-            } else {
-                return req.end();
-            }
-        });
-    };
-    logger = function(request, next) {
-        var log, gen24_asyncResult, response;
-        return new Promise(function(gen2_onFulfilled) {
-            log = request.options.log;
-            if (log === true || log === "request") {
-                console.log(request);
-            }
-            gen2_onFulfilled(Promise.resolve(next()).then(function(gen24_asyncResult) {
-                response = gen24_asyncResult;
-                if (log === true || log === "response") {
-                    console.log(response);
-                }
-                return response;
-            }));
-        });
-    };
-    redirectResponse = function(request, next, api) {
-        var gen25_asyncResult, response, statusCode, location, gen26_asyncResult;
-        return new Promise(function(gen2_onFulfilled) {
-            gen2_onFulfilled(Promise.resolve(next()).then(function(gen25_asyncResult) {
-                response = gen25_asyncResult;
-                statusCode = response.statusCode;
-                location = response.headers.location;
-                return Promise.resolve(function() {
-                    if (request.options.redirect !== false && location && (statusCode === 300 || statusCode === 301 || statusCode === 302 || statusCode === 303 || statusCode === 307)) {
-                        return new Promise(function(gen2_onFulfilled) {
-                            gen2_onFulfilled(Promise.resolve(consumeStream(response.body)).then(function(gen27_asyncResult) {
-                                gen27_asyncResult;
-                                return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen28_asyncResult) {
-                                    redirectResponse = gen28_asyncResult;
-                                    throw {
-                                        redirectResponse: redirectResponse
-                                    };
-                                });
-                            }));
-                        });
-                    } else {
-                        return response;
-                    }
-                }());
-            }));
-        });
-    };
-    headersRequest = function(request, next) {
-        var gen29_asyncResult;
-        return new Promise(function(gen2_onFulfilled) {
-            if (request.options.headers) {
-                request.headers = mergeInto(request.options.headers, request.headers);
-            }
-            gen2_onFulfilled(Promise.resolve(next()));
-        });
-    };
-    textResponse = function(request, next) {
-        var gen30_asyncResult, response, gen31_asyncResult;
-        return new Promise(function(gen2_onFulfilled) {
-            gen2_onFulfilled(Promise.resolve(next()).then(function(gen30_asyncResult) {
-                response = gen30_asyncResult;
-                return Promise.resolve(function() {
-                    if (responseContentTypeIsText(response) || responseContentTypeIs(response, "application/javascript")) {
-                        return new Promise(function(gen2_onFulfilled) {
-                            gen2_onFulfilled(Promise.resolve(streamToString(response.body)).then(function(gen32_asyncResult) {
-                                response.body = gen32_asyncResult;
-                                return response;
-                            }));
-                        });
-                    } else {
-                        return response;
-                    }
-                }());
-            }));
-        });
-    };
-    module.exports = client(void 0, {}, [ exceptionResponse, logger, textResponse, jsonRequest, jsonResponse, redirectResponse, headersRequest, nodeSend ]);
+    module.exports = client(void 0, {}, [ middleware.headers, middleware.exception, middleware.logger, middleware.text, middleware.form, middleware.json, middleware.redirect, middleware.nodeSend ]);
+    module.exports.raw = client(void 0, {}, [ middleware.nodeSend ]);
 }).call(this);

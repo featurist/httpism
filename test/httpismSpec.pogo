@@ -5,6 +5,8 @@ should = require 'chai'.should()
 assert = require 'chai'.assert
 https = require 'https'
 fs = require 'fs'
+qs = require 'qs'
+middleware = require '../middleware'
 
 describe 'httpism'
   server = nil
@@ -238,3 +240,66 @@ describe 'httpism'
         res.send { protocol = req.protocol }
 
       httpism.get (httpsBaseurl, https: {rejectUnauthorized = false})!.body.protocol.should.equal 'https'
+
+  describe 'streams'
+    filename = "#(__dirname)/afile.txt"
+
+    beforeEach
+      fs.writeFile (filename, 'some content', ^)!
+
+      app.post '/file' @(req, res)
+        res.header 'content-type' 'text/plain'
+        req.unshift 'received: '
+        req.pipe(res)
+
+      app.get '/file' @(req, res)
+        stream = fs.createReadStream (filename)
+        res.header 'content-type' 'application/blah'
+        stream.pipe(res)
+
+    afterEach
+      fs.unlink (filename, ^)!
+
+    it 'can upload a stream'
+      stream = fs.createReadStream (filename)
+      response = httpism.post "#(baseurl)/file" (stream, headers: {'content-type' = 'application/blah'})!
+      response.body.should.equal 'received: some content'
+
+    it 'can download a stream'
+      response = httpism.get "#(baseurl)/file"!
+      response.headers.'content-type'.should.equal 'application/blah'
+      middleware.stream (response.body) toString!.should.equal 'some content'
+
+  describe 'forms'
+    it 'can upload application/x-www-form-urlencoded'
+      app.post '/form' @(req, res)
+        res.header 'content-type' 'text/plain'
+        res.header 'x-content-type' (req.headers.'content-type')
+        req.pipe(res)
+
+      response = httpism.post "#(baseurl)/form" {name = 'Betty Boo', address = 'one & two'} (form: true)!
+      response.body.should.equal 'name=Betty%20Boo&address=one%20%26%20two'
+      response.headers.'x-content-type'.should.equal 'application/x-www-form-urlencoded'
+
+    it 'can download application/x-www-form-urlencoded'
+      app.get '/form' @(req, res)
+        res.header 'content-type' 'application/x-www-form-urlencoded'
+        res.send (qs.stringify {name = 'Betty Boo', address = 'one & two'})
+
+      response = httpism.get "#(baseurl)/form"!
+      response.body.should.eql {name = 'Betty Boo', address = 'one & two'}
+      response.headers.'content-type'.should.equal 'application/x-www-form-urlencoded; charset=utf-8'
+
+  describe 'raw'
+    it 'can be used to create new middleware pipelines'
+      app.get "/" @(req, res)
+        res.send 400 {blah = 'blah'}
+
+      api = httpism.raw.api (baseurl) @(request, next)
+        response = next()!
+        response.body = middleware.stream (response.body) toString!
+        response
+
+      response = api.get (baseurl)!
+      response.statusCode.should.equal 400
+      JSON.parse (response.body).should.eql {blah = 'blah'}

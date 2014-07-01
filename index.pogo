@@ -1,7 +1,7 @@
-http = require 'http'
-https = require 'https'
 urlUtils = require 'url'
 _ = require 'underscore'
+middleware = require './middleware'
+mergeInto = require './mergeInto'
 
 client (clientUrl, clientOptions, middlewares) =
   send =
@@ -82,22 +82,6 @@ client (clientUrl, clientOptions, middlewares) =
   else
     []
 
-merge (x) into (y) =
-  if (x @and y)
-    r = {}
-
-    for each @(ykey) in (Object.keys(y))
-      r.(ykey) = y.(ykey)
-
-    for each @(xkey) in (Object.keys(x))
-      r.(xkey) = x.(xkey)
-
-    r
-  else if (y)
-    y
-  else
-    x
-
 parseClientArguments (args, ...) =
   url = [
     arg <- args
@@ -123,141 +107,19 @@ parseClientArguments (args, ...) =
     url = url
   }
 
-stream (s) toString =
-  promise @(result, error)
-    s.setEncoding 'utf-8'
+module.exports = client (
+  nil
+  {}
+  [
+    middleware.headers
+    middleware.exception
+    middleware.logger
+    middleware.text
+    middleware.form
+    middleware.json
+    middleware.redirect
+    middleware.nodeSend
+  ]
+)
 
-    strings = []
-
-    s.on 'data' @(d)
-      strings.push(d)
-
-    s.on 'end'
-      result (strings.join '')
-
-    s.on 'error' @(e)
-      error (e)
-
-consumeStream (s)! =
-  promise @(result, error)
-    s.on 'end'
-      result()
-
-    s.on 'error' @(e)
-      error (e)
-
-    s.resume()
-
-response (response) contentTypeIs (expectedContentType) =
-  re = @new RegExp "^\\s*#(expectedContentType)\\s*($|;)"
-  re.test (response.headers.'content-type')
-
-response (response) contentTypeIsText =
-  response (response) contentTypeIs 'text/.*'
-
-jsonResponse (request, next) =
-  response = next ()!
-  if (response (response) contentTypeIs 'application/json')
-    response.body = JSON.parse(stream (response.body) toString!)
-    response
-  else
-    response
-
-string (s) toStream =
-  {
-    pipe (stream) =
-      stream.write(s)
-      stream.end()
-  }
-
-jsonRequest (request, next)! =
-  if (request.body)
-    request.body = string (JSON.stringify (request.body)) toStream
-    request.headers.'content-type' = 'application/json'
-
-  request.headers.accept = 'application/json'
-
-  next ()!
-
-exceptionResponse (request, next)! =
-  response = next ()!
-  if (response.statusCode >= 400 @and request.options.exceptions != false)
-    error = _.extend (@new Error ("#(request.method) #(request.url) => #(response.statusCode) #(http.STATUS_CODES.(response.statusCode))"), response)
-    @throw error
-  else
-    response
-
-nodeRequest (request, options, protocol, withResponse) =
-  if (protocol == 'https:')
-    https.request (merge (request) into (options.https), withResponse)
-  else
-    http.request (merge (request) into (options.http), withResponse)
-
-nodeSend (request) =
-  promise @(result, error)
-    url = urlUtils.parse(request.url)
-
-    req = nodeRequest {
-      hostname = url.hostname
-      port = url.port
-      method = request.method
-      path = url.path
-      headers = request.headers
-    } (request.options, url.protocol) @(res)
-      result {
-        statusCode = res.statusCode
-        url = request.url
-        headers = res.headers
-        body = res
-      }
-
-    req.on 'error' @(e)
-      error (e)
-
-    if (request.body)
-      request.body.pipe (req)
-    else
-      req.end()
-
-logger (request, next) =
-  log = request.options.log
-  if (log == true @or log == 'request')
-    console.log (request)
-
-  response = next ()!
-
-  if (log == true @or log == 'response')
-    console.log (response)
-
-  response
-
-redirectResponse (request, next, api) =
-  response = next ()!
-
-  statusCode = response.statusCode
-  location = response.headers.location
-  if (request.options.redirect != false @and location @and (statusCode == 300 @or statusCode == 301 @or statusCode == 302 @or statusCode == 303 @or statusCode == 307))
-    consumeStream (response.body)!
-    redirectResponse = api.get (urlUtils.resolve(request.url, location), request.options)!
-    @throw {
-      redirectResponse = redirectResponse
-    }
-  else
-    response
-
-headersRequest (request, next)! =
-  if (request.options.headers)
-    request.headers = merge (request.options.headers) into (request.headers)
-
-  next ()!
-
-textResponse (request, next)! =
-  response = next()!
-
-  if (response (response) contentTypeIsText @or response (response) contentTypeIs 'application/javascript')
-    response.body = stream (response.body) toString!
-    response
-  else
-    response
-
-module.exports = client (nil, {}, [exceptionResponse, logger, textResponse, jsonRequest, jsonResponse, redirectResponse, headersRequest, nodeSend])
+module.exports.raw = client (nil, {}, [middleware.nodeSend])
