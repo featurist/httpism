@@ -3,6 +3,8 @@ express = require 'express'
 bodyParser = require 'body-parser'
 should = require 'chai'.should()
 assert = require 'chai'.assert
+https = require 'https'
+fs = require 'fs'
 
 describe 'httpism'
   server = nil
@@ -189,3 +191,26 @@ describe 'httpism'
       response.url.should.eql "#(baseurl)/redirect"
       response.headers.location.should.equal '/path/'
       response.statusCode.should.equal 302
+
+  describe 'https'
+    httpsServer = nil
+    httpsPort = 23456
+    httpsBaseurl = "https://localhost:#(httpsPort)/"
+
+    beforeEach
+      credentials = {
+        key = fs.readFileSync "#(__dirname)/server.key" 'utf-8'
+        cert = fs.readFileSync "#(__dirname)/server.crt" 'utf-8'
+      }
+
+      httpsServer := https.createServer (credentials, app)
+      httpsServer.listen (httpsPort)
+
+    afterEach
+      httpsServer.close()
+
+    it 'can make HTTPS requests' =>
+      app.get '/' @(req, res)
+        res.send { protocol = req.protocol }
+
+      httpism.json.get (httpsBaseurl, https: {rejectUnauthorized = false})!.body.protocol.should.equal 'https'

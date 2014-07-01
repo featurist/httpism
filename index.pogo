@@ -1,4 +1,5 @@
 http = require 'http'
+https = require 'https'
 urlUtils = require 'url'
 _ = require 'underscore'
 
@@ -82,7 +83,7 @@ client (clientUrl, clientOptions, middlewares) =
     []
 
 merge (x) into (y) =
-  if (x :: Object)
+  if (x @and y)
     r = {}
 
     for each @(ykey) in (Object.keys(y))
@@ -92,8 +93,10 @@ merge (x) into (y) =
       r.(xkey) = x.(xkey)
   
     r
-  else
+  else if (y)
     y
+  else
+    x
 
 parseClientArguments (args, ...) =
   url = [
@@ -184,16 +187,23 @@ exceptionResponse (request, next)! =
   else
     response
 
+nodeRequest (request, options, protocol, withResponse) =
+  if (protocol == 'https:')
+    https.request (merge (request) into (options.https), withResponse)
+  else
+    http.request (merge (request) into (options.http), withResponse)
+
 nodeSend (request) =
   promise @(result, error)
     url = urlUtils.parse(request.url)
-    req = http.request {
+
+    req = nodeRequest {
       hostname = url.hostname
       port = url.port
       method = request.method
       path = url.path
       headers = request.headers
-    } @(res)
+    } (request.options, url.protocol) @(res)
       result {
         statusCode = res.statusCode
         url = request.url

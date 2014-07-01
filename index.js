@@ -1,8 +1,9 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, urlUtils, _, client, toArray, mergeInto, parseClientArguments, streamToString, consumeStream, jsonResponse, stringRequest, stringResponse, jsonRequest, exceptionResponse, nodeSend, logger, redirectResponse;
+    var http, https, urlUtils, _, client, toArray, mergeInto, parseClientArguments, streamToString, consumeStream, jsonResponse, stringRequest, stringResponse, jsonRequest, exceptionResponse, nodeRequest, nodeSend, logger, redirectResponse;
     http = require("http");
+    https = require("https");
     urlUtils = require("url");
     _ = require("underscore");
     client = function(clientUrl, clientOptions, middlewares) {
@@ -112,7 +113,7 @@
     };
     mergeInto = function(x, y) {
         var r, gen6_items, gen7_i, ykey, gen8_items, gen9_i, xkey;
-        if (x instanceof Object) {
+        if (x && y) {
             r = {};
             gen6_items = Object.keys(y);
             for (gen7_i = 0; gen7_i < gen6_items.length; ++gen7_i) {
@@ -125,8 +126,10 @@
                 r[xkey] = x[xkey];
             }
             return r;
-        } else {
+        } else if (y) {
             return y;
+        } else {
+            return x;
         }
     };
     parseClientArguments = function() {
@@ -275,17 +278,24 @@
             }));
         });
     };
+    nodeRequest = function(request, options, protocol, withResponse) {
+        if (protocol === "https:") {
+            return https.request(mergeInto(request, options.https), withResponse);
+        } else {
+            return http.request(mergeInto(request, options.http), withResponse);
+        }
+    };
     nodeSend = function(request) {
         return new Promise(function(result, error) {
             var url, req;
             url = urlUtils.parse(request.url);
-            req = http.request({
+            req = nodeRequest({
                 hostname: url.hostname,
                 port: url.port,
                 method: request.method,
                 path: url.path,
                 headers: request.headers
-            }, function(res) {
+            }, request.options, url.protocol, function(res) {
                 return result({
                     statusCode: res.statusCode,
                     url: request.url,
