@@ -1,7 +1,7 @@
 httpism = require '../index.pogo'
 express = require 'express'
 bodyParser = require 'body-parser'
-require 'chai'.should()
+should = require 'chai'.should()
 assert = require 'chai'.assert
 
 describe 'httpism'
@@ -18,44 +18,45 @@ describe 'httpism'
   afterEach
     server.close()
 
-  context 'a server that responds with JSON to GET requests'
-    beforeEach
-      app.get '/' @(req, res)
+  itCanMake (method) requests =
+    it "can make #(method) requests"
+      app.(method.toLowerCase()) '/' @(req, res)
         res.send {method = req.method, path = req.path}
 
-    it 'can make GET requests'
-      response = httpism.json.get (baseurl)!
+      response = httpism.json.(method.toLowerCase()) (baseurl)!
+      response.body.should.eql {method = method, path = '/'}
 
-      response.body.should.eql {method = 'GET', path = '/'}
+  it "can make HEAD requests"
+    app.head '/' @(req, res)
+      res.header 'x-method' (req.method)
+      res.header 'x-path' (req.path)
+      res.end()
 
-  context 'a server that responds to JSON POST requests'
-    beforeEach
-      app.post '/' @(req, res)
+    response = httpism.json.head (baseurl)!
+    response.headers.'x-method'.should.equal 'HEAD'
+    response.headers.'x-path'.should.equal '/'
+
+  itCanMake (method) requestsWithBody =
+    it "can make #(method) requests"
+      app.(method.toLowerCase()) '/' @(req, res)
         res.send {method = req.method, path = req.path, body = req.body}
 
-    it 'can make JSON POST requests'
-      response = httpism.json.post (baseurl, { joke = 'a chicken...' })!
+      response = httpism.json.(method.toLowerCase()) (baseurl, { joke = 'a chicken...' })!
+      response.body.should.eql {method = method, path = '/', body = { joke = 'a chicken...' }}
 
-      response.body.should.eql {method = 'POST', path = '/', body = { joke = 'a chicken...' }}
+  itCanMake 'GET' requests
+  itCanMake 'DELETE' requests
+  itCanMake 'POST' requestsWithBody
+  itCanMake 'PUT' requestsWithBody
+  itCanMake 'PATCH' requestsWithBody
+  itCanMake 'OPTIONS' requestsWithBody
 
-  context 'a server that responds to JSON PUT requests'
-    beforeEach
-      app.use(bodyParser.json())
-      app.put '/' @(req, res)
-        res.send {method = req.method, path = req.path, body = req.body}
-
-    it 'can make JSON PUT requests'
-      response = httpism.json.put (baseurl, { joke = 'a chicken...' })!
-
-      response.body.should.eql {method = 'PUT', path = '/', body = { joke = 'a chicken...' }}
-
-  context 'a server that returns headers on GET'
-    beforeEach
+  describe 'apis'
+    it 'can make a new client that adds headers'
       app.get '/' @(req, res)
         res.send {joke = req.headers.joke}
 
-    it 'can make a new client that adds headers'
-      client = httpism.json.client @(request, next)
+      client = httpism.json.api @(request, next)
         request.headers.joke = 'a chicken...'
         next (request)!
 
@@ -70,7 +71,7 @@ describe 'httpism'
 
     it 'throws exceptions on 400-500 status codes, by default'
       try
-        httpism.json.resource (baseurl).get '/400'!
+        httpism.json.api (baseurl).get '/400'!
         assert.fail 'expected an exception to be thrown'
       catch (e)
         e.message.should.equal "GET #(baseurl)/400 => 400 Bad Request"
@@ -78,13 +79,13 @@ describe 'httpism'
         e.body.message.should.equal 'oh dear'
 
     it "doesn't throw exceptions on 400-500 status codes, when specified"
-      response = httpism.json.resource (baseurl).get ('/400', exceptions: false)!
+      response = httpism.json.api (baseurl).get ('/400', exceptions: false)!
       response.body.message.should.equal 'oh dear'
 
   describe 'options'
     client = nil
     beforeEach
-      client := httpism.json.client @(request, next)
+      client := httpism.json.api @(request, next)
         request.body = request.options
         next (request)!
       (a: 'a')
@@ -93,31 +94,98 @@ describe 'httpism'
         res.send (req.body)
 
     it 'clients have options, which can be overwritten on each request'
-      root = client.resource (baseurl)
+      root = client.api (baseurl)
       response = root.post '' (nil, b: 'b')!
       response.body.should.eql {a = 'a', b = 'b'}
       response.post '' (nil, c: 'c')!.body.should.eql {a = 'a', c = 'c'}
       root.post '' (nil)!.body.should.eql {a = 'a'}
 
   describe 'responses act as clients'
-    context 'server with resources'
-      beforeEach
-        pathResponse (req, res) =
-          res.send {path = req.path}
+    path = nil
 
-        app.get '/' (pathResponse)
-        app.get '/rootfile' (pathResponse)
-        app.get '/path/' (pathResponse)
-        app.get '/path/file' (pathResponse)
+    beforeEach
+      pathResponse (req, res) =
+        res.send {path = req.path}
 
-      it 'all subsequent requests are relative to original'
-        api = httpism.json.resource (baseurl)
-        path = api.get '/path/'!
+      app.get '/' (pathResponse)
+      app.get '/rootfile' (pathResponse)
+      app.get '/path/' (pathResponse)
+      app.get '/path/file' (pathResponse)
 
-        path.body.path.should.equal '/path/'
-        path.get ''!.body.path.should.equal '/path/'
-        path.get 'file'!.body.path.should.equal '/path/file'
-        path.get '/'!.body.path.should.equal '/'
-        path.get '../rootfile'!.body.path.should.equal '/rootfile'
+      api = httpism.json.api (baseurl)
+      path := api.get '/path/'!
 
-        path.resource 'file'.get ''!.body.path.should.equal '/path/file'
+    it 'resources respond with their url'
+      path.url.should.equal "#(baseurl)/path/"
+      path.body.path.should.equal '/path/'
+
+    it "addresses original resource if url is ''"
+      path.get ''!.body.path.should.equal '/path/'
+
+    it 'makes relative sub path'
+      path.get 'file'!.body.path.should.equal '/path/file'
+
+    it 'addresses root'
+      path.get '/'!.body.path.should.equal '/'
+
+    it 'can address ../ paths'
+      path.get '../rootfile'!.body.path.should.equal '/rootfile'
+
+    it 'can create new apis from relative paths'
+      path.api 'file'.get ''!.body.path.should.equal '/path/file'
+
+  describe 'redirects'
+    beforeEach
+      app.get '/redirecttoredirect' @(req, res)
+        res.redirect '/redirect'
+
+      app.get '/redirect' @(req, res)
+        res.location '/path/'
+        res.send(302, {path = req.path})
+
+      app.get '/' @(req, res)
+        res.send {path = req.path}
+
+      app.get '/path/' @(req, res)
+        res.send {path = req.path}
+
+      app.get '/path/file' @(req, res)
+        res.send {path = req.path}
+
+    it 'follows redirects by default'
+      response = httpism.json.get "#(baseurl)/redirect"!
+      response.body.should.eql {path = '/path/'}
+      response.url.should.eql "#(baseurl)/path/"
+
+    itFollows (statusCode) redirects =
+      it "follows #(statusCode) redirects"
+        app.get "/#(statusCode)" @(req, res)
+          res.location '/path/'
+          res.send(statusCode)
+
+        response = httpism.json.get "#(baseurl)/#(statusCode)"!
+        response.body.should.eql {path = '/path/'}
+        response.url.should.eql "#(baseurl)/path/"
+
+    describe 'redirects'
+      itFollows 300 redirects
+      itFollows 301 redirects
+      itFollows 302 redirects
+      itFollows 303 redirects
+      itFollows 307 redirects
+
+    it 'paths are relative to destination resource'
+      response = httpism.json.get "#(baseurl)/redirect"!
+      response.get 'file'!.body.path.should.equal '/path/file'
+
+    it 'follows a more than one redirect'
+      response = httpism.json.get "#(baseurl)/redirecttoredirect"!
+      response.body.should.eql {path = '/path/'}
+      response.url.should.eql "#(baseurl)/path/"
+
+    it "doesn't follow redirects when specified"
+      response = httpism.json.get "#(baseurl)/redirect" (redirect: false)!
+      response.body.should.eql {path = '/redirect'}
+      response.url.should.eql "#(baseurl)/redirect"
+      response.headers.location.should.equal '/path/'
+      response.statusCode.should.equal 302

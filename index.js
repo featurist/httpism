@@ -1,67 +1,22 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, urlUtils, _, coerceArray, mergeInto, parseClientArguments, client, streamToString, jsonResponse, stringRequest, stringResponse, jsonRequest, exceptionResponse, nodeSend, logger;
+    var http, urlUtils, _, client, toArray, mergeInto, parseClientArguments, streamToString, consumeStream, jsonResponse, stringRequest, stringResponse, jsonRequest, exceptionResponse, nodeSend, logger, redirectResponse;
     http = require("http");
     urlUtils = require("url");
     _ = require("underscore");
-    coerceArray = function(i) {
-        if (i instanceof Array) {
-            return i;
-        } else {
-            return [ i ];
-        }
-    };
-    mergeInto = function(x, y) {
-        var r, gen1_items, gen2_i, ykey, gen3_items, gen4_i, xkey;
-        if (x instanceof Object) {
-            r = {};
-            gen1_items = Object.keys(y);
-            for (gen2_i = 0; gen2_i < gen1_items.length; ++gen2_i) {
-                ykey = gen1_items[gen2_i];
-                r[ykey] = y[ykey];
-            }
-            gen3_items = Object.keys(x);
-            for (gen4_i = 0; gen4_i < gen3_items.length; ++gen4_i) {
-                xkey = gen3_items[gen4_i];
-                r[xkey] = x[xkey];
-            }
-            return r;
-        } else {
-            return y;
-        }
-    };
-    parseClientArguments = function(middlewares, options) {
-        if (middlewares instanceof Array || middlewares instanceof Function) {
-            return {
-                middlewares: coerceArray(middlewares),
-                options: options || {}
-            };
-        } else if (middlewares instanceof Object) {
-            return {
-                middlewares: [],
-                options: middlewares
-            };
-        } else {
-            return {
-                middlewares: [],
-                options: {}
-            };
-        }
-    };
-    client = function(middlewares, clientOptions) {
-        var args, send, resource;
-        args = parseClientArguments(middlewares, clientOptions);
-        middlewares = args.middlewares;
-        clientOptions = args.options;
+    client = function(clientUrl, clientOptions, middlewares) {
+        var send, resource;
         send = function() {
             var sendToMiddleware;
             sendToMiddleware = function(middlewares, index) {
                 var middleware;
                 middleware = middlewares[index];
                 if (middleware) {
-                    return function(request) {
-                        return middleware(request, sendToMiddleware(middlewares, index + 1));
+                    return function(request, api) {
+                        return middleware(request, function() {
+                            return sendToMiddleware(middlewares, index + 1)(request, api);
+                        }, api);
                     };
                 } else {
                     return void 0;
@@ -74,86 +29,191 @@
             resolveUrl = function(url) {
                 if (response.url) {
                     return urlUtils.resolve(response.url, url);
+                } else if (clientUrl) {
+                    return urlUtils.resolve(clientUrl, url);
                 } else {
                     return url;
                 }
             };
-            sendRequest = function(method, url, body, options) {
-                var gen5_asyncResult, response;
-                return new Promise(function(gen6_onFulfilled) {
+            sendRequest = function(method, url, body, options, api) {
+                var gen1_asyncResult, response;
+                return new Promise(function(gen2_onFulfilled) {
                     options = mergeInto(options, clientOptions);
-                    gen6_onFulfilled(Promise.resolve(send({
-                        method: method,
-                        url: resolveUrl(url),
-                        body: body,
-                        headers: {},
-                        options: options
-                    })).then(function(gen5_asyncResult) {
-                        response = gen5_asyncResult;
+                    gen2_onFulfilled(Promise.resolve(function() {
+                        var gen3_asyncResult;
+                        return new Promise(function(gen2_onFulfilled) {
+                            gen2_onFulfilled(new Promise(function(gen2_onFulfilled) {
+                                gen2_onFulfilled(Promise.resolve(send({
+                                    method: method,
+                                    url: resolveUrl(url),
+                                    body: body,
+                                    headers: {},
+                                    options: options
+                                }, api)));
+                            }).then(void 0, function(e) {
+                                if (e.redirectResponse) {
+                                    return e.redirectResponse;
+                                } else {
+                                    throw e;
+                                }
+                            }));
+                        });
+                    }()).then(function(gen1_asyncResult) {
+                        response = gen1_asyncResult;
                         return resource(response);
                     }));
                 });
             };
             res = {
-                client: function(newMiddlewares, options) {
+                api: function(url, options, newMiddlewares) {
                     var self = this;
                     var args;
-                    args = parseClientArguments(newMiddlewares, options);
-                    return client(coerceArray(args.middlewares).concat(middlewares), mergeInto(args.options, clientOptions));
-                },
-                resource: function(url) {
-                    var self = this;
-                    return resource({
-                        url: resolveUrl(url)
-                    });
+                    args = parseClientArguments(url, options, newMiddlewares);
+                    return client(resolveUrl(args.url), mergeInto(args.options, clientOptions), toArray(args.middlewares).concat(middlewares));
                 }
             };
             sends = function(method) {
                 return res[method] = function(url, options) {
                     var self = this;
-                    var gen7_asyncResult;
-                    return new Promise(function(gen6_onFulfilled) {
-                        gen6_onFulfilled(Promise.resolve(sendRequest(method.toUpperCase(), url, void 0, options)));
+                    var gen4_asyncResult;
+                    return new Promise(function(gen2_onFulfilled) {
+                        gen2_onFulfilled(Promise.resolve(sendRequest(method.toUpperCase(), url, void 0, options, self)));
                     });
                 };
             };
             sendsWithBody = function(method) {
                 return res[method] = function(url, body, options) {
                     var self = this;
-                    var gen8_asyncResult;
-                    return new Promise(function(gen6_onFulfilled) {
-                        gen6_onFulfilled(Promise.resolve(sendRequest(method.toUpperCase(), url, body, options)));
+                    var gen5_asyncResult;
+                    return new Promise(function(gen2_onFulfilled) {
+                        gen2_onFulfilled(Promise.resolve(sendRequest(method.toUpperCase(), url, body, options, self)));
                     });
                 };
             };
             sends("get");
+            sends("delete");
+            sends("head");
             sendsWithBody("post");
             sendsWithBody("put");
+            sendsWithBody("patch");
+            sendsWithBody("options");
             return _.extend(res, response);
         };
-        return resource({}, {});
+        return resource({});
+    };
+    toArray = function(i) {
+        if (i instanceof Array) {
+            return i;
+        } else if (i !== void 0) {
+            return [ i ];
+        } else {
+            return [];
+        }
+    };
+    mergeInto = function(x, y) {
+        var r, gen6_items, gen7_i, ykey, gen8_items, gen9_i, xkey;
+        if (x instanceof Object) {
+            r = {};
+            gen6_items = Object.keys(y);
+            for (gen7_i = 0; gen7_i < gen6_items.length; ++gen7_i) {
+                ykey = gen6_items[gen7_i];
+                r[ykey] = y[ykey];
+            }
+            gen8_items = Object.keys(x);
+            for (gen9_i = 0; gen9_i < gen8_items.length; ++gen9_i) {
+                xkey = gen8_items[gen9_i];
+                r[xkey] = x[xkey];
+            }
+            return r;
+        } else {
+            return y;
+        }
+    };
+    parseClientArguments = function() {
+        var args = Array.prototype.slice.call(arguments, 0, arguments.length);
+        var url, middlewares, options;
+        url = function() {
+            var gen10_results, gen11_items, gen12_i, arg;
+            gen10_results = [];
+            gen11_items = args;
+            for (gen12_i = 0; gen12_i < gen11_items.length; ++gen12_i) {
+                arg = gen11_items[gen12_i];
+                (function(arg) {
+                    if (typeof arg === "string") {
+                        return gen10_results.push(arg);
+                    }
+                })(arg);
+            }
+            return gen10_results;
+        }()[0];
+        middlewares = toArray(function() {
+            var gen13_results, gen14_items, gen15_i, arg;
+            gen13_results = [];
+            gen14_items = args;
+            for (gen15_i = 0; gen15_i < gen14_items.length; ++gen15_i) {
+                arg = gen14_items[gen15_i];
+                (function(arg) {
+                    if (arg instanceof Array || arg instanceof Function) {
+                        return gen13_results.push(arg);
+                    }
+                })(arg);
+            }
+            return gen13_results;
+        }()[0]);
+        options = function() {
+            var gen16_results, gen17_items, gen18_i, arg;
+            gen16_results = [];
+            gen17_items = args;
+            for (gen18_i = 0; gen18_i < gen17_items.length; ++gen18_i) {
+                arg = gen17_items[gen18_i];
+                (function(arg) {
+                    if (!(arg instanceof Array) && !(arg instanceof Function) && arg instanceof Object) {
+                        return gen16_results.push(arg);
+                    }
+                })(arg);
+            }
+            return gen16_results;
+        }()[0] || {};
+        return {
+            middlewares: middlewares,
+            options: options,
+            url: url
+        };
     };
     streamToString = function(s) {
         return new Promise(function(result, error) {
-            var string;
+            var strings;
             s.setEncoding("utf-8");
-            string = "";
+            strings = [];
             s.on("data", function(d) {
-                return string = string + d;
+                return strings.push(d);
             });
             s.on("end", function() {
-                return result(string);
+                return result(strings.join(""));
             });
             return s.on("error", function(e) {
                 return error(e);
             });
         });
     };
+    consumeStream = function(s) {
+        return new Promise(function(gen2_onFulfilled) {
+            gen2_onFulfilled(new Promise(function(result, error) {
+                s.on("end", function() {
+                    return result();
+                });
+                s.on("error", function(e) {
+                    return error(e);
+                });
+                return s.resume();
+            }));
+        });
+    };
     jsonResponse = function(request, next) {
-        var gen9_asyncResult, response;
-        return new Promise(function(gen6_onFulfilled) {
-            gen6_onFulfilled(Promise.resolve(next(request)).then(function(gen9_asyncResult) {
-                response = gen9_asyncResult;
+        var gen19_asyncResult, response;
+        return new Promise(function(gen2_onFulfilled) {
+            gen2_onFulfilled(Promise.resolve(next()).then(function(gen19_asyncResult) {
+                response = gen19_asyncResult;
                 if (/^\s*application\/json\s*($|;)/.test(response.headers["content-type"])) {
                     response.body = JSON.parse(response.body);
                     return response;
@@ -164,8 +224,8 @@
         });
     };
     stringRequest = function(request, next) {
-        var body, gen10_asyncResult;
-        return new Promise(function(gen6_onFulfilled) {
+        var body, gen20_asyncResult;
+        return new Promise(function(gen2_onFulfilled) {
             if (request.body) {
                 body = request.body;
                 request.body = {
@@ -176,36 +236,36 @@
                     }
                 };
             }
-            gen6_onFulfilled(Promise.resolve(next(request)));
+            gen2_onFulfilled(Promise.resolve(next()));
         });
     };
     stringResponse = function(request, next) {
-        var gen11_asyncResult, response, gen12_asyncResult;
-        return new Promise(function(gen6_onFulfilled) {
-            gen6_onFulfilled(Promise.resolve(next(request)).then(function(gen11_asyncResult) {
-                response = gen11_asyncResult;
-                return Promise.resolve(streamToString(response.body)).then(function(gen12_asyncResult) {
-                    response.body = gen12_asyncResult;
+        var gen21_asyncResult, response, gen22_asyncResult;
+        return new Promise(function(gen2_onFulfilled) {
+            gen2_onFulfilled(Promise.resolve(next()).then(function(gen21_asyncResult) {
+                response = gen21_asyncResult;
+                return Promise.resolve(streamToString(response.body)).then(function(gen22_asyncResult) {
+                    response.body = gen22_asyncResult;
                     return response;
                 });
             }));
         });
     };
     jsonRequest = function(request, next) {
-        var gen13_asyncResult;
-        return new Promise(function(gen6_onFulfilled) {
+        var gen23_asyncResult;
+        return new Promise(function(gen2_onFulfilled) {
             if (request.body) {
                 request.body = JSON.stringify(request.body);
                 request.headers["content-type"] = "application/json";
             }
-            gen6_onFulfilled(Promise.resolve(next(request)));
+            gen2_onFulfilled(Promise.resolve(next()));
         });
     };
     exceptionResponse = function(request, next) {
-        var gen14_asyncResult, response, error;
-        return new Promise(function(gen6_onFulfilled) {
-            gen6_onFulfilled(Promise.resolve(next(request)).then(function(gen14_asyncResult) {
-                response = gen14_asyncResult;
+        var gen24_asyncResult, response, error;
+        return new Promise(function(gen2_onFulfilled) {
+            gen2_onFulfilled(Promise.resolve(next()).then(function(gen24_asyncResult) {
+                response = gen24_asyncResult;
                 if (response.statusCode >= 400 && request.options.exceptions !== false) {
                     error = _.extend(new Error(request.method + " " + request.url + " => " + response.statusCode + " " + http.STATUS_CODES[response.statusCode]), response);
                     throw error;
@@ -244,14 +304,14 @@
         });
     };
     logger = function(request, next) {
-        var log, gen15_asyncResult, response;
-        return new Promise(function(gen6_onFulfilled) {
+        var log, gen25_asyncResult, response;
+        return new Promise(function(gen2_onFulfilled) {
             log = request.options.log;
             if (log === true || log === "request") {
                 console.log(request);
             }
-            gen6_onFulfilled(Promise.resolve(next(request)).then(function(gen15_asyncResult) {
-                response = gen15_asyncResult;
+            gen2_onFulfilled(Promise.resolve(next()).then(function(gen25_asyncResult) {
+                response = gen25_asyncResult;
                 if (log === true || log === "response") {
                     console.log(response);
                 }
@@ -259,5 +319,32 @@
             }));
         });
     };
-    exports.json = client([ exceptionResponse, jsonRequest, jsonResponse, logger, stringRequest, stringResponse, nodeSend ]);
+    redirectResponse = function(request, next, api) {
+        var gen26_asyncResult, response, statusCode, location, gen27_asyncResult;
+        return new Promise(function(gen2_onFulfilled) {
+            gen2_onFulfilled(Promise.resolve(next()).then(function(gen26_asyncResult) {
+                response = gen26_asyncResult;
+                statusCode = response.statusCode;
+                location = response.headers.location;
+                return Promise.resolve(function() {
+                    if (request.options.redirect !== false && location && (statusCode === 300 || statusCode === 301 || statusCode === 302 || statusCode === 303 || statusCode === 307)) {
+                        return new Promise(function(gen2_onFulfilled) {
+                            gen2_onFulfilled(Promise.resolve(consumeStream(response.body)).then(function(gen28_asyncResult) {
+                                gen28_asyncResult;
+                                return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen29_asyncResult) {
+                                    redirectResponse = gen29_asyncResult;
+                                    throw {
+                                        redirectResponse: redirectResponse
+                                    };
+                                });
+                            }));
+                        });
+                    } else {
+                        return response;
+                    }
+                }());
+            }));
+        });
+    };
+    exports.json = client(void 0, {}, [ exceptionResponse, jsonRequest, jsonResponse, logger, stringRequest, stringResponse, redirectResponse, nodeSend ]);
 }).call(this);
