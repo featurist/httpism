@@ -1,7 +1,7 @@
 all: compile test
 
-compile: index.pogo
-	./node_modules/.bin/pogo -c index.pogo
+compile: *.pogo
+	./node_modules/.bin/pogo -c *.pogo
 
 test:
 	./node_modules/.bin/mocha test/*Spec.pogo
