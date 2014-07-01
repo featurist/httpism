@@ -25,7 +25,7 @@ describe 'httpism'
       app.(method.toLowerCase()) '/' @(req, res)
         res.send {method = req.method, path = req.path, accept = req.headers.accept}
 
-      response = httpism.json.(method.toLowerCase()) (baseurl)!
+      response = httpism.(method.toLowerCase()) (baseurl)!
       response.body.should.eql {method = method, path = '/', accept = 'application/json'}
 
   it "can make HEAD requests"
@@ -34,7 +34,7 @@ describe 'httpism'
       res.header 'x-path' (req.path)
       res.end()
 
-    response = httpism.json.head (baseurl)!
+    response = httpism.head (baseurl)!
     response.headers.'x-method'.should.equal 'HEAD'
     response.headers.'x-path'.should.equal '/'
 
@@ -43,7 +43,7 @@ describe 'httpism'
       app.(method.toLowerCase()) '/' @(req, res)
         res.send {method = req.method, path = req.path, accept = req.headers.accept, body = req.body}
 
-      response = httpism.json.(method.toLowerCase()) (baseurl, { joke = 'a chicken...' })!
+      response = httpism.(method.toLowerCase()) (baseurl, { joke = 'a chicken...' })!
       response.body.should.eql {method = method, path = '/', accept = 'application/json', body = { joke = 'a chicken...' }}
 
   itCanMake 'GET' requests
@@ -58,7 +58,7 @@ describe 'httpism'
       app.get '/' @(req, res)
         res.send {'x-header' = req.headers.'x-header'}
 
-      response = httpism.json.get (baseurl, headers: {'x-header' = 'haha'})!
+      response = httpism.get (baseurl, headers: {'x-header' = 'haha'})!
       response.body.'x-header'.should.equal 'haha'
 
   describe 'text responses'
@@ -68,7 +68,7 @@ describe 'httpism'
           res.header 'content-type' (mimeType)
           res.send 'content as string'
 
-        response = httpism.json.get (baseurl)!
+        response = httpism.get (baseurl)!
         response.body.should.equal 'content as string'
 
     itReturnsAStringForContentType 'text/plain'
@@ -82,7 +82,7 @@ describe 'httpism'
       app.get '/' @(req, res)
         res.send {joke = req.headers.joke}
 
-      client = httpism.json.api @(request, next)
+      client = httpism.api @(request, next)
         request.headers.joke = 'a chicken...'
         next (request)!
 
@@ -97,7 +97,7 @@ describe 'httpism'
 
     it 'throws exceptions on 400-500 status codes, by default'
       try
-        httpism.json.api (baseurl).get '/400'!
+        httpism.api (baseurl).get '/400'!
         assert.fail 'expected an exception to be thrown'
       catch (e)
         e.message.should.equal "GET #(baseurl)/400 => 400 Bad Request"
@@ -105,13 +105,13 @@ describe 'httpism'
         e.body.message.should.equal 'oh dear'
 
     it "doesn't throw exceptions on 400-500 status codes, when specified"
-      response = httpism.json.api (baseurl).get ('/400', exceptions: false)!
+      response = httpism.api (baseurl).get ('/400', exceptions: false)!
       response.body.message.should.equal 'oh dear'
 
   describe 'options'
     client = nil
     beforeEach
-      client := httpism.json.api @(request, next)
+      client := httpism.api @(request, next)
         request.body = request.options
         next (request)!
       (a: 'a')
@@ -138,7 +138,7 @@ describe 'httpism'
       app.get '/path/' (pathResponse)
       app.get '/path/file' (pathResponse)
 
-      api = httpism.json.api (baseurl)
+      api = httpism.api (baseurl)
       path := api.get '/path/'!
 
     it 'resources respond with their url'
@@ -179,7 +179,7 @@ describe 'httpism'
         res.send {path = req.path}
 
     it 'follows redirects by default'
-      response = httpism.json.get "#(baseurl)/redirect"!
+      response = httpism.get "#(baseurl)/redirect"!
       response.body.should.eql {path = '/path/'}
       response.url.should.eql "#(baseurl)/path/"
 
@@ -189,7 +189,7 @@ describe 'httpism'
           res.location '/path/'
           res.send(statusCode)
 
-        response = httpism.json.get "#(baseurl)/#(statusCode)"!
+        response = httpism.get "#(baseurl)/#(statusCode)"!
         response.body.should.eql {path = '/path/'}
         response.url.should.eql "#(baseurl)/path/"
 
@@ -201,16 +201,16 @@ describe 'httpism'
       itFollows 307 redirects
 
     it 'paths are relative to destination resource'
-      response = httpism.json.get "#(baseurl)/redirect"!
+      response = httpism.get "#(baseurl)/redirect"!
       response.get 'file'!.body.path.should.equal '/path/file'
 
     it 'follows a more than one redirect'
-      response = httpism.json.get "#(baseurl)/redirecttoredirect"!
+      response = httpism.get "#(baseurl)/redirecttoredirect"!
       response.body.should.eql {path = '/path/'}
       response.url.should.eql "#(baseurl)/path/"
 
     it "doesn't follow redirects when specified"
-      response = httpism.json.get "#(baseurl)/redirect" (redirect: false)!
+      response = httpism.get "#(baseurl)/redirect" (redirect: false)!
       response.body.should.eql {path = '/redirect'}
       response.url.should.eql "#(baseurl)/redirect"
       response.headers.location.should.equal '/path/'
@@ -237,4 +237,4 @@ describe 'httpism'
       app.get '/' @(req, res)
         res.send { protocol = req.protocol }
 
-      httpism.json.get (httpsBaseurl, https: {rejectUnauthorized = false})!.body.protocol.should.equal 'https'
+      httpism.get (httpsBaseurl, https: {rejectUnauthorized = false})!.body.protocol.should.equal 'https'

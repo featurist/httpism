@@ -381,5 +381,5 @@
             }));
         });
     };
-    exports.json = client(void 0, {}, [ exceptionResponse, textResponse, jsonRequest, jsonResponse, logger, redirectResponse, headersRequest, nodeSend ]);
+    module.exports = client(void 0, {}, [ exceptionResponse, logger, textResponse, jsonRequest, jsonResponse, redirectResponse, headersRequest, nodeSend ]);
 }).call(this);

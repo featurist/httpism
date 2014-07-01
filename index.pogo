@@ -91,7 +91,7 @@ merge (x) into (y) =
 
     for each @(xkey) in (Object.keys(x))
       r.(xkey) = x.(xkey)
-  
+
     r
   else if (y)
     y
@@ -104,7 +104,7 @@ parseClientArguments (args, ...) =
     arg :: String
     arg
   ].0
-  
+
   middlewares = ([
     arg <- args
     (arg :: Array) @or (arg :: Function)
@@ -260,4 +260,4 @@ textResponse (request, next)! =
   else
     response
 
-exports.json = client (nil, {}, [exceptionResponse, textResponse, jsonRequest, jsonResponse, logger, redirectResponse, headersRequest, nodeSend])
+module.exports = client (nil, {}, [exceptionResponse, logger, textResponse, jsonRequest, jsonResponse, redirectResponse, headersRequest, nodeSend])
