@@ -23,10 +23,10 @@ describe 'httpism'
   itCanMake (method) requests =
     it "can make #(method) requests"
       app.(method.toLowerCase()) '/' @(req, res)
-        res.send {method = req.method, path = req.path}
+        res.send {method = req.method, path = req.path, accept = req.headers.accept}
 
       response = httpism.json.(method.toLowerCase()) (baseurl)!
-      response.body.should.eql {method = method, path = '/'}
+      response.body.should.eql {method = method, path = '/', accept = 'application/json'}
 
   it "can make HEAD requests"
     app.head '/' @(req, res)
@@ -41,10 +41,10 @@ describe 'httpism'
   itCanMake (method) requestsWithBody =
     it "can make #(method) requests"
       app.(method.toLowerCase()) '/' @(req, res)
-        res.send {method = req.method, path = req.path, body = req.body}
+        res.send {method = req.method, path = req.path, accept = req.headers.accept, body = req.body}
 
       response = httpism.json.(method.toLowerCase()) (baseurl, { joke = 'a chicken...' })!
-      response.body.should.eql {method = method, path = '/', body = { joke = 'a chicken...' }}
+      response.body.should.eql {method = method, path = '/', accept = 'application/json', body = { joke = 'a chicken...' }}
 
   itCanMake 'GET' requests
   itCanMake 'DELETE' requests
@@ -52,6 +52,30 @@ describe 'httpism'
   itCanMake 'PUT' requestsWithBody
   itCanMake 'PATCH' requestsWithBody
   itCanMake 'OPTIONS' requestsWithBody
+
+  describe 'request headers'
+    it 'can accept new headers for the request'
+      app.get '/' @(req, res)
+        res.send {'x-header' = req.headers.'x-header'}
+
+      response = httpism.json.get (baseurl, headers: {'x-header' = 'haha'})!
+      response.body.'x-header'.should.equal 'haha'
+
+  describe 'text responses'
+    itReturnsAStringForContentType (mimeType) =
+      it "returns a string if the content-type is #(mimeType)"
+        app.get '/' @(req, res)
+          res.header 'content-type' (mimeType)
+          res.send 'content as string'
+
+        response = httpism.json.get (baseurl)!
+        response.body.should.equal 'content as string'
+
+    itReturnsAStringForContentType 'text/plain'
+    itReturnsAStringForContentType 'text/html'
+    itReturnsAStringForContentType 'text/css'
+    itReturnsAStringForContentType 'text/javascript'
+    itReturnsAStringForContentType 'application/javascript'
 
   describe 'apis'
     it 'can make a new client that adds headers'

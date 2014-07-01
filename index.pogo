@@ -148,34 +148,34 @@ consumeStream (s)! =
 
     s.resume()
 
+response (response) contentTypeIs (expectedContentType) =
+  re = @new RegExp "^\\s*#(expectedContentType)\\s*($|;)"
+  re.test (response.headers.'content-type')
+
+response (response) contentTypeIsText =
+  response (response) contentTypeIs 'text/.*'
+
 jsonResponse (request, next) =
   response = next ()!
-  if (r/^\s*application\/json\s*($|;)/.test (response.headers.'content-type'))
-    response.body = JSON.parse(response.body)
+  if (response (response) contentTypeIs 'application/json')
+    response.body = JSON.parse(stream (response.body) toString!)
     response
   else
     response
 
-stringRequest (request, next)! =
-  if (request.body)
-    body = request.body
-    request.body = {
-      pipe (stream) =
-        stream.write(body)
-        stream.end()
-    }
-
-  next ()!
-
-stringResponse (request, next)! =
-  response = next ()!
-  response.body = stream (response.body) toString!
-  response
+string (s) toStream =
+  {
+    pipe (stream) =
+      stream.write(s)
+      stream.end()
+  }
 
 jsonRequest (request, next)! =
   if (request.body)
-    request.body = JSON.stringify (request.body)
+    request.body = string (JSON.stringify (request.body)) toStream
     request.headers.'content-type' = 'application/json'
+
+  request.headers.accept = 'application/json'
 
   next ()!
 
@@ -245,4 +245,19 @@ redirectResponse (request, next, api) =
   else
     response
 
-exports.json = client (nil, {}, [exceptionResponse, jsonRequest, jsonResponse, logger, stringRequest, stringResponse, redirectResponse, nodeSend])
+headersRequest (request, next)! =
+  if (request.options.headers)
+    request.headers = merge (request.options.headers) into (request.headers)
+
+  next ()!
+
+textResponse (request, next)! =
+  response = next()!
+
+  if (response (response) contentTypeIsText @or response (response) contentTypeIs 'application/javascript')
+    response.body = stream (response.body) toString!
+    response
+  else
+    response
+
+exports.json = client (nil, {}, [exceptionResponse, textResponse, jsonRequest, jsonResponse, logger, redirectResponse, headersRequest, nodeSend])
