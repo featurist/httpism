@@ -173,6 +173,21 @@ Middleware commonly works like this:
 * `next` is a function that passes control onto the next middleware, it returns a promise of the response.
 * `httpism` is a **httpism api** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
 
+### Existing Middleware
+
+The following middleware are available in `var middleware = require('httpism/middleware')`:
+
+* `middleware.json` sends and receives JSON objects as `application/json`, also sets `Accept: application/json` on request.
+* `middleware.text` sends strings as `text/plain` and receives strings when `text/*` or `application/javascript`.
+* `middleware.exception` throws an exception when the response status code is 400-500.
+* `middleware.logger` logs requests and responses.
+* `middleware.redirect` follows redirects.
+* `middleware.headers` honours `options.headers`.
+* `middleware.form` when `options.form == true` sends and receives URL-encoded JS objects `application/x-www-form-urlencoded`.
+* `middleware.querystring` merges the URL-encoded `options.querystring` into the request URL.
+
+See [middleware.pogo](https://github.com/featurist/httpism/blob/master/middleware.pogo) for more info.
+
 # License
 
 BSD
