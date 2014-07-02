@@ -161,3 +161,14 @@ exports.form (request, next)! =
     response.body = qs.parse (exports.stream (response.body) toString!)
 
   response
+
+exports.querystring (request, next) =
+  if (request.options.querystring :: Object)
+    split = request.url.split '?'
+    path = split.0
+    querystring = qs.parse (split.1)
+    mergedQueryString = merge (request.options.querystring) into (querystring)
+
+    request.url = "#(path)?#(qs.stringify(mergedQueryString))"
+
+  next()!

@@ -128,6 +128,19 @@ describe 'httpism'
         response.headers.'received-content-type'.should.equal 'text/plain'
         response.body.should.equal 'content as string'
 
+    describe 'query strings'
+      beforeEach
+        app.get '/' @(req, res)
+          res.send(req.query)
+
+      it 'can set query string'
+        response = httpism.get (baseurl, querystring: {a = 'a', b = 'b'})!
+        response.body.should.eql {a = 'a', b = 'b'}
+
+      it 'can override query string in url'
+        response = httpism.get ("#(baseurl)/?a=a&c=c", querystring: {a = 'newa', b = 'b'})!
+        response.body.should.eql {a = 'newa', b = 'b', c = 'c'}
+
     describe 'apis'
       it 'can make a new client that adds headers'
         app.get '/' @(req, res)

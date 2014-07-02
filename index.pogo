@@ -117,6 +117,7 @@ module.exports = client (
     middleware.text
     middleware.form
     middleware.json
+    middleware.querystring
     middleware.redirect
     middleware.nodeSend
   ]

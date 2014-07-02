@@ -249,4 +249,18 @@
             }));
         });
     };
+    exports.querystring = function(request, next) {
+        var self = this;
+        var split, path, querystring, mergedQueryString, gen18_asyncResult;
+        return new Promise(function(gen1_onFulfilled) {
+            if (request.options.querystring instanceof Object) {
+                split = request.url.split("?");
+                path = split[0];
+                querystring = qs.parse(split[1]);
+                mergedQueryString = mergeInto(request.options.querystring, querystring);
+                request.url = path + "?" + qs.stringify(mergedQueryString);
+            }
+            gen1_onFulfilled(Promise.resolve(next()));
+        });
+    };
 }).call(this);
