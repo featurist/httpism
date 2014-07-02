@@ -37,12 +37,14 @@ exports.(response) contentTypeIs (expectedContentType) =
 exports.(response) contentTypeIsText =
   exports.(response) contentTypeIs 'text/.*'
 
-exports.json (request, next) =
-  if (request.body @and request.headers.'content-type' == nil @or exports.(request) contentTypeIs 'application/json')
-    request.body = exports.string (JSON.stringify (request.body)) toStream
-    request.headers.'content-type' = 'application/json'
+is (body) aStream = body != nil @and (body.pipe :: Function)
 
-  request.headers.accept = 'application/json'
+exports.json (request, next) =
+  if ((request.body :: Object) @and @not is (request.body) aStream)
+    request.body = exports.string (JSON.stringify (request.body)) toStream
+    set (request) header 'content-type' to 'application/json'
+
+  set (request) header 'accept' to 'application/json'
 
   response = next ()!
 
@@ -134,8 +136,7 @@ exports.headers (request, next)! =
 exports.text (request, next)! =
   if (request.body :: String)
     request.body = exports.string (request.body) toStream
-    if (@not exports.(request) contentTypeIsText)
-      request.headers.'content-type' = 'text/plain'
+    set (request) header 'content-type' to 'text/plain'
 
   response = next()!
 
@@ -145,10 +146,14 @@ exports.text (request, next)! =
   else
     response
 
+set (request) header (header) to (value) =
+  if (@not request.headers.(header))
+    request.headers.(header) = value
+
 exports.form (request, next)! =
-  if (request.options.form @or exports.(request) contentTypeIs 'application/x-www-form-urlencoded')
+  if (request.options.form @and (request.body :: Object) @and @not is (request.body) aStream)
     request.body = exports.string (qs.stringify(request.body)) toStream
-    request.headers.'content-type' = 'application/x-www-form-urlencoded'
+    set (request) header 'content-type' to 'application/x-www-form-urlencoded'
 
   response = next()!
 

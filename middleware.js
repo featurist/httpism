@@ -1,7 +1,7 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, https, urlUtils, _, mergeInto, qs, nodeRequest;
+    var http, https, urlUtils, _, mergeInto, qs, isAStream, nodeRequest, setHeaderTo;
     http = require("http");
     https = require("https");
     urlUtils = require("url");
@@ -49,15 +49,18 @@
         var self = this;
         return exports.contentTypeIs(response, "text/.*");
     };
+    isAStream = function(body) {
+        return body !== void 0 && body.pipe instanceof Function;
+    };
     exports.json = function(request, next) {
         var self = this;
         var gen2_asyncResult, response, gen3_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
-            if (request.body && request.headers["content-type"] === void 0 || exports.contentTypeIs(request, "application/json")) {
+            if (request.body instanceof Object && !isAStream(request.body)) {
                 request.body = exports.stringToStream(JSON.stringify(request.body));
-                request.headers["content-type"] = "application/json";
+                setHeaderTo(request, "content-type", "application/json");
             }
-            request.headers.accept = "application/json";
+            setHeaderTo(request, "accept", "application/json");
             gen1_onFulfilled(Promise.resolve(next()).then(function(gen2_asyncResult) {
                 response = gen2_asyncResult;
                 return Promise.resolve(function() {
@@ -197,9 +200,7 @@
         return new Promise(function(gen1_onFulfilled) {
             if (typeof request.body === "string") {
                 request.body = exports.stringToStream(request.body);
-                if (!exports.contentTypeIsText(request)) {
-                    request.headers["content-type"] = "text/plain";
-                }
+                setHeaderTo(request, "content-type", "text/plain");
             }
             gen1_onFulfilled(Promise.resolve(next()).then(function(gen12_asyncResult) {
                 response = gen12_asyncResult;
@@ -218,13 +219,18 @@
             }));
         });
     };
+    setHeaderTo = function(request, header, value) {
+        if (!request.headers[header]) {
+            return request.headers[header] = value;
+        }
+    };
     exports.form = function(request, next) {
         var self = this;
         var gen15_asyncResult, response, gen16_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
-            if (request.options.form || exports.contentTypeIs(request, "application/x-www-form-urlencoded")) {
+            if (request.options.form && request.body instanceof Object && !isAStream(request.body)) {
                 request.body = exports.stringToStream(qs.stringify(request.body));
-                request.headers["content-type"] = "application/x-www-form-urlencoded";
+                setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
             }
             gen1_onFulfilled(Promise.resolve(next()).then(function(gen15_asyncResult) {
                 response = gen15_asyncResult;

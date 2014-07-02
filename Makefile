@@ -10,4 +10,7 @@ examples: example.pogo example.js
 	./node_modules/.bin/pogo example.pogo
 	node example.js
 
+clean:
+	rm *.js
+
 .PHONY: test

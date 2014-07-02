@@ -1,6 +1,6 @@
 {
   "name": "httpism",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "HTTP client with middleware and good defaults",
   "main": "index.js",
   "dependencies": {
@@ -27,7 +27,8 @@
     "url": "https://github.com/featurist/httpism.git"
   },
   "keywords": [
-    "http"
+    "http",
+    "rest"
   ],
   "author": {
     "email": "timmacfarlane@gmail.com",
