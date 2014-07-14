@@ -80,6 +80,35 @@ describe 'httpism'
         response.body.should.eql 'a string'
         response.headers.'received-content-type'.should.eql 'application/custom'
 
+    describe 'content-length header'
+      unicodeText = '♫♫♫♫♪ ☺'
+
+      beforeEach
+        app.post '/' @(req, res)
+          res.send {
+            'content-length' = req.headers.'content-length'
+            'transfer-encoding' = req.headers.'transfer-encoding'
+          }
+
+
+      it 'sends content-length, and not transfer-encoding: chunked, with JSON'
+        response = httpism.post (baseurl) { json = unicodeText }!
+        response.body.should.eql {
+          'content-length' = Buffer.byteLength(JSON.stringify { json = unicodeText }).toString()
+        }
+
+      it 'sends content-length, and not transfer-encoding: chunked, with plain text'
+        response = httpism.post (baseurl, unicodeText)!
+        response.body.should.eql {
+          'content-length' = Buffer.byteLength(unicodeText).toString()
+        }
+
+      it 'sends content-length, and not transfer-encoding: chunked, with form data'
+        response = httpism.post (baseurl, { formData = unicodeText }, form: true)!
+        response.body.should.eql {
+          'content-length' = Buffer.byteLength(qs.stringify { formData = unicodeText }).toString()
+        }
+
     describe 'accept request header'
       beforeEach
         app.get '/' @(req, res)
@@ -359,6 +388,32 @@ describe 'httpism'
       response = httpism.get "#(baseurl)/file"!
       response.headers.'content-type'.should.equal 'application/blah'
       middleware.stream (response.body) toString!.should.equal 'some content'
+
+    describe 'forcing response parsing'
+      describeForcing (type) response (contentType: nil, content: nil, sendContent: nil) =
+        describe (type)
+          it "can download a stream of content-type #(contentType)"
+            app.get '/content' @(req, res)
+              stream = fs.createReadStream (filename)
+              res.header 'content-type' (contentType)
+              stream.pipe(res)
+
+            response = httpism.get "#(baseurl)/content" (responseBody: 'stream')!
+            response.headers.'content-type'.should.equal (contentType)
+            middleware.stream (response.body) toString!.should.equal 'some content'
+
+          it "can force parse #(type) when content-type is application/blah"
+            app.get '/content' @(req, res)
+              res.header 'content-type' 'application/blah'
+              res.send (sendContent @or content)
+
+            response = httpism.get "#(baseurl)/content" (responseBody: (type))!
+            response.headers.'content-type'.should.equal 'application/blah; charset=utf-8'
+            response.body.should.eql (content)
+
+      describeForcing 'text' response (contentType: 'text/plain; charset=utf-8', content: 'some text content')
+      describeForcing 'json' response (contentType: 'application/json', content: { json = true})
+      describeForcing 'form' response (contentType: 'application/x-www-form-urlencoded', content: { json = "true"}, sendContent: qs.stringify { json = "true" })
 
   describe 'raw'
     it 'can be used to create new middleware pipelines'

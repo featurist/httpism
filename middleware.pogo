@@ -30,31 +30,57 @@ exports.consumeStream (s)! =
 
     s.resume()
 
-exports.(response) contentTypeIs (expectedContentType) =
+exports.contentTypeIs = (response) contentTypeIs (expectedContentType) =
   re = @new RegExp "^\\s*#(expectedContentType)\\s*($|;)"
   re.test (response.headers.'content-type')
 
-exports.(response) contentTypeIsText =
+exports.contentTypeIsText = (response) contentTypeIsText =
   exports.(response) contentTypeIs 'text/.*'
 
 is (body) aStream = body != nil @and (body.pipe :: Function)
 
+shouldParse (response) as (type, contentType: nil, request: nil) =
+  if (request.options.responseBody)
+    type == request.options.responseBody
+  else
+    bodyType = responseBodyTypes.(type)
+
+    if (bodyType)
+      bodyType (response)
+
+responseBodyTypes = {
+  json (response) =
+    (response) contentTypeIs 'application/json'
+
+  text (response) =
+    (response) contentTypeIsText @or (response) contentTypeIs 'application/javascript'
+
+  form (response) =
+    (response) contentTypeIs 'application/x-www-form-urlencoded'
+
+  stream (response) = false
+}
+
 exports.json (request, next) =
   if ((request.body :: Object) @and @not is (request.body) aStream)
-    request.body = exports.string (JSON.stringify (request.body)) toStream
+    set (request) bodyToString (JSON.stringify (request.body))
     set (request) header 'content-type' to 'application/json'
 
   set (request) header 'accept' to 'application/json'
 
   response = next ()!
 
-  if (exports.(response) contentTypeIs 'application/json')
+  if (shouldParse (response) as 'json' (request: request))
     response.body = JSON.parse(exports.stream (response.body) toString!)
     response
   else
     response
 
-exports.string (s) toStream =
+set (r) bodyToString (s) =
+  r.body = string (s) toStream
+  r.headers.'content-length' = Buffer.byteLength(s, 'utf-8')
+
+exports.stringToStream = string (s) toStream =
   {
     pipe (stream) =
       stream.write(s)
@@ -135,12 +161,12 @@ exports.headers (request, next)! =
 
 exports.text (request, next)! =
   if (request.body :: String)
-    request.body = exports.string (request.body) toStream
+    set (request) bodyToString (request.body)
     set (request) header 'content-type' to 'text/plain'
 
   response = next()!
 
-  if (exports.(response) contentTypeIsText @or exports.(response) contentTypeIs 'application/javascript')
+  if (shouldParse (response) as 'text' (request: request))
     response.body = exports.stream (response.body) toString!
     response
   else
@@ -152,12 +178,12 @@ set (request) header (header) to (value) =
 
 exports.form (request, next)! =
   if (request.options.form @and (request.body :: Object) @and @not is (request.body) aStream)
-    request.body = exports.string (qs.stringify(request.body)) toStream
+    set (request) bodyToString (qs.stringify(request.body))
     set (request) header 'content-type' to 'application/x-www-form-urlencoded'
 
   response = next()!
 
-  if (exports.(response) contentTypeIs 'application/x-www-form-urlencoded')
+  if (shouldParse (response) as 'form' (request: request))
     response.body = qs.parse (exports.stream (response.body) toString!)
 
   response

@@ -1,7 +1,7 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, https, urlUtils, _, mergeInto, qs, isAStream, nodeRequest, setHeaderTo;
+    var http, https, urlUtils, _, mergeInto, qs, contentTypeIs, contentTypeIsText, isAStream, shouldParseAs, responseBodyTypes, setBodyToString, stringToStream, nodeRequest, setHeaderTo;
     http = require("http");
     https = require("https");
     urlUtils = require("url");
@@ -39,35 +39,67 @@
             }));
         });
     };
-    exports.contentTypeIs = function(response, expectedContentType) {
-        var self = this;
+    exports.contentTypeIs = contentTypeIs = function(response, expectedContentType) {
         var re;
         re = new RegExp("^\\s*" + expectedContentType + "\\s*($|;)");
         return re.test(response.headers["content-type"]);
     };
-    exports.contentTypeIsText = function(response) {
-        var self = this;
+    exports.contentTypeIsText = contentTypeIsText = function(response) {
         return exports.contentTypeIs(response, "text/.*");
     };
     isAStream = function(body) {
         return body !== void 0 && body.pipe instanceof Function;
     };
+    shouldParseAs = function(response, type, gen2_options) {
+        var contentType, request;
+        contentType = gen2_options !== void 0 && Object.prototype.hasOwnProperty.call(gen2_options, "contentType") && gen2_options.contentType !== void 0 ? gen2_options.contentType : void 0;
+        request = gen2_options !== void 0 && Object.prototype.hasOwnProperty.call(gen2_options, "request") && gen2_options.request !== void 0 ? gen2_options.request : void 0;
+        var bodyType;
+        if (request.options.responseBody) {
+            return type === request.options.responseBody;
+        } else {
+            bodyType = responseBodyTypes[type];
+            if (bodyType) {
+                return bodyType(response);
+            }
+        }
+    };
+    responseBodyTypes = {
+        json: function(response) {
+            var self = this;
+            return contentTypeIs(response, "application/json");
+        },
+        text: function(response) {
+            var self = this;
+            return contentTypeIsText(response) || contentTypeIs(response, "application/javascript");
+        },
+        form: function(response) {
+            var self = this;
+            return contentTypeIs(response, "application/x-www-form-urlencoded");
+        },
+        stream: function(response) {
+            var self = this;
+            return false;
+        }
+    };
     exports.json = function(request, next) {
         var self = this;
-        var gen2_asyncResult, response, gen3_asyncResult;
+        var gen3_asyncResult, response, gen4_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.body instanceof Object && !isAStream(request.body)) {
-                request.body = exports.stringToStream(JSON.stringify(request.body));
+                setBodyToString(request, JSON.stringify(request.body));
                 setHeaderTo(request, "content-type", "application/json");
             }
             setHeaderTo(request, "accept", "application/json");
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen2_asyncResult) {
-                response = gen2_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen3_asyncResult) {
+                response = gen3_asyncResult;
                 return Promise.resolve(function() {
-                    if (exports.contentTypeIs(response, "application/json")) {
+                    if (shouldParseAs(response, "json", {
+                        request: request
+                    })) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen4_asyncResult) {
-                                response.body = JSON.parse(gen4_asyncResult);
+                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen5_asyncResult) {
+                                response.body = JSON.parse(gen5_asyncResult);
                                 return response;
                             }));
                         });
@@ -78,8 +110,11 @@
             }));
         });
     };
-    exports.stringToStream = function(s) {
-        var self = this;
+    setBodyToString = function(r, s) {
+        r.body = stringToStream(s);
+        return r.headers["content-length"] = Buffer.byteLength(s, "utf-8");
+    };
+    exports.stringToStream = stringToStream = function(s) {
         return {
             pipe: function(stream) {
                 var self = this;
@@ -90,10 +125,10 @@
     };
     exports.exception = function(request, next) {
         var self = this;
-        var gen5_asyncResult, response, error;
+        var gen6_asyncResult, response, error;
         return new Promise(function(gen1_onFulfilled) {
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen5_asyncResult) {
-                response = gen5_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen6_asyncResult) {
+                response = gen6_asyncResult;
                 if (response.statusCode >= 400 && request.options.exceptions !== false) {
                     error = _.extend(new Error(request.method + " " + request.url + " => " + response.statusCode + " " + http.STATUS_CODES[response.statusCode]), response);
                     throw error;
@@ -141,14 +176,14 @@
     };
     exports.logger = function(request, next) {
         var self = this;
-        var log, gen6_asyncResult, response;
+        var log, gen7_asyncResult, response;
         return new Promise(function(gen1_onFulfilled) {
             log = request.options.log;
             if (log === true || log === "request") {
                 console.log(request);
             }
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen6_asyncResult) {
-                response = gen6_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen7_asyncResult) {
+                response = gen7_asyncResult;
                 if (log === true || log === "response") {
                     console.log(response);
                 }
@@ -158,19 +193,19 @@
     };
     exports.redirect = function(request, next, api) {
         var self = this;
-        var gen7_asyncResult, response, statusCode, location, gen8_asyncResult;
+        var gen8_asyncResult, response, statusCode, location, gen9_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen7_asyncResult) {
-                response = gen7_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen8_asyncResult) {
+                response = gen8_asyncResult;
                 statusCode = response.statusCode;
                 location = response.headers.location;
                 return Promise.resolve(function() {
                     if (request.options.redirect !== false && location && (statusCode === 300 || statusCode === 301 || statusCode === 302 || statusCode === 303 || statusCode === 307)) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.consumeStream(response.body)).then(function(gen9_asyncResult) {
-                                gen9_asyncResult;
-                                return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen10_asyncResult) {
-                                    redirectResponse = gen10_asyncResult;
+                            gen1_onFulfilled(Promise.resolve(exports.consumeStream(response.body)).then(function(gen10_asyncResult) {
+                                gen10_asyncResult;
+                                return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen11_asyncResult) {
+                                    redirectResponse = gen11_asyncResult;
                                     throw {
                                         redirectResponse: redirectResponse
                                     };
@@ -186,7 +221,7 @@
     };
     exports.headers = function(request, next) {
         var self = this;
-        var gen11_asyncResult;
+        var gen12_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.headers) {
                 request.headers = mergeInto(request.options.headers, request.headers);
@@ -196,19 +231,21 @@
     };
     exports.text = function(request, next) {
         var self = this;
-        var gen12_asyncResult, response, gen13_asyncResult;
+        var gen13_asyncResult, response, gen14_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (typeof request.body === "string") {
-                request.body = exports.stringToStream(request.body);
+                setBodyToString(request, request.body);
                 setHeaderTo(request, "content-type", "text/plain");
             }
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen12_asyncResult) {
-                response = gen12_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen13_asyncResult) {
+                response = gen13_asyncResult;
                 return Promise.resolve(function() {
-                    if (exports.contentTypeIsText(response) || exports.contentTypeIs(response, "application/javascript")) {
+                    if (shouldParseAs(response, "text", {
+                        request: request
+                    })) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen14_asyncResult) {
-                                response.body = gen14_asyncResult;
+                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen15_asyncResult) {
+                                response.body = gen15_asyncResult;
                                 return response;
                             }));
                         });
@@ -226,24 +263,26 @@
     };
     exports.form = function(request, next) {
         var self = this;
-        var gen15_asyncResult, response, gen16_asyncResult;
+        var gen16_asyncResult, response, gen17_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.form && request.body instanceof Object && !isAStream(request.body)) {
-                request.body = exports.stringToStream(qs.stringify(request.body));
+                setBodyToString(request, qs.stringify(request.body));
                 setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
             }
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen15_asyncResult) {
-                response = gen15_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen16_asyncResult) {
+                response = gen16_asyncResult;
                 return Promise.resolve(function() {
-                    if (exports.contentTypeIs(response, "application/x-www-form-urlencoded")) {
+                    if (shouldParseAs(response, "form", {
+                        request: request
+                    })) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen17_asyncResult) {
-                                return response.body = qs.parse(gen17_asyncResult);
+                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen18_asyncResult) {
+                                return response.body = qs.parse(gen18_asyncResult);
                             }));
                         });
                     }
-                }()).then(function(gen16_asyncResult) {
-                    gen16_asyncResult;
+                }()).then(function(gen17_asyncResult) {
+                    gen17_asyncResult;
                     return response;
                 });
             }));
@@ -251,7 +290,7 @@
     };
     exports.querystring = function(request, next) {
         var self = this;
-        var split, path, querystring, mergedQueryString, gen18_asyncResult;
+        var split, path, querystring, mergedQueryString, gen19_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.querystring instanceof Object) {
                 split = request.url.split("?");
