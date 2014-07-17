@@ -99,9 +99,9 @@ Responses are objects that contain
 * `url` the full URL of the response
 * `headers` the headers of the response
 * `body` the body of the response. Depending on the `Content-Type` header:
-    * `application/json` a javascript object
-    * `application/x-www-form-urlencoded` a javascript object
-    * `text/*` or `application/javascript` a javascript string
+    * `application/json` a object
+    * `application/x-www-form-urlencoded` a object
+    * `text/*` or `application/javascript` a string
     * anything else is returned as a Node stream, **be careful to close it!**
 
 ## Hypermedia
@@ -177,7 +177,7 @@ Middleware commonly works like this:
     * `headers` the headers of the request as an object. All headers are lower-cased as per Node.js conventions. E.g. `{ 'content-type': 'application/json' }`
     * `options` the options as passed through from the request, either from the **api** or the individual request. E.g. `{log: true}`.
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
-* `next` is a function that passes control onto the next middleware, it returns a promise of the response.
+* `next` is a function that passes control onto the next middleware, it returns a promise of the [response](#responses).
 * `httpism` is a **httpism api** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
 
 ### Existing Middleware
