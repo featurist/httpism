@@ -175,7 +175,7 @@ Middleware commonly works like this:
     * `url` the full URL of the request, e.g. `http://example.com/path?query=value`
     * `method` the method of the request, e.g. `GET` or `POST`
     * `headers` the headers of the request as an object. All headers are lower-cased as per Node.js conventions. E.g. `{ 'content-type': 'application/json' }`
-    * `options` the options as passed through from the request, either from the **api** or the individual request. E.g. `{log: true}`.
+    * `options` the [options](#options) as passed through from the request, either from the **api** or the individual request. E.g. `{log: true}`.
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
 * `next` is a function that passes control onto the next middleware, it returns a promise of the [response](#responses).
 * `httpism` is a **httpism api** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
