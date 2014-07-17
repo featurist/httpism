@@ -1,7 +1,7 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, https, urlUtils, _, mergeInto, qs, contentTypeIs, contentTypeIsText, isAStream, shouldParseAs, responseBodyTypes, setBodyToString, stringToStream, nodeRequest, setHeaderTo;
+    var http, https, urlUtils, _, mergeInto, qs, contentTypeIs, contentTypeIsText, isAStream, shouldParseAs, responseBodyTypes, setBodyToString, stringToStream, nodeRequest, logResponseDependingOnOptions, setHeaderTo;
     http = require("http");
     https = require("https");
     urlUtils = require("url");
@@ -112,7 +112,10 @@
     };
     setBodyToString = function(r, s) {
         r.body = stringToStream(s);
-        return r.headers["content-length"] = Buffer.byteLength(s, "utf-8");
+        r.headers["content-length"] = Buffer.byteLength(s, "utf-8");
+        if (r.options.log) {
+            return r.stringBody = s;
+        }
     };
     exports.stringToStream = stringToStream = function(s) {
         return {
@@ -174,38 +177,51 @@
             }
         });
     };
-    exports.logger = function(request, next) {
+    exports.logRequest = function(request, next) {
         var self = this;
-        var log, gen7_asyncResult, response;
+        var log, gen7_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             log = request.options.log;
             if (log === true || log === "request") {
                 console.log(request);
             }
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen7_asyncResult) {
-                response = gen7_asyncResult;
-                if (log === true || log === "response") {
-                    console.log(response);
-                }
+            gen1_onFulfilled(Promise.resolve(next()));
+        });
+    };
+    exports.logResponse = function(request, next) {
+        var self = this;
+        var gen8_asyncResult, response;
+        return new Promise(function(gen1_onFulfilled) {
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen8_asyncResult) {
+                response = gen8_asyncResult;
+                logResponseDependingOnOptions(response, request.options);
                 return response;
             }));
         });
     };
+    logResponseDependingOnOptions = function(response, options) {
+        var log;
+        log = options.log;
+        if (log === true || log === "response") {
+            return console.log(response);
+        }
+    };
     exports.redirect = function(request, next, api) {
         var self = this;
-        var gen8_asyncResult, response, statusCode, location, gen9_asyncResult;
+        var gen9_asyncResult, response, statusCode, location, gen10_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen8_asyncResult) {
-                response = gen8_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen9_asyncResult) {
+                response = gen9_asyncResult;
                 statusCode = response.statusCode;
                 location = response.headers.location;
                 return Promise.resolve(function() {
                     if (request.options.redirect !== false && location && (statusCode === 300 || statusCode === 301 || statusCode === 302 || statusCode === 303 || statusCode === 307)) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.consumeStream(response.body)).then(function(gen10_asyncResult) {
-                                gen10_asyncResult;
-                                return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen11_asyncResult) {
-                                    redirectResponse = gen11_asyncResult;
+                            gen1_onFulfilled(Promise.resolve(exports.consumeStream(response.body)).then(function(gen11_asyncResult) {
+                                gen11_asyncResult;
+                                logResponseDependingOnOptions(response, request.options);
+                                return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen12_asyncResult) {
+                                    redirectResponse = gen12_asyncResult;
                                     throw {
                                         redirectResponse: redirectResponse
                                     };
@@ -221,7 +237,7 @@
     };
     exports.headers = function(request, next) {
         var self = this;
-        var gen12_asyncResult;
+        var gen13_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.headers) {
                 request.headers = mergeInto(request.options.headers, request.headers);
@@ -231,21 +247,21 @@
     };
     exports.text = function(request, next) {
         var self = this;
-        var gen13_asyncResult, response, gen14_asyncResult;
+        var gen14_asyncResult, response, gen15_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (typeof request.body === "string") {
                 setBodyToString(request, request.body);
                 setHeaderTo(request, "content-type", "text/plain");
             }
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen13_asyncResult) {
-                response = gen13_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen14_asyncResult) {
+                response = gen14_asyncResult;
                 return Promise.resolve(function() {
                     if (shouldParseAs(response, "text", {
                         request: request
                     })) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen15_asyncResult) {
-                                response.body = gen15_asyncResult;
+                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen16_asyncResult) {
+                                response.body = gen16_asyncResult;
                                 return response;
                             }));
                         });
@@ -263,26 +279,26 @@
     };
     exports.form = function(request, next) {
         var self = this;
-        var gen16_asyncResult, response, gen17_asyncResult;
+        var gen17_asyncResult, response, gen18_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.form && request.body instanceof Object && !isAStream(request.body)) {
                 setBodyToString(request, qs.stringify(request.body));
                 setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
             }
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen16_asyncResult) {
-                response = gen16_asyncResult;
+            gen1_onFulfilled(Promise.resolve(next()).then(function(gen17_asyncResult) {
+                response = gen17_asyncResult;
                 return Promise.resolve(function() {
                     if (shouldParseAs(response, "form", {
                         request: request
                     })) {
                         return new Promise(function(gen1_onFulfilled) {
-                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen18_asyncResult) {
-                                return response.body = qs.parse(gen18_asyncResult);
+                            gen1_onFulfilled(Promise.resolve(exports.streamToString(response.body)).then(function(gen19_asyncResult) {
+                                return response.body = qs.parse(gen19_asyncResult);
                             }));
                         });
                     }
-                }()).then(function(gen17_asyncResult) {
-                    gen17_asyncResult;
+                }()).then(function(gen18_asyncResult) {
+                    gen18_asyncResult;
                     return response;
                 });
             }));
@@ -290,7 +306,7 @@
     };
     exports.querystring = function(request, next) {
         var self = this;
-        var split, path, querystring, mergedQueryString, gen19_asyncResult;
+        var split, path, querystring, mergedQueryString, gen20_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.querystring instanceof Object) {
                 split = request.url.split("?");
@@ -298,6 +314,19 @@
                 querystring = qs.parse(split[1]);
                 mergedQueryString = mergeInto(request.options.querystring, querystring);
                 request.url = path + "?" + qs.stringify(mergedQueryString);
+            }
+            gen1_onFulfilled(Promise.resolve(next()));
+        });
+    };
+    exports.basicAuth = function(request, next) {
+        var self = this;
+        var encodeUsernameAndPassword, gen21_asyncResult;
+        return new Promise(function(gen1_onFulfilled) {
+            if (request.options.basicAuth) {
+                encodeUsernameAndPassword = function() {
+                    return new Buffer(request.options.basicAuth.username + ":" + request.options.basicAuth.password).toString("base64");
+                };
+                request.headers.authorization = "Basic " + encodeUsernameAndPassword();
             }
             gen1_onFulfilled(Promise.resolve(next()));
         });

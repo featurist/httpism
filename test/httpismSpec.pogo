@@ -7,6 +7,7 @@ https = require 'https'
 fs = require 'fs'
 qs = require 'qs'
 middleware = require '../middleware'
+basicAuth = require 'basic-auth-connect'
 
 describe 'httpism'
   server = nil
@@ -351,6 +352,18 @@ describe 'httpism'
         response = httpism.get "#(baseurl)/form"!
         response.body.should.eql {name = 'Betty Boo', address = 'one & two'}
         response.headers.'content-type'.should.equal 'application/x-www-form-urlencoded; charset=utf-8'
+
+    describe 'basic authentication'
+      beforeEach
+        app.use(basicAuth @(user, pass)
+          user == 'good user' @and pass == 'good password!'
+        )
+
+        app.get '/secret' @(req, res)
+          res.send 'this is secret'
+
+      it 'can authenticate using username password'
+        httpism.get "#(baseurl)/secret" (basicAuth: {username = 'good user', password = 'good password!'})!.body.should.equal 'this is secret'
 
   describe 'streams'
     filename = "#(__dirname)/afile.txt"

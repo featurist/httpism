@@ -9,6 +9,7 @@
     "underscore": "^1.6.0"
   },
   "devDependencies": {
+    "basic-auth-connect": "^1.0.0",
     "body-parser": "^1.4.3",
     "chai": "^1.9.1",
     "express": "^4.4.5",

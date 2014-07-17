@@ -80,6 +80,9 @@ set (r) bodyToString (s) =
   r.body = string (s) toStream
   r.headers.'content-length' = Buffer.byteLength(s, 'utf-8')
 
+  if (r.options.log)
+    r.stringBody = s
+
 exports.stringToStream = string (s) toStream =
   {
     pipe (stream) =
@@ -127,17 +130,22 @@ exports.nodeSend (request) =
     else
       req.end()
 
-exports.logger (request, next) =
+exports.logRequest (request, next) =
   log = request.options.log
   if (log == true @or log == 'request')
     console.log (request)
 
-  response = next ()!
+  next ()!
 
+exports.logResponse (request, next) =
+  response = next ()!
+  logResponse (response) dependingOnOptions (request.options)
+  response
+
+logResponse (response) dependingOnOptions (options) =
+  log = options.log
   if (log == true @or log == 'response')
     console.log (response)
-
-  response
 
 exports.redirect (request, next, api) =
   response = next ()!
@@ -146,6 +154,7 @@ exports.redirect (request, next, api) =
   location = response.headers.location
   if (request.options.redirect != false @and location @and (statusCode == 300 @or statusCode == 301 @or statusCode == 302 @or statusCode == 303 @or statusCode == 307))
     exports.consumeStream (response.body)!
+    logResponse (response) dependingOnOptions (request.options)
     redirectResponse = api.get (urlUtils.resolve(request.url, location), request.options)!
     @throw {
       redirectResponse = redirectResponse
@@ -196,5 +205,14 @@ exports.querystring (request, next) =
     mergedQueryString = merge (request.options.querystring) into (querystring)
 
     request.url = "#(path)?#(qs.stringify(mergedQueryString))"
+
+  next()!
+
+exports.basicAuth (request, next) =
+  if (request.options.basicAuth)
+    encodeUsernameAndPassword() =
+      @new Buffer "#(request.options.basicAuth.username):#(request.options.basicAuth.password)".toString 'base64'
+
+    request.headers.authorization = "Basic #(encodeUsernameAndPassword())"
 
   next()!

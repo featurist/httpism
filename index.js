@@ -162,6 +162,6 @@
             url: url
         };
     };
-    module.exports = client(void 0, {}, [ middleware.headers, middleware.exception, middleware.logger, middleware.text, middleware.form, middleware.json, middleware.querystring, middleware.redirect, middleware.nodeSend ]);
+    module.exports = client(void 0, {}, [ middleware.logResponse, middleware.headers, middleware.exception, middleware.text, middleware.form, middleware.json, middleware.querystring, middleware.basicAuth, middleware.redirect, middleware.logRequest, middleware.nodeSend ]);
     module.exports.raw = client(void 0, {}, [ middleware.nodeSend ]);
 }).call(this);
