@@ -324,7 +324,7 @@
         return new Promise(function(gen1_onFulfilled) {
             if (request.options.basicAuth) {
                 encodeUsernameAndPassword = function() {
-                    return new Buffer(request.options.basicAuth.username + ":" + request.options.basicAuth.password).toString("base64");
+                    return new Buffer(request.options.basicAuth.username.replace(/:/g, "") + ":" + request.options.basicAuth.password).toString("base64");
                 };
                 request.headers.authorization = "Basic " + encodeUsernameAndPassword();
             }

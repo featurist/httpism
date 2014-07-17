@@ -211,7 +211,7 @@ exports.querystring (request, next) =
 exports.basicAuth (request, next) =
   if (request.options.basicAuth)
     encodeUsernameAndPassword() =
-      @new Buffer "#(request.options.basicAuth.username):#(request.options.basicAuth.password)".toString 'base64'
+      @new Buffer "#(request.options.basicAuth.username.replace r/:/g ''):#(request.options.basicAuth.password)".toString 'base64'
 
     request.headers.authorization = "Basic #(encodeUsernameAndPassword())"
 

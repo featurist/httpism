@@ -122,19 +122,21 @@ All responses are full `httpism` clients, just with their base URI set to the HR
 
 ## Options
 
-* `log` default `undefined`, set to `true` if you want to log both requests and responses, or `'request'` to log requests, or `'response'` to log responses.
-* `exceptions` default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response.
-* `redirect` default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
-* `headers` default `undefined`, can be set to an object that is merged with middleware headers.
-* `querystring` default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any.
-* `responseBody` can be used to force the parsing of the response, ignoring the `Content-Type`, it can be a string of one of the following:
-    * `stream` always downloads the response as a stream
-    * `json` always parses the response as a JSON object
-    * `text` always parses the response as text
-    * `form` always parses the response as a URL-encoded form
-* `http` default `undefined`, object containing options that are passed to [Node.js http.request()](http://nodejs.org/api/http.html#http_http_request_options_callback).
+* `log`: default `undefined`, set to `true` if you want to log both requests and responses, or `'request'` to log requests, or `'response'` to log responses.
+* `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response.
+* `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
+* `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
+* `basicAuth`: use Basic Authentication, pass an object `{ username: 'bob', password: "bob's secret" }`.
+* `querystring`: default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any.
+* `responseBody`: can be used to force the parsing of the response, ignoring the `Content-Type`, it can be a string of one of the following:
+    * `'stream'`: always downloads the response as a stream
+    * `'json'`: always parses the response as a JSON object
+    * `'text'`: always parses the response as text
+    * `'form'`: always parses the response as a URL-encoded form
+    * `undefined`: parse response based on `Content-Type`, the default.
+* `http`: default `undefined`, object containing options that are passed to [Node.js http.request()](http://nodejs.org/api/http.html#http_http_request_options_callback).
     Many of these options are ignored by default, so you should set `agent: undefined` to force a new agent to honour the options.
-* `https` default `undefined`, object containing options that are passed to [Node.js https.request()](http://nodejs.org/api/https.html#https_https_request_options_callback).
+* `https`: default `undefined`, object containing options that are passed to [Node.js https.request()](http://nodejs.org/api/https.html#https_https_request_options_callback).
     Many of these options are ignored by default, so you should set `agent: undefined` to force a new agent to honour the options.
 
 ## APIs

@@ -365,6 +365,12 @@ describe 'httpism'
       it 'can authenticate using username password'
         httpism.get "#(baseurl)/secret" (basicAuth: {username = 'good user', password = 'good password!'})!.body.should.equal 'this is secret'
 
+      it 'can authenticate using username with colons :'
+        httpism.get "#(baseurl)/secret" (basicAuth: {username = 'good: :user', password = 'good password!'})!.body.should.equal 'this is secret'
+
+      it 'fails to authenticate when password is incorrect'
+        httpism.get "#(baseurl)/secret" (basicAuth: {username = 'good user', password = 'bad password!'}, exceptions: false)!.statusCode.should.equal 401
+
   describe 'streams'
     filename = "#(__dirname)/afile.txt"
 
