@@ -208,7 +208,7 @@
     };
     exports.redirect = function(request, next, api) {
         var self = this;
-        var gen9_asyncResult, response, statusCode, location, gen10_asyncResult;
+        var gen9_asyncResult, response, statusCode, location, gen10_asyncResult, redirectResponse;
         return new Promise(function(gen1_onFulfilled) {
             gen1_onFulfilled(Promise.resolve(next()).then(function(gen9_asyncResult) {
                 response = gen9_asyncResult;
