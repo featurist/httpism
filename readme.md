@@ -114,7 +114,7 @@ All responses are full `httpism` clients, just with their base URI set to the HR
       //   "documentsLink": "documents"
       // }
 
-      // so we navigate to http://example.com/api/docuemnts
+      // so we navigate to http://example.com/api/documents
       api.get(api.body.documentsLink).then(function (documents) {
         console.log('documents', documents.body);
       });
