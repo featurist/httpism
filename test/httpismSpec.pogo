@@ -365,6 +365,10 @@ describe 'httpism'
       it 'can authenticate using username password'
         httpism.get "#(baseurl)/secret" (basicAuth: {username = 'good user', password = 'good password!'})!.body.should.equal 'this is secret'
 
+      it 'can authenticate using username password encoded in URL'
+        u = encodeURIComponent
+        httpism.get "http://#(u 'good user'):#(u 'good password!')@localhost:#(port)/secret"!.body.should.equal 'this is secret'
+
       it 'can authenticate using username with colons :'
         httpism.get "#(baseurl)/secret" (basicAuth: {username = 'good: :user', password = 'good password!'})!.body.should.equal 'this is secret'
 

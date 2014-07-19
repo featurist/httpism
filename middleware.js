@@ -320,13 +320,25 @@
     };
     exports.basicAuth = function(request, next) {
         var self = this;
-        var encodeUsernameAndPassword, gen21_asyncResult;
+        var encodeBasicAuthorizationHeader, basicAuthorizationHeader, header, gen21_asyncResult;
         return new Promise(function(gen1_onFulfilled) {
-            if (request.options.basicAuth) {
-                encodeUsernameAndPassword = function() {
-                    return new Buffer(request.options.basicAuth.username.replace(/:/g, "") + ":" + request.options.basicAuth.password).toString("base64");
-                };
-                request.headers.authorization = "Basic " + encodeUsernameAndPassword();
+            encodeBasicAuthorizationHeader = function(s) {
+                return "Basic " + new Buffer(s).toString("base64");
+            };
+            basicAuthorizationHeader = function() {
+                var url;
+                if (request.options.basicAuth) {
+                    return encodeBasicAuthorizationHeader(request.options.basicAuth.username.replace(/:/g, "") + ":" + request.options.basicAuth.password);
+                } else {
+                    url = urlUtils.parse(request.url);
+                    if (url.auth) {
+                        return encodeBasicAuthorizationHeader(url.auth);
+                    }
+                }
+            };
+            header = basicAuthorizationHeader();
+            if (header) {
+                request.headers.authorization = header;
             }
             gen1_onFulfilled(Promise.resolve(next()));
         });

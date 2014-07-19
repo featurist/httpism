@@ -209,10 +209,20 @@ exports.querystring (request, next) =
   next()!
 
 exports.basicAuth (request, next) =
-  if (request.options.basicAuth)
-    encodeUsernameAndPassword() =
-      @new Buffer "#(request.options.basicAuth.username.replace r/:/g ''):#(request.options.basicAuth.password)".toString 'base64'
+  encodeBasicAuthorizationHeader (s) = 
+      "Basic #(@new Buffer(s).toString 'base64')"
 
-    request.headers.authorization = "Basic #(encodeUsernameAndPassword())"
+  basicAuthorizationHeader() =
+    if (request.options.basicAuth)
+      encodeBasicAuthorizationHeader "#(request.options.basicAuth.username.replace r/:/g ''):#(request.options.basicAuth.password)"
+    else
+      url = urlUtils.parse(request.url)
+      if (url.auth)
+        encodeBasicAuthorizationHeader (url.auth)
+
+  header = basicAuthorizationHeader()
+
+  if (header)
+    request.headers.authorization = header
 
   next()!
