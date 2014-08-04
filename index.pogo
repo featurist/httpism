@@ -3,7 +3,7 @@ _ = require 'underscore'
 middleware = require './middleware'
 mergeInto = require './mergeInto'
 
-client (clientUrl, clientOptions, middlewares) =
+resource =
   send =
     sendToMiddleware (middlewares, index) =
       middleware = middlewares.(index)
@@ -15,64 +15,65 @@ client (clientUrl, clientOptions, middlewares) =
 
     sendToMiddleware (middlewares, 0)
 
-  resource (response) =
-    resolveUrl (url) =
-      if (response.url)
-        urlUtils.resolve (response.url, url)
-      else if (clientUrl)
-        urlUtils.resolve (clientUrl, url)
-      else
-        url
 
-    sendRequest (method, url, body, options, api) =
-      options := merge (options) into (clientOptions)
-      response =
-        try
-          send (
-            {
-              method = method
-              url = resolveUrl (url)
-              body = body
-              headers = {}
-              options = options
-            }
-            api
-          )!
-        catch (e)
-          if (e.redirectResponse)
-            e.redirectResponse
-          else
-            @throw e
+  resolveUrl (url) =
+    if (response.url)
+      urlUtils.resolve (response.url, url)
+    else if (clientUrl)
+      urlUtils.resolve (clientUrl, url)
+    else
+      url
 
-      resource (response)
+  sendRequest (method, url, body, options, api) =
+    options := merge (options) into (clientOptions)
+    response =
+      try
+        send (
+          {
+            method = method
+            url = resolveUrl (url)
+            body = body
+            headers = {}
+            options = options
+          }
+          api
+        )!
+      catch (e)
+        if (e.redirectResponse)
+          e.redirectResponse
+        else
+          @throw e
 
-    res = {
-      api (url, options, newMiddlewares) =
-        args = parseClientArguments (url, options, newMiddlewares)
-        client (
-          resolveUrl (args.url)
-          merge (args.options) into (clientOptions)
-          (args.middlewares) toArray.concat (middlewares)
-        )
-    }
+    resource (response)
 
-    sends (method) =
-      res.(method) (url, options) = sendRequest (method.toUpperCase(), url, nil, options, self)!
+  resourcePrototype = {
+    api (url, options, newMiddlewares) =
+      args = parseClientArguments (url, options, newMiddlewares)
+      client (
+        resolveUrl (args.url)
+        merge (args.options) into (clientOptions)
+        (args.middlewares) toArray.concat (middlewares)
+      )
+  }
 
-    sends (method) withBody =
-      res.(method) (url, body, options) = sendRequest (method.toUpperCase(), url, body, options, self)!
+  sends (method) =
+    resourcePrototype.(method) (url, options) = sendRequest (method.toUpperCase(), url, nil, options, self)!
 
-    sends 'get'
-    sends 'delete'
-    sends 'head'
-    sends 'post' withBody
-    sends 'put' withBody
-    sends 'patch' withBody
-    sends 'options' withBody
+  sends (method) withBody =
+    resourcePrototype.(method) (url, body, options) = sendRequest (method.toUpperCase(), url, body, options, self)!
 
-    _.extend (res, response)
+  sends 'get'
+  sends 'delete'
+  sends 'head'
+  sends 'post' withBody
+  sends 'put' withBody
+  sends 'patch' withBody
+  sends 'options' withBody
 
-  resource {}
+  prototype (resourcePrototype)
+
+client (clientUrl, clientOptions, middlewares) =
+  resource()
 
 (i) toArray =
   if (i :: Array)
