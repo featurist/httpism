@@ -9,7 +9,7 @@ httpism is a HTTP client that does a few things differently:
 * **useful by default**: sends and receives JSON, throws exceptions on 400-500s, follows redirects. Of course, you can disable this stuff when it gets in your way, or hit raw HTTP and streams when you need to get clever.
 * **promises**: no messing about with callbacks.
 
-## NPM
+## NPM: [httpism](https://www.npmjs.org/package/httpism)
 
 ```sh
 npm install httpism
