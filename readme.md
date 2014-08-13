@@ -11,58 +11,72 @@ httpism is a HTTP client that does a few things differently:
 
 ## NPM
 
-    npm install httpism
+```sh
+npm install httpism
+```
 
 Then
 
-    var httpism = require('httpism');
+```JavaScript
+var httpism = require('httpism');
+```
 
 ## GET JSON
 
-    httpism.get('http://example.com/').then(function (response) {
-      console.log('json', response.body);
-    }, function (error) {
-      console.log('uh oh', error);
-    });
+```JavaScript
+httpism.get('http://example.com/').then(function (response) {
+  console.log('json', response.body);
+}, function (error) {
+  console.log('uh oh', error);
+});
+```
 
 ## POST JSON
 
-    httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response) {
-      console.log('json', response.body);
-    }, function (error) {
-      console.log('uh oh', error);
-    });
+```JavaScript
+httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response) {
+  console.log('json', response.body);
+}, function (error) {
+  console.log('uh oh', error);
+});
+```
 
 ## Create an API
 
 Specify a base URL:
 
-    var example = httpism.api('http://example.com/');
+```JavaScript
+var example = httpism.api('http://example.com/');
 
-    // GET http://example.com/a
-    example.get('a').then(function (response) {
-      console.log(response.body);
-    });
+// GET http://example.com/a
+example.get('a').then(function (response) {
+  console.log(response.body);
+});
+```
 
 Specify some options:
 
-    var loggingHttpism = httpism.api({log: true});
+```JavaScript
+var loggingHttpism = httpism.api({log: true});
 
-    loggingHttpism.get('http://example.com/').then(function (response) {
-      console.log(response.body);
-    });
+loggingHttpism.get('http://example.com/').then(function (response) {
+  console.log(response.body);
+});
+```
 
 Add some middleware:
 
-    var authHttpism = httpism.api(function (request, next) {
-      request.url += '?apikey=myapikey';
-      return next();
-    });
+```JavaScript
+var authHttpism = httpism.api(function (request, next) {
+  request.url += '?apikey=myapikey';
+  return next();
+});
 
-    // GET https://secretapi.com/?apikey=myapikey
-    authHttpism.get('https://secretapi.com/').then(function (response) {
-      console.log(response.body);
-    });
+// GET https://secretapi.com/?apikey=myapikey
+authHttpism.get('https://secretapi.com/').then(function (response) {
+  console.log(response.body);
+});
+```
 
 See more about [apis](#apis).
 
@@ -70,8 +84,10 @@ See more about [apis](#apis).
 
 ### GET, HEAD, DELETE
 
-    httpism.method (url, [options])
-    response.method (url, [options])
+```JavaScript
+httpism.method (url, [options])
+response.method (url, [options])
+```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
 * `options` request options, see [options](#options).
@@ -81,8 +97,10 @@ returns a promise
 
 ### POST, PUT, PATCH, OPTIONS
 
-    httpism.method (url, data, [options])
-    response.method (url, data, [options])
+```JavaScript
+httpism.method (url, data, [options])
+response.method (url, data, [options])
+```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
 * `data` the data to send
@@ -108,17 +126,19 @@ Responses are objects that contain
 
 All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `api()`, see [apis](#apis) below.
 
-    httpism.get('http://example.com/api/').then(function (api) {
-      // api.body is:
-      // {
-      //   "documentsLink": "documents"
-      // }
+```JavaScript
+httpism.get('http://example.com/api/').then(function (api) {
+  // api.body is:
+  // {
+  //   "documentsLink": "documents"
+  // }
 
-      // so we navigate to http://example.com/api/documents
-      api.get(api.body.documentsLink).then(function (documents) {
-        console.log('documents', documents.body);
-      });
-    });
+  // so we navigate to http://example.com/api/documents
+  api.get(api.body.documentsLink).then(function (documents) {
+    console.log('documents', documents.body);
+  });
+});
+```
 
 ## Options
 
@@ -145,9 +165,11 @@ API clients give you a way to build or customise a HTTP client for the purpose o
 
 You can create API clients, either from `httpism`, giving you a fairly complete HTTP client, or from `httpism.raw` giving you no frills streaming HTTP client to do what you will with. 
 
-    var api = httpism.api([url], [options], [middleware]);
-    var api = httpism.raw.api([url], [options], [middleware]);
-    var api = response.api([url], [options], [middleware]);
+```JavaScript
+var api = httpism.api([url], [options], [middleware]);
+var api = httpism.raw.api([url], [options], [middleware]);
+var api = response.api([url], [options], [middleware]);
+```
 
 * `url` a URL string, which could be relative to the response, or absolute.
 * `options` options object to be used for all calls with this api. If `api` is called on a response, the options are merged with that responses api.
@@ -161,15 +183,17 @@ You can create API clients, either from `httpism`, giving you a fairly complete 
 
 Middleware commonly works like this:
 
-    function middleware(request, next, httpism) {
-      // change request
-      request.url = ...;
-      return next().then(function (response) {
-        // change response
-        response.body = ...;
-        return response;
-      });
-    }
+```JavaScript
+function middleware(request, next, httpism) {
+  // change request
+  request.url = ...;
+  return next().then(function (response) {
+    // change response
+    response.body = ...;
+    return response;
+  });
+}
+```
 
 * `request` is an object with the following properties:
     * `url` the full URL of the request, e.g. `http://example.com/path?query=value`
