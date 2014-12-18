@@ -187,7 +187,7 @@ describe 'httpism'
     describe 'exceptions'
       beforeEach
         app.get '/400' @(req, res)
-          res.status 400.send {message = 'oh dear'}
+          res.send 400 {message = 'oh dear'}
 
       it 'throws exceptions on 400-500 status codes, by default'
         try
@@ -261,7 +261,7 @@ describe 'httpism'
 
         app.get '/redirect' @(req, res)
           res.location '/path/'
-          res.status 302.send {path = req.path}
+          res.send(302, {path = req.path})
 
         app.get '/' @(req, res)
           res.send {path = req.path}
@@ -281,7 +281,7 @@ describe 'httpism'
         it "follows #(statusCode) redirects"
           app.get "/#(statusCode)" @(req, res)
             res.location '/path/'
-            res.status (statusCode).send()
+            res.send(statusCode)
 
           response = httpism.get "#(baseurl)/#(statusCode)"!
           response.body.should.eql {path = '/path/'}
@@ -441,12 +441,12 @@ describe 'httpism'
   describe 'raw'
     it 'can be used to create new middleware pipelines'
       app.get "/" @(req, res)
-        res.status 400.send {blah = 'blah'}
+        res.send 400 {blah = 'blah'}
 
       api = httpism.raw.api (baseurl) @(request, next)
-        resp = next()!
-        resp.body = middleware.stream (resp.body) toString!
-        resp
+        response = next()!
+        response.body = middleware.stream (response.body) toString!
+        response
 
       response = api.get (baseurl)!
       response.statusCode.should.equal 400
