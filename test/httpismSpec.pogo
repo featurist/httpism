@@ -164,7 +164,7 @@ describe 'httpism'
           res.send(req.query)
 
       it 'can set query string'
-        response = httpism.get (baseurl, querystring: {a = 'a', b = 'b'})!
+        response = httpism.get (baseurl, querystring = {a = 'a', b = 'b'}, log = true)!
         response.body.should.eql {a = 'a', b = 'b'}
 
       it 'can override query string in url'
@@ -187,7 +187,7 @@ describe 'httpism'
     describe 'exceptions'
       beforeEach
         app.get '/400' @(req, res)
-          res.send 400 {message = 'oh dear'}
+          res.status 400.send {message = 'oh dear'}
 
       it 'throws exceptions on 400-500 status codes, by default'
         try
@@ -261,7 +261,7 @@ describe 'httpism'
 
         app.get '/redirect' @(req, res)
           res.location '/path/'
-          res.send(302, {path = req.path})
+          res.status 302.send {path = req.path}
 
         app.get '/' @(req, res)
           res.send {path = req.path}
@@ -281,7 +281,7 @@ describe 'httpism'
         it "follows #(statusCode) redirects"
           app.get "/#(statusCode)" @(req, res)
             res.location '/path/'
-            res.send(statusCode)
+            res.status (statusCode).send()
 
           response = httpism.get "#(baseurl)/#(statusCode)"!
           response.body.should.eql {path = '/path/'}
@@ -441,12 +441,12 @@ describe 'httpism'
   describe 'raw'
     it 'can be used to create new middleware pipelines'
       app.get "/" @(req, res)
-        res.send 400 {blah = 'blah'}
+        res.status 400.send {blah = 'blah'}
 
       api = httpism.raw.api (baseurl) @(request, next)
-        response = next()!
-        response.body = middleware.stream (response.body) toString!
-        response
+        res = next()!
+        res.body = middleware.stream (res.body) toString!
+        res
 
       response = api.get (baseurl)!
       response.statusCode.should.equal 400

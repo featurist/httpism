@@ -11,11 +11,11 @@
         send = function() {
             var sendToMiddleware;
             sendToMiddleware = function(middlewares, index) {
-                var middleware;
-                middleware = middlewares[index];
-                if (middleware) {
+                var currentMiddleware;
+                currentMiddleware = middlewares[index];
+                if (currentMiddleware) {
                     return function(request, api) {
-                        return middleware(request, function() {
+                        return currentMiddleware(request, function() {
                             return sendToMiddleware(middlewares, index + 1)(request, api);
                         }, api);
                     };
@@ -37,7 +37,7 @@
                 }
             };
             sendRequest = function(method, url, body, options, api) {
-                var gen1_asyncResult, response;
+                var gen1_asyncResult, resp;
                 return new Promise(function(gen2_onFulfilled) {
                     options = mergeInto(options, clientOptions);
                     gen2_onFulfilled(Promise.resolve(function() {
@@ -60,8 +60,8 @@
                             }));
                         });
                     }()).then(function(gen1_asyncResult) {
-                        response = gen1_asyncResult;
-                        return resource(response);
+                        resp = gen1_asyncResult;
+                        return resource(resp);
                     }));
                 });
             };
