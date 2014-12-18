@@ -164,7 +164,7 @@ describe 'httpism'
           res.send(req.query)
 
       it 'can set query string'
-        response = httpism.get (baseurl, querystring = {a = 'a', b = 'b'}, log = true)!
+        response = httpism.get (baseurl, querystring = {a = 'a', b = 'b'})!
         response.body.should.eql {a = 'a', b = 'b'}
 
       it 'can override query string in url'
