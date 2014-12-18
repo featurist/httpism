@@ -6,10 +6,10 @@ mergeInto = require './mergeInto'
 client (clientUrl, clientOptions, middlewares) =
   send =
     sendToMiddleware (middlewares, index) =
-      middleware = middlewares.(index)
-      if (middleware)
+      currentMiddleware = middlewares.(index)
+      if (currentMiddleware)
         @(request, api)
-          middleware (request, @{ (sendToMiddleware (middlewares, index + 1)) (request, api) }, api)
+          currentMiddleware (request, @{ (sendToMiddleware (middlewares, index + 1)) (request, api) }, api)
       else
         nil
 
@@ -26,7 +26,7 @@ client (clientUrl, clientOptions, middlewares) =
 
     sendRequest (method, url, body, options, api) =
       options := merge (options) into (clientOptions)
-      response =
+      resp =
         try
           send (
             {
@@ -44,7 +44,7 @@ client (clientUrl, clientOptions, middlewares) =
           else
             @throw e
 
-      resource (response)
+      resource (resp)
 
     res = {
       api (url, options, newMiddlewares) =
