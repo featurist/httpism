@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "bluebird": "^2.2.2",
+    "debug": "2.2.0",
     "qs": "^0.6.6",
     "underscore": "^1.6.0"
   },

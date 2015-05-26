@@ -111,7 +111,7 @@ module.exports = client (
   nil
   {}
   [
-    middleware.logResponse
+    middleware.log
     middleware.headers
     middleware.exception
     middleware.text
@@ -120,7 +120,6 @@ module.exports = client (
     middleware.querystring
     middleware.basicAuth
     middleware.redirect
-    middleware.logRequest
     middleware.nodeSend
   ]
 )

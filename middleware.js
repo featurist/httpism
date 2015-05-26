@@ -1,13 +1,17 @@
 (function() {
     var Promise = require("bluebird");
     var self = this;
-    var http, https, urlUtils, _, mergeInto, qs, contentTypeIs, contentTypeIsText, isAStream, shouldParseAs, responseBodyTypes, setBodyToString, stringToStream, nodeRequest, logResponseDependingOnOptions, setHeaderTo;
+    var http, https, urlUtils, _, mergeInto, qs, createDebug, debug, debugResponse, debugRequest, contentTypeIs, contentTypeIsText, isAStream, shouldParseAs, responseBodyTypes, setBodyToString, stringToStream, nodeRequest, logRequest, logResponse, setHeaderTo;
     http = require("http");
     https = require("https");
     urlUtils = require("url");
     _ = require("underscore");
     mergeInto = require("./mergeInto");
     qs = require("qs");
+    createDebug = require("debug");
+    debug = createDebug("httpism");
+    debugResponse = createDebug("httpism:response");
+    debugRequest = createDebug("httpism:request");
     exports.streamToString = function(s) {
         var self = this;
         return new Promise(function(result, error) {
@@ -113,9 +117,7 @@
     setBodyToString = function(r, s) {
         r.body = stringToStream(s);
         r.headers["content-length"] = Buffer.byteLength(s, "utf-8");
-        if (r.options.log) {
-            return r.stringBody = s;
-        }
+        return r.stringBody = s;
     };
     exports.stringToStream = stringToStream = function(s) {
         return {
@@ -177,33 +179,39 @@
             }
         });
     };
-    exports.logRequest = function(request, next) {
-        var self = this;
-        var log, gen7_asyncResult;
-        return new Promise(function(gen1_onFulfilled) {
-            log = request.options.log;
-            if (log === true || log === "request") {
-                console.log(request);
-            }
-            gen1_onFulfilled(Promise.resolve(next()));
-        });
+    logRequest = function(request) {
+        return debugRequest(request);
     };
-    exports.logResponse = function(request, next) {
+    exports.log = function(request, next) {
         var self = this;
-        var gen8_asyncResult, response;
+        var gen7_asyncResult, response;
         return new Promise(function(gen1_onFulfilled) {
-            gen1_onFulfilled(Promise.resolve(next()).then(function(gen8_asyncResult) {
-                response = gen8_asyncResult;
-                logResponseDependingOnOptions(response, request.options);
-                return response;
+            gen1_onFulfilled(new Promise(function(gen1_onFulfilled) {
+                logRequest(request);
+                gen1_onFulfilled(Promise.resolve(next()).then(function(gen8_asyncResult) {
+                    response = gen8_asyncResult;
+                    logResponse(response);
+                    return response;
+                }));
+            }).then(void 0, function(e) {
+                var res;
+                res = _.extend({}, e);
+                logResponse(res);
+                throw e;
             }));
         });
     };
-    logResponseDependingOnOptions = function(response, options) {
-        var log;
-        log = options.log;
-        if (log === true || log === "response") {
-            return console.log(response);
+    logResponse = function(response) {
+        var responseToLog;
+        if (!response.redirectResponse) {
+            responseToLog = function() {
+                if (isAStream(response.body)) {
+                    return _.omit(response, "body");
+                } else {
+                    return _.omit(response);
+                }
+            }();
+            return debugResponse(responseToLog);
         }
     };
     exports.redirect = function(request, next, api) {
@@ -219,7 +227,7 @@
                         return new Promise(function(gen1_onFulfilled) {
                             gen1_onFulfilled(Promise.resolve(exports.consumeStream(response.body)).then(function(gen11_asyncResult) {
                                 gen11_asyncResult;
-                                logResponseDependingOnOptions(response, request.options);
+                                logResponse(response);
                                 return Promise.resolve(api.get(urlUtils.resolve(request.url, location), request.options)).then(function(gen12_asyncResult) {
                                     redirectResponse = gen12_asyncResult;
                                     throw {

@@ -57,7 +57,7 @@ example.get('a').then(function (response) {
 Specify some options:
 
 ```JavaScript
-var loggingHttpism = httpism.api({log: true});
+var loggingHttpism = httpism.api({exceptions: false});
 
 loggingHttpism.get('http://example.com/').then(function (response) {
   console.log(response.body);
@@ -79,6 +79,16 @@ authHttpism.get('https://secretapi.com/').then(function (response) {
 ```
 
 See more about [apis](#apis).
+
+## Logging
+
+httpism uses [debug](https://github.com/visionmedia/debug) so you can enable logging just by setting the `DEBUG` environment variable to `httpism:*`:
+
+```bash
+DEBUG=httpism:* node app.js
+```
+
+More information in debug's README.
 
 ## Requests
 
@@ -142,7 +152,6 @@ httpism.get('http://example.com/api/').then(function (api) {
 
 ## Options
 
-* `log`: default `undefined`, set to `true` if you want to log both requests and responses, or `'request'` to log requests, or `'response'` to log responses.
 * `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response.
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
@@ -199,7 +208,7 @@ function middleware(request, next, httpism) {
     * `url` the full URL of the request, e.g. `http://example.com/path?query=value`
     * `method` the method of the request, e.g. `GET` or `POST`
     * `headers` the headers of the request as an object. All headers are lower-cased as per Node.js conventions. E.g. `{ 'content-type': 'application/json' }`
-    * `options` the [options](#options) as passed through from the request, either from the **api** or the individual request. E.g. `{log: true}`.
+    * `options` the [options](#options) as passed through from the request, either from the **api** or the individual request. E.g. `{exceptions: true}`.
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
 * `next` is a function that passes control onto the next middleware, it returns a promise of the [response](#responses).
 * `httpism` is a **httpism api** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.

@@ -4,6 +4,10 @@ urlUtils = require 'url'
 _ = require 'underscore'
 mergeInto = require './mergeInto'
 qs = require 'qs'
+createDebug = require 'debug'
+debug = createDebug('httpism')
+debugResponse = createDebug('httpism:response')
+debugRequest = createDebug('httpism:request')
 
 exports.stream (s) toString =
   promise @(result, error)
@@ -79,9 +83,7 @@ exports.json (request, next) =
 set (r) bodyToString (s) =
   r.body = string (s) toStream
   r.headers.'content-length' = Buffer.byteLength(s, 'utf-8')
-
-  if (r.options.log)
-    r.stringBody = s
+  r.stringBody = s
 
 exports.stringToStream = string (s) toStream =
   {
@@ -130,22 +132,30 @@ exports.nodeSend (request) =
     else
       req.end()
 
-exports.logRequest (request, next) =
-  log = request.options.log
-  if (log == true @or log == 'request')
-    console.log (request)
+logRequest (request) =
+  debugRequest(request)
 
-  next ()!
+exports.log(request, next) =
+  try
+    logRequest(request)
+    response = next ()!
+    logResponse (response)
+    response
+  catch (e)
+    res = _.extend({}, e)
+    logResponse (res)
+    throw (e)
+    
 
-exports.logResponse (request, next) =
-  response = next ()!
-  logResponse (response) dependingOnOptions (request.options)
-  response
+logResponse (response) =
+  if (@not response.redirectResponse)
+    responseToLog =
+      if (is (response.body) aStream)
+        _.omit(response, 'body')
+      else
+        _.omit(response)
 
-logResponse (response) dependingOnOptions (options) =
-  log = options.log
-  if (log == true @or log == 'response')
-    console.log (response)
+    debugResponse(responseToLog)
 
 exports.redirect (request, next, api) =
   response = next ()!
@@ -154,7 +164,7 @@ exports.redirect (request, next, api) =
   location = response.headers.location
   if (request.options.redirect != false @and location @and (statusCode == 300 @or statusCode == 301 @or statusCode == 302 @or statusCode == 303 @or statusCode == 307))
     exports.consumeStream (response.body)!
-    logResponse (response) dependingOnOptions (request.options)
+    logResponse (response)
     redirectResponse = api.get (urlUtils.resolve(request.url, location), request.options)!
     @throw {
       redirectResponse = redirectResponse
