@@ -1,167 +1,130 @@
-(function() {
-    var Promise = require("bluebird");
-    var self = this;
-    var urlUtils, _, middleware, mergeInto, client, toArray, parseClientArguments;
-    urlUtils = require("url");
-    _ = require("underscore");
-    middleware = require("./middleware");
-    mergeInto = require("./mergeInto");
-    client = function(clientUrl, clientOptions, middlewares) {
-        var send, resource;
-        send = function() {
-            var sendToMiddleware;
-            sendToMiddleware = function(middlewares, index) {
-                var currentMiddleware;
-                currentMiddleware = middlewares[index];
-                if (currentMiddleware) {
-                    return function(request, api) {
-                        return currentMiddleware(request, function() {
-                            return sendToMiddleware(middlewares, index + 1)(request, api);
-                        }, api);
-                    };
-                } else {
-                    return void 0;
-                }
-            };
-            return sendToMiddleware(middlewares, 0);
-        }();
-        resource = function(response) {
-            var resolveUrl, sendRequest, res, sends, sendsWithBody;
-            resolveUrl = function(url) {
-                if (response.url) {
-                    return urlUtils.resolve(response.url, url);
-                } else if (clientUrl) {
-                    return urlUtils.resolve(clientUrl, url);
-                } else {
-                    return url;
-                }
-            };
-            sendRequest = function(method, url, body, options, api) {
-                var gen1_asyncResult, resp;
-                return new Promise(function(gen2_onFulfilled) {
-                    options = mergeInto(options, clientOptions);
-                    gen2_onFulfilled(Promise.resolve(function() {
-                        var gen3_asyncResult;
-                        return new Promise(function(gen2_onFulfilled) {
-                            gen2_onFulfilled(new Promise(function(gen2_onFulfilled) {
-                                gen2_onFulfilled(Promise.resolve(send({
-                                    method: method,
-                                    url: resolveUrl(url),
-                                    body: body,
-                                    headers: {},
-                                    options: options
-                                }, api)));
-                            }).then(void 0, function(e) {
-                                if (e.redirectResponse) {
-                                    return e.redirectResponse;
-                                } else {
-                                    throw e;
-                                }
-                            }));
-                        });
-                    }()).then(function(gen1_asyncResult) {
-                        resp = gen1_asyncResult;
-                        return resource(resp);
-                    }));
-                });
-            };
-            res = {
-                api: function(url, options, newMiddlewares) {
-                    var self = this;
-                    var args;
-                    args = parseClientArguments(url, options, newMiddlewares);
-                    return client(resolveUrl(args.url), mergeInto(args.options, clientOptions), toArray(args.middlewares).concat(middlewares));
-                }
-            };
-            sends = function(method) {
-                return res[method] = function(url, options) {
-                    var self = this;
-                    var gen4_asyncResult;
-                    return new Promise(function(gen2_onFulfilled) {
-                        gen2_onFulfilled(Promise.resolve(sendRequest(method.toUpperCase(), url, void 0, options, self)));
-                    });
-                };
-            };
-            sendsWithBody = function(method) {
-                return res[method] = function(url, body, options) {
-                    var self = this;
-                    var gen5_asyncResult;
-                    return new Promise(function(gen2_onFulfilled) {
-                        gen2_onFulfilled(Promise.resolve(sendRequest(method.toUpperCase(), url, body, options, self)));
-                    });
-                };
-            };
-            sends("get");
-            sends("delete");
-            sends("head");
-            sendsWithBody("post");
-            sendsWithBody("put");
-            sendsWithBody("patch");
-            sendsWithBody("options");
-            return _.extend(res, response);
-        };
-        return resource({});
-    };
-    toArray = function(i) {
-        if (i instanceof Array) {
-            return i;
-        } else if (i !== void 0) {
-            return [ i ];
-        } else {
-            return [];
-        }
-    };
-    parseClientArguments = function() {
-        var args = Array.prototype.slice.call(arguments, 0, arguments.length);
-        var url, middlewares, options;
-        url = function() {
-            var gen6_results, gen7_items, gen8_i, arg;
-            gen6_results = [];
-            gen7_items = args;
-            for (gen8_i = 0; gen8_i < gen7_items.length; ++gen8_i) {
-                arg = gen7_items[gen8_i];
-                (function(arg) {
-                    if (typeof arg === "string") {
-                        return gen6_results.push(arg);
-                    }
-                })(arg);
-            }
-            return gen6_results;
-        }()[0];
-        middlewares = toArray(function() {
-            var gen9_results, gen10_items, gen11_i, arg;
-            gen9_results = [];
-            gen10_items = args;
-            for (gen11_i = 0; gen11_i < gen10_items.length; ++gen11_i) {
-                arg = gen10_items[gen11_i];
-                (function(arg) {
-                    if (arg instanceof Array || arg instanceof Function) {
-                        return gen9_results.push(arg);
-                    }
-                })(arg);
-            }
-            return gen9_results;
-        }()[0]);
-        options = function() {
-            var gen12_results, gen13_items, gen14_i, arg;
-            gen12_results = [];
-            gen13_items = args;
-            for (gen14_i = 0; gen14_i < gen13_items.length; ++gen14_i) {
-                arg = gen13_items[gen14_i];
-                (function(arg) {
-                    if (!(arg instanceof Array) && !(arg instanceof Function) && arg instanceof Object) {
-                        return gen12_results.push(arg);
-                    }
-                })(arg);
-            }
-            return gen12_results;
-        }()[0] || {};
-        return {
-            middlewares: middlewares,
-            options: options,
-            url: url
-        };
-    };
-    module.exports = client(void 0, {}, [ middleware.log, middleware.headers, middleware.exception, middleware.text, middleware.form, middleware.json, middleware.querystring, middleware.basicAuth, middleware.redirect, middleware.nodeSend ]);
-    module.exports.raw = client(void 0, {}, [ middleware.nodeSend ]);
-}).call(this);
+var merge = require('./merge');
+var urlUtils = require('url');
+var _ = require('underscore');
+var middleware = require('./middleware');
+
+function client(url, options, middlewares) {
+  return new Httpism(url, options, middlewares);
+}
+
+function Httpism(url, options, middlewares) {
+  this.url = url;
+  this._options = options;
+  this.middlewares = middlewares;
+}
+
+Httpism.prototype.send = function(method, url, body, options, api) {
+  var request = {
+    method: method,
+    url: resolveUrl(this.url, url),
+    headers: {},
+    body: body,
+    options: merge(options, this._options)
+  };
+
+  var self = this;
+
+  function sendToMiddleware(index) {
+    if (index < self.middlewares.length) {
+      var middleware = self.middlewares[index];
+      return middleware(request, function () { return sendToMiddleware(index + 1); }, self);
+    }
+  }
+
+  return sendToMiddleware(0).then(function (response) {
+    return makeResponse(self, response);
+  }, function (e) {
+    if (e.redirectResponse) {
+      return e.redirectResponse;
+    } else {
+      throw e;
+    }
+  });
+};
+
+function makeResponse(api, response) {
+  return _.extend(new Httpism(api.url, api._options, api.middlewares), response);
+}
+
+Httpism.prototype.api = function (url, options, middlewares) {
+  var args = parseClientArguments(url, options, middlewares);
+
+  return new Httpism(
+    resolveUrl(this.url, args.url),
+    merge(args.options, this._options),
+    args.middlewares
+      ? args.middlewares.concat(this.middlewares)
+      : this.middlewares
+  );
+};
+
+function addMethod(method) {
+  Httpism.prototype[method] = function (url, options) {
+    return this.send(method, url, undefined, options, this);
+  };
+}
+
+function addMethodWithBody(method) {
+  Httpism.prototype[method] = function (url, body, options) {
+    return this.send(method, url, body, options, this);
+  };
+}
+
+addMethod('get');
+addMethod('delete');
+addMethod('head');
+addMethodWithBody('post');
+addMethodWithBody('put');
+addMethodWithBody('patch');
+addMethodWithBody('options');
+
+function resolveUrl(base, url) {
+  if (base) {
+    return urlUtils.resolve (base, url);
+  } else {
+    return url;
+  }
+}
+
+function parseClientArguments() {
+  var url, options, middlewares;
+
+  for(var n = 0; n < arguments.length; n++) {
+    var arg = arguments[n];
+
+    if (typeof arg === 'string') {
+      url = arg;
+    } else if (typeof arg === 'function') {
+      middlewares = [arg];
+    } else if (arg instanceof Array) {
+      middlewares = arg;
+    } else if (arg instanceof Object) {
+      options = arg;
+    }
+  }
+
+  return {
+    url: url,
+    options: options,
+    middlewares: middlewares
+  };
+}
+
+module.exports = client(
+  undefined,
+  {},
+  [
+    middleware.log,
+    middleware.headers,
+    middleware.exception,
+    middleware.text,
+    middleware.form,
+    middleware.json,
+    middleware.querystring,
+    middleware.basicAuth,
+    middleware.redirect,
+    middleware.nodeSend
+  ]
+);
+
+module.exports.raw = client(undefined, {}, [middleware.nodeSend]);
