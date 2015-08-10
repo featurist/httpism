@@ -157,6 +157,7 @@ httpism.get('http://example.com/api/').then(function (api) {
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
 * `basicAuth`: use Basic Authentication, pass an object `{ username: 'bob', password: "bob's secret" }`.
 * `querystring`: default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any.
+* `form`: when `true`, treats the incoming JSON data as a form and encodes it as `application/x-www-form-urlencoded`.
 * `responseBody`: can be used to force the parsing of the response, ignoring the `Content-Type`, it can be a string of one of the following:
     * `'stream'`: always downloads the response as a stream
     * `'json'`: always parses the response as a JSON object
