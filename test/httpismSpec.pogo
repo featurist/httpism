@@ -8,6 +8,8 @@ fs = require 'fs'
 qs = require 'qs'
 middleware = require '../middleware'
 basicAuth = require 'basic-auth-connect'
+cookieParser = require 'cookie-parser'
+toughCookie = require 'tough-cookie'
 
 describe 'httpism'
   server = nil
@@ -309,6 +311,22 @@ describe 'httpism'
         response.url.should.eql "#(baseurl)/redirect"
         response.headers.location.should.equal '/path/'
         response.statusCode.should.equal 302
+
+    describe 'cookies'
+      beforeEach
+        app.use(cookieParser())
+        app.get '/setcookie' @(req, res)
+          res.cookie 'mycookie' 'value'
+          res.send {}
+
+        app.get '/getcookie' @(req, res)
+          res.send (req.cookies)
+
+      it 'can store cookies and send cookies'
+        cookies = @new toughCookie.CookieJar()
+        httpism.get! "#(baseurl)/setcookie" {cookies = cookies}
+        response = httpism.get! "#(baseurl)/getcookie" {cookies = cookies}.body
+        response.should.eql {mycookie = 'value'}
 
     describe 'https'
       httpsServer = nil

@@ -123,6 +123,7 @@ module.exports = client(
     middleware.querystring,
     middleware.basicAuth,
     middleware.redirect,
+    middleware.cookies,
     middleware.nodeSend
   ]
 );

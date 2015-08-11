@@ -132,6 +132,23 @@ Responses are objects that contain
     * `text/*` or `application/javascript` a string
     * anything else is returned as a Node stream, **be careful to close it!**
 
+## Cookies
+
+Cookies can be stored with [tough-cookie](https://github.com/SalesforceEng/tough-cookie). Just set `options.cookies` to an instance of a `ToughCookie.CookieJar` to store cookies sent from the server, and correspondingly, cookies that match the domain will be sent back to the server.
+
+```js
+var ToughCookie = require('tough-cookie');
+
+// make a new client that uses the cookie jar
+var client = httpism.api('http://example.com/', {cookies: new ToughCookie.CookieJar()});
+
+client.post('/login', {username: 'jerome', password: 'password123'}, {form: true}).then(function () {
+  return client.get('/profile').then(function (profileResponse) {
+    console.log(profileResponse.body);
+  });
+});
+```
+
 ## Hypermedia
 
 All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `api()`, see [apis](#apis) below.

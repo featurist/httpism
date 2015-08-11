@@ -229,6 +229,37 @@ exports.redirect = function(request, next, api) {
   });
 };
 
+function loadCookies(cookies, url) {
+  return cookies.getCookieStringSync(url);
+}
+
+function storeCookies(cookies, url, header) {
+  if (header) {
+    var headers =
+      header instanceof Array
+        ? header
+        : [header];
+
+    headers.forEach(function (setCookieHeader) {
+      cookies.setCookieSync(setCookieHeader, url);
+    });
+  }
+}
+
+exports.cookies = function (request, next) {
+  var cookies = request.options.cookies;
+
+  if (cookies) {
+    request.headers.cookie = loadCookies(cookies, request.url);
+    return next().then(function (response) {
+      storeCookies(cookies, response.url, response.headers['set-cookie']);
+      return response;
+    });
+  } else {
+    return next();
+  }
+};
+
 exports.headers = function(request, next) {
   if (request.options.headers) {
     request.headers = merge(request.options.headers, request.headers);

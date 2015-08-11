@@ -13,10 +13,12 @@
     "basic-auth-connect": "^1.0.0",
     "body-parser": "^1.4.3",
     "chai": "^1.9.1",
+    "cookie-parser": "1.3.5",
     "express": "^4.4.5",
     "mocha": "2.2.5",
     "pogo": "^0.9.6",
-    "should": "~2.1.1"
+    "should": "~2.1.1",
+    "tough-cookie": "2.0.0"
   },
   "directories": {
     "test": "test"
