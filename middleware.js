@@ -145,9 +145,32 @@ function nodeRequest(request, options, protocol, withResponse) {
   }
 }
 
+function proxyUrl(request, proxy) {
+  var url = urlUtils.parse(request.url);
+  var proxyUrl = urlUtils.parse(proxy);
+
+  request.headers.host = url.hostname;
+
+  return {
+    hostname: proxyUrl.hostname,
+    port: proxyUrl.port,
+    path: request.url
+  };
+}
+
+function parseUrl(request) {
+  var proxy = process.env.http_proxy || request.options.proxy;
+
+  if (proxy) {
+    return proxyUrl(request, proxy);
+  } else {
+    return urlUtils.parse(request.url);
+  }
+}
+
 exports.nodeSend = function(request) {
   return new Promise(function(result, error) {
-    var url = urlUtils.parse(request.url);
+    var url = parseUrl(request);
 
     var req = nodeRequest(
       {

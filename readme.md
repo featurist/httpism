@@ -181,6 +181,7 @@ httpism.get('http://example.com/api/').then(function (api) {
     * `'text'`: always parses the response as text
     * `'form'`: always parses the response as a URL-encoded form
     * `undefined`: parse response based on `Content-Type`, the default.
+* `proxy`: a proxy URL, if present all requests will be run throught the proxy. This works if the environment variable `http_proxy` is set too.
 * `http`: default `undefined`, object containing options that are passed to [Node.js http.request()](http://nodejs.org/api/http.html#http_http_request_options_callback).
     Many of these options are ignored by default, so you should set `agent: undefined` to force a new agent to honour the options.
 * `https`: default `undefined`, object containing options that are passed to [Node.js https.request()](http://nodejs.org/api/https.html#https_https_request_options_callback).
