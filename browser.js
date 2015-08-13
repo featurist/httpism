@@ -102,7 +102,6 @@ module.exports = httpism(
   undefined,
   {},
   [
-    utils.log,
     utils.exception,
     form,
     json,

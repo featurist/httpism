@@ -1,8 +1,4 @@
 var merge = require("./merge");
-var createDebug = require("debug");
-var debug = createDebug("httpism");
-var debugResponse = createDebug("httpism:response");
-var debugRequest = createDebug("httpism:request");
 
 module.exports.setHeaderTo = function (request, header, value) {
   if (!request.headers[header]) {
@@ -58,39 +54,7 @@ function extend(object, extension) {
   return object;
 }
 
-function logRequest(request) {
-  debugRequest(request);
-}
-
-exports.log = function(request, next) {
-  logRequest(request);
-
-  return next().then(function(response) {
-    logResponse(response);
-    return response;
-  }, function(e) {
-    var res = extend({}, e);
-    logResponse(res);
-    throw e;
-  });
-};
-
-module.exports.isStream = function (body) {
-  return body !== undefined && typeof body.pipe === 'function';
-}
-
-function logResponse(response) {
-  if (!response.redirectResponse) {
-    var responseToLog = extend({}, response);
-    if (module.exports.isStream(response.body)) {
-      delete responseToLog.body;
-    }
-
-    debugResponse(responseToLog);
-  }
-}
-
-module.exports.logResponse = logResponse;
+exports.extend = extend;
 
 exports.exception = function(request, next) {
   return next().then(function(response) {

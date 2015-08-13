@@ -6,6 +6,10 @@ var _ = require("underscore");
 var merge = require("./merge");
 var qs = require("qs");
 var utils = require('./middlewareUtils');
+var createDebug = require("debug");
+var debug = createDebug("httpism");
+var debugResponse = createDebug("httpism:response");
+var debugRequest = createDebug("httpism:request");
 
 exports.exception = utils.exception;
 exports.log = utils.log;
@@ -43,8 +47,12 @@ exports.consumeStream = function(s) {
   });
 };
 
+function isStream(body) {
+  return body !== undefined && typeof body.pipe === 'function';
+}
+
 exports.json = function(request, next) {
-  if (request.body instanceof Object && !utils.isStream(request.body)) {
+  if (request.body instanceof Object && !isStream(request.body)) {
     setBodyToString(request, JSON.stringify(request.body));
     utils.setHeaderTo(request, "content-type", "application/json");
   }
@@ -147,6 +155,33 @@ exports.nodeSend = function(request) {
   });
 };
 
+function logRequest(request) {
+  debugRequest(request);
+}
+
+exports.log = function(request, next) {
+  logRequest(request);
+
+  return next().then(function(response) {
+    logResponse(response);
+    return response;
+  }, function(e) {
+    var res = _.extend({}, e);
+    logResponse(res);
+    throw e;
+  });
+};
+
+function logResponse(response) {
+  if (!response.redirectResponse) {
+    var responseToLog = _.extend({}, response);
+    if (isStream(response.body)) {
+      delete responseToLog.body;
+    }
+
+    debugResponse(responseToLog);
+  }
+}
 exports.redirect = function(request, next, api) {
   return next().then(function(response) {
     var statusCode = response.statusCode;
@@ -154,7 +189,7 @@ exports.redirect = function(request, next, api) {
 
     if (request.options.redirect !== false && location && (statusCode === 300 || statusCode === 301 || statusCode === 302 || statusCode === 303 || statusCode === 307)) {
       return exports.consumeStream(response.body).then(function() {
-        utils.logResponse(response);
+        logResponse(response);
         return api.get(urlUtils.resolve(request.url, location), request.options).then(function(redirectResponse) {
           throw {
             redirectResponse: redirectResponse
@@ -217,7 +252,7 @@ exports.text = function(request, next) {
 };
 
 exports.form = function(request, next) {
-  if (request.options.form && request.body instanceof Object && !utils.isStream(request.body)) {
+  if (request.options.form && request.body instanceof Object && !isStream(request.body)) {
     setBodyToString(request, qs.stringify(request.body));
     utils.setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
   }

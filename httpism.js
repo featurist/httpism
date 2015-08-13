@@ -1,6 +1,6 @@
 var merge = require('./merge');
-var urlUtils = require('url');
-var _ = require('underscore');
+var resolveUrl = require('./resolveUrl');
+var utils = require('./middlewareUtils');
 
 function client(url, options, middlewares) {
   return new Httpism(url, options, middlewares);
@@ -43,7 +43,7 @@ Httpism.prototype.send = function(method, url, body, _options, api) {
 };
 
 function makeResponse(api, response) {
-  return _.extend(new Httpism(api.url, api._options, api.middlewares), response);
+  return utils.extend(new Httpism(api.url, api._options, api.middlewares), response);
 }
 
 Httpism.prototype.api = function (url, options, middlewares) {
@@ -80,7 +80,7 @@ addMethodWithBody('options');
 
 function resolveUrl(base, url) {
   if (base) {
-    return urlUtils.resolve (base, url);
+    return resolveUrl(base, url);
   } else {
     return url;
   }
