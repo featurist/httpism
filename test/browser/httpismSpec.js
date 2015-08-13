@@ -47,6 +47,15 @@ describe('httpism', function () {
       });
     });
 
+    it('can make a cross-origin json post request', function () {
+      return httpism.post('http://localhost:12345/', {data: 'hehey'}).then(function (response) {
+        expect(response.body.body).to.eql({data: 'hehey'});
+        expect(response.body.headers['content-type']).to.equal('application/json');
+        expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
+        expect(response.url).to.equal('http://localhost:12345/');
+      });
+    });
+
     it('can make a text post request', function () {
       return httpism.post('/', 'hehey').then(function (response) {
         expect(response.body.body).to.eql('hehey');

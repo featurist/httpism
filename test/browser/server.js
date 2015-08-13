@@ -1,10 +1,12 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var cors = require('cors');
 
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(bodyParser.urlencoded());
+app.use(cors());
 
 function respond(req, res) {
   res.json({url: req.url, body: req.body, method: req.method, headers: req.headers});
