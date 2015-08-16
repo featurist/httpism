@@ -1,4 +1,5 @@
 var middleware = require('./middleware');
+var utils = require('./middlewareUtils');
 var httpism = require('./httpism');
 
 module.exports = httpism(
@@ -10,7 +11,7 @@ module.exports = httpism(
     middleware.text,
     middleware.form,
     middleware.json,
-    middleware.querystring,
+    utils.querystring,
     middleware.basicAuth,
     middleware.redirect,
     middleware.cookies,

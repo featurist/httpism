@@ -66,7 +66,7 @@ describe('httpism', function () {
       });
     });
 
-    it.only("withCredentials = true, sends cookies cross-domain", function () {
+    it("withCredentials = true, sends cookies cross-domain", function () {
       return httpism.get('http://localhost:12345/cookies', {querystring: {a: 'b'}}).then(function () {
         expect(document.cookie).to.equal('a=b');
         return httpism.get('http://localhost:12345/', {withCredentials: true}).then(function (response) {
