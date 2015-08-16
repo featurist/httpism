@@ -85,7 +85,8 @@ function send(request) {
           headers: parseHeaders(xhr.getAllResponseHeaders()),
           statusCode: xhr.status,
           url: responseUrl(xhr, request.url),
-          xhr: xhr
+          xhr: xhr,
+          statusText: xhr.statusText
         };
 
         fulfil(response);
@@ -93,6 +94,7 @@ function send(request) {
     };
 
     setHeaders(request.headers, xhr);
+    xhr.withCredentials = !!request.options.withCredentials;
 
     xhr.send(request.body);
   });
@@ -105,6 +107,7 @@ module.exports = httpism(
     utils.exception,
     form,
     json,
+    utils.querystring,
     send
   ]
 );

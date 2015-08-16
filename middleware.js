@@ -136,6 +136,7 @@ exports.nodeSend = function(request) {
       function(res) {
         return result({
           statusCode: res.statusCode,
+          statusText: http.STATUS_CODES[res.statusCode],
           url: request.url,
           headers: res.headers,
           body: res
@@ -267,18 +268,6 @@ exports.form = function(request, next) {
       return response;
     }
   });
-};
-
-exports.querystring = function(request, next) {
-  if (request.options.querystring instanceof Object) {
-    var split = request.url.split("?");
-    var path = split[0];
-    var querystring = qs.parse(split[1]);
-    var mergedQueryString = merge(request.options.querystring, querystring);
-    request.url = path + "?" + qs.stringify(mergedQueryString);
-  }
-
-  return next();
 };
 
 exports.basicAuth = function(request, next) {

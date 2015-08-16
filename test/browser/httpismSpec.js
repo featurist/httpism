@@ -12,6 +12,16 @@ describe('httpism', function () {
       });
     });
 
+    it('can GET with query string', function () {
+      return httpism.get('/?a=b&b=c&c=d', {querystring: {b: 'd'}}).then(function (response) {
+        expect(response.body.method).to.equal('GET');
+        expect(response.body.query).to.eql({a: 'b', b: 'd', c: 'd'});
+        expect(response.body.url).to.equal('/?a=b&b=d&c=d');
+        expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
+        expect(response.url).to.equal('/?a=b&b=d&c=d');
+      });
+    });
+
     it('can make a string GET request', function () {
       return httpism.get('/text?text=asdf').then(function (response) {
         expect(response.body).to.equal('asdf');
@@ -33,6 +43,35 @@ describe('httpism', function () {
       return httpism.get('/redirect?url=' + encodeURIComponent('/')).then(function (response) {
         expect(response.body.method).to.eql('GET');
         expect(response.url).to.equal('/');
+      });
+    });
+  });
+
+  describe('cookies', function () {
+    it('can send and receive cookies', function () {
+      return httpism.get('/cookies', {querystring: {a: 'b'}}).then(function () {
+        expect(document.cookie).to.equal('a=b');
+        return httpism.get('/').then(function (response) {
+          expect(response.body.cookies).to.eql({a: 'b'});
+        });
+      });
+    });
+
+    it("by default, doesn't send cookies cross-domain", function () {
+      return httpism.get('http://localhost:12345/cookies', {querystring: {a: 'b'}}).then(function () {
+        expect(document.cookie).to.equal('a=b');
+        return httpism.get('http://localhost:12345/').then(function (response) {
+          expect(response.body.cookies).to.eql({});
+        });
+      });
+    });
+
+    it.only("withCredentials = true, sends cookies cross-domain", function () {
+      return httpism.get('http://localhost:12345/cookies', {querystring: {a: 'b'}}).then(function () {
+        expect(document.cookie).to.equal('a=b');
+        return httpism.get('http://localhost:12345/', {withCredentials: true}).then(function (response) {
+          expect(response.body.cookies).to.eql({a: 'b'});
+        });
       });
     });
   });
