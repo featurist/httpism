@@ -2,7 +2,7 @@
 
 [![travis-ci](https://secure.travis-ci.org/featurist/httpism.png?branch=master)](https://travis-ci.org/featurist/httpism)
 
-httpism is a HTTP client that does a few things differently:
+httpism is a node and browser HTTP client that does a few things differently:
 
 * **middleware**: customise a HTTP client for your API by sticking together middleware, for example, for content handlers or authentication schemes.
 * **hypermedia**: responses can be used to make further requests relative to the response URI, just like a browser.
@@ -20,6 +20,8 @@ Then
 ```JavaScript
 var httpism = require('httpism');
 ```
+
+Compatible with browserify too!
 
 ## GET JSON
 
@@ -80,6 +82,23 @@ authHttpism.get('https://secretapi.com/').then(function (response) {
 
 See more about [apis](#apis).
 
+## In the Browser
+
+The browser version has a few differences from the node version:
+
+* Relative URLs are relative to the current browser location.
+* No support for streams.
+* Redirects aren't optional, browsers _always_ follow redirects.
+* Logging is removed, since most (if not all?) browsers now have a network debug tab.
+
+However, everything else works as described here.
+
+### Size
+
+* httpism.js: 17K
+* httpism.min.js: 8.3K
+* httpism.min.js.gz: 3.1K
+
 ## Logging
 
 httpism uses [debug](https://github.com/visionmedia/debug) so you can enable logging just by setting the `DEBUG` environment variable to `httpism:*`:
@@ -124,13 +143,13 @@ response.method (url, data, [options])
 
 Responses are objects that contain
 
-* `url` the full URL of the response
+* `url` the full URL of the response. In the browser, this will be root-relative if the request is for the same domain as the current page. This can be different to the `request.url` if there was a redirect.
 * `headers` the headers of the response
 * `body` the body of the response. Depending on the `Content-Type` header:
     * `application/json` a object
     * `application/x-www-form-urlencoded` a object
     * `text/*` or `application/javascript` a string
-    * anything else is returned as a Node stream, **be careful to close it!**
+    * on the server, anything else is returned as a Node stream, **be careful to close it!**. In the browser, anything else is returned as a string.
 
 ## Cookies
 
