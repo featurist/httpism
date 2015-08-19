@@ -74,22 +74,30 @@ function responseUrl(xhr, requestUrl) {
 }
 
 function send(request) {
-  return new Promise(function (fulfil, reject) {
-    var xhr = new XMLHttpRequest();
+  var xhr = new XMLHttpRequest();
 
+  var promise = new Promise(function (fulfil, reject) {
     xhr.open(request.method, request.url, true);
     xhr.onreadystatechange = function (event) {
       if (xhr.readyState == 4) {
-        var response = {
-          body: xhr.responseText,
-          headers: parseHeaders(xhr.getAllResponseHeaders()),
-          statusCode: xhr.status,
-          url: responseUrl(xhr, request.url),
-          xhr: xhr,
-          statusText: xhr.statusText
-        };
+        if (xhr.status !== 0) {
+          var response = {
+            body: xhr.responseText,
+            headers: parseHeaders(xhr.getAllResponseHeaders()),
+            statusCode: xhr.status,
+            url: responseUrl(xhr, request.url),
+            xhr: xhr,
+            statusText: xhr.statusText
+          };
 
-        fulfil(response);
+          fulfil(response);
+        } else if (aborted) {
+          var error = new Error('aborted connection to ' + request.method + ' ' + request.url);
+          error.aborted = true;
+          reject(error);
+        } else {
+          reject(new Error('failed to connect to ' + request.method + ' ' + request.url));
+        }
       }
     };
 
@@ -98,6 +106,22 @@ function send(request) {
 
     xhr.send(request.body);
   });
+
+  var abort = function () { aborted = true; xhr.abort(); };
+  var aborted = false;
+  addAbortToPromise(promise, abort);
+
+  return promise;
+}
+
+function addAbortToPromise(promise, abort) {
+  var then = promise.then;
+  promise.then = function () {
+    var p = then.apply(this, arguments);
+    p.abort = abort;
+    addAbortToPromise(p, abort);
+    return p;
+  };
 }
 
 module.exports = httpism(

@@ -95,9 +95,9 @@ However, everything else works as described here.
 
 ### Size
 
-* httpism.js: 17K
-* httpism.min.js: 8.3K
-* httpism.min.js.gz: 3.1K
+* httpism.js: 18K
+* httpism.min.js: 8.6K
+* httpism.min.js.gz: 3.2K
 
 ## Logging
 

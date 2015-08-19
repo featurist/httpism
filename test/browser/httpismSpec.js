@@ -5,6 +5,7 @@ describe('httpism', function () {
   describe('get', function () {
     it('can make a JSON GET request', function () {
       return httpism.get('/').then(function (response) {
+        console.log('got response', response);
         expect(response.body.method).to.equal('GET');
         expect(response.body.url).to.equal('/');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -121,6 +122,55 @@ describe('httpism', function () {
         expect(response.body.headers['content-type']).to.equal('application/json');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
         expect(response.url).to.equal('/');
+      });
+    });
+  });
+
+  describe('abort', function () {
+    it('can abort a request', function () {
+      var request = httpism.get('/');
+      request.abort();
+      return new Promise(function (fulfil, reject) {
+        request.then(function (response) {
+          reject(new Error("didn't expect response"));
+        }, function (error) {
+          if (error.aborted != true) {
+            reject(error);
+          } else {
+            fulfil();
+          }
+        });
+      });
+    });
+
+    it('can abort a request even with user middleware', function () {
+      var middlewareRequest, middlewareResponse;
+
+      var http = httpism.api([
+        function (request, next) {
+          middlewareRequest = true;
+          return next().then(function (response) {
+            middlewareResponse = true;
+            return response;
+          });
+        }
+      ]);
+
+      var request = http.get('/');
+      request.abort();
+      return new Promise(function (fulfil, reject) {
+        request.then(function (response) {
+          reject(new Error("didn't expect response"));
+        }, function (error) {
+          if (error.aborted != true) {
+            reject(error);
+          } else {
+            fulfil();
+          }
+        });
+      }).then(function () {
+        expect(middlewareRequest).to.be.true;
+        expect(middlewareResponse).to.be.undefined;
       });
     });
   });
