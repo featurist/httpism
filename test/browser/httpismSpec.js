@@ -1,11 +1,13 @@
 var expect = require('chai').expect;
 var httpism = require('../..');
+Promise = require('es6-promise').Promise;
+
+var server = 'http://' + window.location.hostname + ':12345';
 
 describe('httpism', function () {
   describe('get', function () {
     it('can make a JSON GET request', function () {
       return httpism.get('/').then(function (response) {
-        console.log('got response', response);
         expect(response.body.method).to.equal('GET');
         expect(response.body.url).to.equal('/');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -53,25 +55,29 @@ describe('httpism', function () {
       return httpism.get('/cookies', {querystring: {a: 'b'}}).then(function () {
         expect(document.cookie).to.equal('a=b');
         return httpism.get('/').then(function (response) {
-          expect(response.body.cookies).to.eql({a: 'b'});
+          expect(response.body.cookies.a).to.equal('b');
         });
       });
     });
 
-    it("by default, doesn't send cookies cross-domain", function () {
-      return httpism.get('http://localhost:12345/cookies', {querystring: {a: 'b'}}).then(function () {
-        expect(document.cookie).to.equal('a=b');
-        return httpism.get('http://localhost:12345/').then(function (response) {
-          expect(response.body.cookies).to.eql({});
+    describe('cross-domain', function () {
+      beforeEach(function () {
+        return httpism.get(server + '/cookies', {querystring: {a: ''}, withCredentials: true});
+      });
+
+      it("by default, doesn't send cookies cross-domain", function () {
+        return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
+          return httpism.get(server + '/').then(function (response) {
+            expect(response.body.cookies.a).to.be.undefined;
+          });
         });
       });
-    });
 
-    it("withCredentials = true, sends cookies cross-domain", function () {
-      return httpism.get('http://localhost:12345/cookies', {querystring: {a: 'b'}}).then(function () {
-        expect(document.cookie).to.equal('a=b');
-        return httpism.get('http://localhost:12345/', {withCredentials: true}).then(function (response) {
-          expect(response.body.cookies).to.eql({a: 'b'});
+      it("withCredentials = true, sends cookies cross-domain", function () {
+        return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
+          return httpism.get(server + '/', {withCredentials: true}).then(function (response) {
+            expect(response.body.cookies.a).to.equal('b');
+          });
         });
       });
     });
@@ -88,11 +94,11 @@ describe('httpism', function () {
     });
 
     it('can make a cross-origin json post request', function () {
-      return httpism.post('http://localhost:12345/', {data: 'hehey'}).then(function (response) {
+      return httpism.post(server + '/', {data: 'hehey'}).then(function (response) {
         expect(response.body.body).to.eql({data: 'hehey'});
         expect(response.body.headers['content-type']).to.equal('application/json');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
-        expect(response.url).to.equal('http://localhost:12345/');
+        expect(response.url).to.equal(server + '/');
       });
     });
 

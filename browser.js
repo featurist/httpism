@@ -66,10 +66,14 @@ function responseUrl(xhr, requestUrl) {
   var origin = location.origin;
   var responseUrl = xhr.responseURL;
   
-  if (responseUrl.substring(0, origin.length) == origin) {
-    return responseUrl.substring(origin.length);
+  if (responseUrl) {
+    if (responseUrl.substring(0, origin.length) == origin) {
+      return responseUrl.substring(origin.length);
+    } else {
+      return responseUrl;
+    }
   } else {
-    return responseUrl;
+    return requestUrl;
   }
 }
 
