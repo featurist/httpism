@@ -80,6 +80,12 @@ describe('httpism', function () {
           });
         });
       });
+
+      it("doesn't send x-requested-with if cross-domain", function () {
+        return httpism.get(server + '/').then(function (response) {
+          expect(response.body.xhr).to.be.false;
+        });
+      });
     });
   });
 
@@ -177,6 +183,23 @@ describe('httpism', function () {
       }).then(function () {
         expect(middlewareRequest).to.be.true;
         expect(middlewareResponse).to.be.undefined;
+      });
+    });
+  });
+
+  describe('x-requested-with header', function () {
+    it('sends the x-requested-with header', function () {
+      return httpism.get('/').then(function (response) {
+        expect(response.body.xhr).to.be.true;
+      });
+    });
+  });
+
+  describe('delete', function () {
+    it('can respond with 204 and empty body', function () {
+      return httpism.delete('/delete').then(function (response) {
+        expect(response.statusCode).to.equal(204);
+        expect(response.body).to.be.undefined;
       });
     });
   });

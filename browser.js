@@ -85,10 +85,12 @@ function send(request) {
     xhr.onreadystatechange = function (event) {
       if (xhr.readyState == 4) {
         if (xhr.status !== 0) {
+          var statusCode = xhr.status;
+
           var response = {
-            body: xhr.responseText,
+            body: statusCode == 204? undefined: xhr.responseText,
             headers: parseHeaders(xhr.getAllResponseHeaders()),
-            statusCode: xhr.status,
+            statusCode: statusCode,
             url: responseUrl(xhr, request.url),
             xhr: xhr,
             statusText: xhr.statusText
@@ -105,6 +107,10 @@ function send(request) {
       }
     };
 
+    if (!isCrossDomain(request.url) && !request.headers['x-requested-with']) {
+      request.headers['x-requested-with'] = 'XMLHttpRequest'
+    }
+
     setHeaders(request.headers, xhr);
     xhr.withCredentials = !!request.options.withCredentials;
 
@@ -116,6 +122,10 @@ function send(request) {
   addAbortToPromise(promise, abort);
 
   return promise;
+}
+
+function isCrossDomain(url) {
+  return /^https?:\/\//.test(url);
 }
 
 function addAbortToPromise(promise, abort) {

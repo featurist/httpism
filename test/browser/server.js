@@ -17,12 +17,17 @@ function respond(req, res) {
     method: req.method,
     headers: req.headers,
     query: req.query,
-    cookies: req.cookies
+    cookies: req.cookies,
+    xhr: req.xhr
   });
 }
 
 app.all('/', function (req, res) {
   respond(req, res);
+});
+
+app.delete('/delete', function (req, res) {
+  res.status(204).send();
 });
 
 app.get('/text', function (req, res) {
