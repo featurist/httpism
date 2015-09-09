@@ -3,6 +3,7 @@ var httpism = require('../..');
 Promise = require('es6-promise').Promise;
 
 var server = 'http://' + window.location.hostname + ':12345';
+var badServer = 'http://' + window.location.hostname + ':12346';
 
 describe('httpism', function () {
   describe('get', function () {
@@ -84,6 +85,13 @@ describe('httpism', function () {
       it("doesn't send x-requested-with if cross-domain", function () {
         return httpism.get(server + '/').then(function (response) {
           expect(response.body.xhr).to.be.false;
+        });
+      });
+
+      it('throws when it cannot connect to the remote server', function () {
+        return httpism.get(badServer + '/').then(function () {
+          throw new Error('expected to be rejected');
+        }, function (response) {
         });
       });
     });

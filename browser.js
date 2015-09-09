@@ -79,32 +79,28 @@ function responseUrl(xhr, requestUrl) {
 
 function send(request) {
   var xhr = new XMLHttpRequest();
+  var reject;
 
-  var promise = new Promise(function (fulfil, reject) {
+  var promise = new Promise(function (fulfil, _reject) {
+    reject = _reject;
     xhr.open(request.method, request.url, true);
-    xhr.onreadystatechange = function (event) {
-      if (xhr.readyState == 4) {
-        if (xhr.status !== 0) {
-          var statusCode = xhr.status;
+    xhr.onload = function (event) {
+      var statusCode = xhr.status;
 
-          var response = {
-            body: statusCode == 204? undefined: xhr.responseText,
-            headers: parseHeaders(xhr.getAllResponseHeaders()),
-            statusCode: statusCode,
-            url: responseUrl(xhr, request.url),
-            xhr: xhr,
-            statusText: xhr.statusText
-          };
+      var response = {
+        body: statusCode == 204? undefined: xhr.responseText,
+        headers: parseHeaders(xhr.getAllResponseHeaders()),
+        statusCode: statusCode,
+        url: responseUrl(xhr, request.url),
+        xhr: xhr,
+        statusText: xhr.statusText
+      };
 
-          fulfil(response);
-        } else if (aborted) {
-          var error = new Error('aborted connection to ' + request.method + ' ' + request.url);
-          error.aborted = true;
-          reject(error);
-        } else {
-          reject(new Error('failed to connect to ' + request.method + ' ' + request.url));
-        }
-      }
+      fulfil(response);
+    };
+
+    xhr.onerror = function (error) {
+      reject(new Error('failed to connect to ' + request.method + ' ' + request.url));
     };
 
     if (!isCrossDomain(request.url) && !request.headers['x-requested-with']) {
@@ -117,8 +113,12 @@ function send(request) {
     xhr.send(request.body);
   });
 
-  var abort = function () { aborted = true; xhr.abort(); };
-  var aborted = false;
+  function abort() {
+    xhr.abort();
+    var error = new Error('aborted connection to ' + request.method + ' ' + request.url);
+    error.aborted = true;
+    reject(error);
+  }
   addAbortToPromise(promise, abort);
 
   return promise;
