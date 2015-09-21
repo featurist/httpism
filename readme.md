@@ -127,17 +127,33 @@ returns a promise
 ### POST, PUT, PATCH, OPTIONS
 
 ```JavaScript
-httpism.method (url, data, [options])
-response.method (url, data, [options])
+httpism.method (url, body, [options])
+response.method (url, body, [options])
 ```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
-* `data` the data to send
+* `body` the request body to send
     * by default a JS object is encoded as JSON and sent as `application/json`
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
     * a stream (where `typeof(stream.pipe) === 'function'`) is sent as is. Be sure to set `Content-Type` header: `{headers: {'content-type': '...'}}`.
 * `options` request options, see [options](#options).
 * `response` a response from another request.
+
+### Send
+
+```js
+httpism.send(method, url, [body], [options]);
+response.send(method, url, [body], [options]);
+```
+
+* `url` a string url, full or relative to the response, or '' to request the response again
+* `body` the request body to send
+    * by default a JS object is encoded as JSON and sent as `application/json`
+    * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
+    * a stream (where `typeof(stream.pipe) === 'function'`) is sent as is. Be sure to set `Content-Type` header: `{headers: {'content-type': '...'}}`.
+* `options` request options, see [options](#options).
+* `response` a response from another request.
+
 
 ## Responses
 
