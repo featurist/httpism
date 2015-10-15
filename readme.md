@@ -8,6 +8,7 @@ httpism is a node and browser HTTP client that does a few things differently:
 * **hypermedia**: responses can be used to make further requests relative to the response URI, just like a browser.
 * **useful by default**: sends and receives JSON, throws exceptions on 400-500s, follows redirects. Of course, you can disable this stuff when it gets in your way, or hit raw HTTP and streams when you need to get clever.
 * **promises**: no messing about with callbacks.
+* for **browser** and **server** alike.
 
 ## NPM: [httpism](https://www.npmjs.org/package/httpism)
 
@@ -22,6 +23,12 @@ var httpism = require('httpism');
 ```
 
 Compatible with browserify too!
+
+## Browser Size
+
+* httpism.js: 18K
+* httpism.min.js: 8.6K
+* httpism.min.js.gz: 3.2K
 
 ## GET JSON
 
@@ -93,12 +100,6 @@ The browser version has a few differences from the node version:
 
 However, everything else works as described here.
 
-### Size
-
-* httpism.js: 18K
-* httpism.min.js: 8.6K
-* httpism.min.js.gz: 3.2K
-
 ## Logging
 
 httpism uses [debug](https://github.com/visionmedia/debug) so you can enable logging just by setting the `DEBUG` environment variable to `httpism:*`:
@@ -169,7 +170,7 @@ Responses are objects that contain
 
 ## Cookies
 
-Cookies are not handled by default, but you can enable them by using `httpism.api` passing the `{cookies: true}` option:
+Cookies on the server are not handled by default, but you can enable them by using `httpism.api` passing the `{cookies: true}` option:
 
 ```js
 var client = httpism.api('http://example.com/', {cookies: true});
@@ -180,6 +181,10 @@ client.post('/login', {username: 'jerome', password: 'password123'}, {form: true
   });
 });
 ```
+
+Different instances of httpism APIs will use different cookie jars.
+
+Cookies are always on in the browser, using native browser cookies.
 
 ## Hypermedia
 
