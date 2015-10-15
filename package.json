@@ -6,6 +6,7 @@
   "dependencies": {
     "debug": "2.2.0",
     "qs": "^0.6.6",
+    "tough-cookie": "2.2.0",
     "underscore": "^1.6.0"
   },
   "devDependencies": {
@@ -25,8 +26,7 @@
     "mocha": "2.2.5",
     "mock-xhr-router": "1.1.1",
     "pogo": "^0.9.6",
-    "should": "~2.1.1",
-    "tough-cookie": "2.0.0"
+    "should": "~2.1.1"
   },
   "directories": {
     "test": "test"

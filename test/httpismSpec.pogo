@@ -328,6 +328,12 @@ describe 'httpism'
         response = httpism.get! "#(baseurl)/getcookie" {cookies = cookies}.body
         response.should.eql {mycookie = 'value'}
 
+      it 'can store cookies and send cookies'
+        api = httpism.api (baseurl, cookies: true)
+        api.get! "#(baseurl)/setcookie"
+        response = api.get! "#(baseurl)/getcookie".body
+        response.should.eql {mycookie = 'value'}
+
     describe 'https'
       httpsServer = nil
       httpsPort = 23456

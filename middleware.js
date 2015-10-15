@@ -219,8 +219,15 @@ function storeCookies(cookies, url, header) {
   }
 }
 
-exports.cookies = function (request, next) {
-  var cookies = request.options.cookies;
+exports.cookies = function (request, next, api) {
+  var cookies;
+
+  if (api._options.cookies === true) {
+    var toughCookie = require('tough-cookie');
+    cookies = request.options.cookies = api._options.cookies = new toughCookie.CookieJar();
+  } else {
+    cookies = request.options.cookies;
+  }
 
   if (cookies) {
     request.headers.cookie = loadCookies(cookies, request.url);

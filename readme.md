@@ -169,13 +169,10 @@ Responses are objects that contain
 
 ## Cookies
 
-Cookies can be stored with [tough-cookie](https://github.com/SalesforceEng/tough-cookie). Just set `options.cookies` to an instance of a `ToughCookie.CookieJar` to store cookies sent from the server, and correspondingly, cookies that match the domain will be sent back to the server.
+Cookies are not handled by default, but you can enable them by using `httpism.api` passing the `{cookies: true}` option:
 
 ```js
-var ToughCookie = require('tough-cookie');
-
-// make a new client that uses the cookie jar
-var client = httpism.api('http://example.com/', {cookies: new ToughCookie.CookieJar()});
+var client = httpism.api('http://example.com/', {cookies: true});
 
 client.post('/login', {username: 'jerome', password: 'password123'}, {form: true}).then(function () {
   return client.get('/profile').then(function (profileResponse) {
