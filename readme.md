@@ -100,13 +100,16 @@ The browser version has a few differences from the node version:
 
 However, everything else works as described here.
 
-## Logging
+## Debug
 
 httpism uses [debug](https://github.com/visionmedia/debug) so you can enable logging just by setting the `DEBUG` environment variable to `httpism:*`:
 
 ```bash
 DEBUG=httpism:* node app.js
 ```
+
+* `httpism:request` the request
+* `httpism:response` the response
 
 More information in debug's README.
 
