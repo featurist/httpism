@@ -4,7 +4,7 @@ var qs = require('qs');
 
 function json(request, next) {
   if (request.body instanceof Object) {
-    setBodyToString(request, JSON.stringify(request.body));
+    request.body = JSON.stringify(request.body);
     utils.setHeaderTo(request, "content-type", "application/json");
   }
 
@@ -16,6 +16,14 @@ function json(request, next) {
     }
     return response;
   });
+}
+
+function text(request, next) {
+  if (typeof request.body === 'string') {
+    utils.setHeaderTo(request, "content-type", "text/plain;charset=UTF-8");
+  }
+
+  return next();
 }
 
 function form(request, next) {
@@ -34,7 +42,6 @@ function form(request, next) {
 
 function setBodyToString(r, s) {
   r.body = s;
-  r.stringBody = s;
 }
 
 function parseHeaders(headers) {
@@ -145,6 +152,7 @@ module.exports = httpism(
     utils.exception,
     form,
     json,
+    text,
     utils.querystring,
     send
   ]

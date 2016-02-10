@@ -57,13 +57,6 @@ describe('httpism', function () {
         expect(response.url).to.equal('/status/404');
       });
     });
-
-    it('redirects', function () {
-      return httpism.get('/redirect?url=' + encodeURIComponent('/')).then(function (response) {
-        expect(response.body.method).to.eql('GET');
-        expect(response.url).to.equal('/');
-      });
-    });
   });
 
   describe('cookies', function () {

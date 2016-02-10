@@ -25,9 +25,11 @@
     "karma-chrome-launcher": "0.2.0",
     "karma-mocha": "0.2.0",
     "karma-mocha-reporter": "1.1.1",
+    "karma-phantomjs-launcher": "1.0.0",
     "karma-server-side": "1.3.0",
     "mocha": "2.2.5",
     "mock-xhr-router": "1.1.1",
+    "phantomjs-prebuilt": "2.1.4",
     "pogo": "^0.9.6",
     "server-destroy": "1.0.1",
     "should": "~2.1.1"
@@ -36,7 +38,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run test-mocha && npm run test-browser -- --single-run",
+    "test": "npm run test-mocha && npm run test-browser -- --single-run --browsers PhantomJS",
     "test-browser": "karma start",
     "test-mocha": "mocha",
     "size": "browserify browser.js > _httpism.js && uglifyjs --compress warnings=false --mangle -- _httpism.js > _httpism.min.js && gzip < _httpism.min.js > _httpism.min.js.gz && ls -lh _httpism.*"
