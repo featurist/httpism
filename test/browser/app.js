@@ -51,6 +51,4 @@ app.get('/redirect', function (req, res) {
   res.redirect(req.query.url);
 });
 
-app.listen(12345, function () {
-  console.log('http://localhost:12345/');
-});
+module.exports = app;

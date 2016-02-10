@@ -1,11 +1,26 @@
 var expect = require('chai').expect;
 var httpism = require('../..');
 Promise = require('es6-promise').Promise;
+var serverSide = require('karma-server-side');
 
 var server = 'http://' + window.location.hostname + ':12345';
 var badServer = 'http://' + window.location.hostname + ':12346';
 
 describe('httpism', function () {
+  before(function () {
+    return serverSide.run(function () {
+      if (this.server) {
+        this.server.destroy();
+      }
+
+      var app = serverRequire('./test/browser/app');
+      var serverDestroy = serverRequire('server-destroy');
+
+      this.server = app.listen(12345);
+      serverDestroy(this.server);
+    });
+  });
+
   describe('get', function () {
     it('can make a JSON GET request', function () {
       return httpism.get('/').then(function (response) {
