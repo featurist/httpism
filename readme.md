@@ -1,6 +1,4 @@
-# HTTPism
-
-[![travis-ci](https://secure.travis-ci.org/featurist/httpism.png?branch=master)](https://travis-ci.org/featurist/httpism)
+# httpism [![npm version](https://img.shields.io/npm/v/httpism.svg)](https://www.npmjs.com/package/httpism) [![npm](https://img.shields.io/npm/dm/httpism.svg)](https://www.npmjs.com/package/httpism) [![Build Status](https://travis-ci.org/featurist/httpism.svg?branch=master)](https://travis-ci.org/featurist/httpism)
 
 httpism is a node and browser HTTP client that does a few things differently:
 
