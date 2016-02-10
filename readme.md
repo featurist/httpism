@@ -103,9 +103,10 @@ However, everything else works as described here.
 httpism uses [debug](https://github.com/visionmedia/debug) so you can enable logging just by setting the `DEBUG` environment variable to `httpism:*`:
 
 ```bash
-DEBUG=httpism:* node app.js
+DEBUG=httpism* node app.js
 ```
 
+* `httpism` simple request => response, i.e. `GET http://www.example.com/api => 200 (40ms)`
 * `httpism:request` the request
 * `httpism:response` the response
 

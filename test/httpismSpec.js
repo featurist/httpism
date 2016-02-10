@@ -220,7 +220,7 @@ describe("httpism", function() {
           });
         });
 
-        httpism.get(baseurl, {
+        return httpism.get(baseurl, {
           headers: {
             "x-header": "haha"
           }

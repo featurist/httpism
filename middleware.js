@@ -11,7 +11,6 @@ var debugResponse = createDebug("httpism:response");
 var debugRequest = createDebug("httpism:request");
 
 exports.exception = utils.exception;
-exports.log = utils.log;
 
 exports.streamToString = function(s) {
   return new Promise(function(result, error) {
@@ -172,14 +171,33 @@ exports.log = function(request, next) {
   });
 };
 
-function logResponse(response) {
-  if (!response.redirectResponse) {
-    var responseToLog = _.extend({}, response);
-    if (isStream(response.body)) {
-      delete responseToLog.body;
-    }
+exports.debugLog = function(request, next) {
+  if (debug.enabled) {
+    var startTime = Date.now();
+    return next().then(function (response) {
+      var time = Date.now() - startTime;
+      debug(request.method.toUpperCase() + ' ' + request.url + ' => ' + response.statusCode + ' (' + time + 'ms)');
+      return response;
+    }, function (error) {
+      var time = Date.now() - startTime;
+      debug(request.method + ' ' + request.url + ' => ' + error.message + ' (' + time + 'ms)');
+      throw error;
+    });
+  } else {
+    return next();
+  }
+};
 
-    debugResponse(responseToLog);
+function logResponse(response) {
+  if (debugResponse.enabled) {
+    if (!response.redirectResponse) {
+      var responseToLog = _.extend({}, response);
+      if (isStream(response.body)) {
+        delete responseToLog.body;
+      }
+
+      debugResponse(responseToLog);
+    }
   }
 }
 exports.redirect = function(request, next, api) {

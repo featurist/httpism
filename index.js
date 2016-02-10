@@ -15,6 +15,7 @@ module.exports = httpism(
     middleware.basicAuth,
     middleware.redirect,
     middleware.cookies,
+    middleware.debugLog,
     middleware.nodeSend
   ]
 );
