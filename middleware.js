@@ -9,6 +9,7 @@ var createDebug = require("debug");
 var debug = createDebug("httpism");
 var debugResponse = createDebug("httpism:response");
 var debugRequest = createDebug("httpism:request");
+var HttpsProxyAgent = require('https-proxy-agent');
 
 exports.exception = utils.exception;
 
@@ -100,15 +101,20 @@ function proxyUrl(request, proxy) {
 
   request.headers.host = url.hostname;
 
-  if (proxyUrl.auth) {
-    request.headers['proxy-authorization'] = encodeBasicAuthorizationHeader(proxyUrl.auth);
-  }
+  if (url.protocol === 'https:') {
+    url.agent = new HttpsProxyAgent(proxy);
+    return url;
+  } else {
+    if (proxyUrl.auth) {
+      request.headers['proxy-authorization'] = encodeBasicAuthorizationHeader(proxyUrl.auth);
+    }
 
-  return {
-    hostname: proxyUrl.hostname,
-    port: proxyUrl.port,
-    path: request.url
-  };
+    return {
+      hostname: proxyUrl.hostname,
+      port: proxyUrl.port,
+      path: request.url
+    };
+  }
 }
 
 function parseUrl(request) {
@@ -131,7 +137,8 @@ exports.nodeSend = function(request) {
         port: url.port,
         method: request.method,
         path: url.path,
-        headers: request.headers
+        headers: request.headers,
+        agent: url.agent
       },
       request.options,
       url.protocol,
@@ -173,9 +180,14 @@ function withoutPasswords(request, fn) {
   var basicAuth = request.options && request.options.basicAuth;
   var password = basicAuth && basicAuth.password;
   var url = request.url;
-  var urlWithoutPassword = obfuscateUrlPassword(request.url);
 
-  request.url = urlWithoutPassword;
+  if (url) {
+    var urlWithoutPassword = obfuscateUrlPassword(request.url);
+    request.url = urlWithoutPassword;
+  } else {
+    debug('request without url', request);
+  }
+
   if (password) {
     basicAuth.password = '********';
   }

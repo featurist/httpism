@@ -15,6 +15,7 @@ var basicAuth = require("basic-auth-connect");
 var cookieParser = require("cookie-parser");
 var toughCookie = require("tough-cookie");
 var httpProxy = require('http-proxy');
+var net = require('net');
 
 describe("httpism", function() {
   var server;
@@ -827,40 +828,80 @@ describe("httpism", function() {
     var proxyPort = 12346;
     var proxy;
     var urlProxied;
-
-    beforeEach(function () {
-      urlProxied = undefined;
-    });
+    var proxyAuth = false;
+    var proxyUrl = 'http://localhost:' + proxyPort + '/';
+    var secureProxyUrl = 'http://bob:secret@localhost:' + proxyPort + '/';
 
     function proxyRequest(req, res) {
       urlProxied = req.url;
       proxy.web(req, res, { target: req.url });
     }
 
-    function checkProxyAuthentication(username, password, next) {
-      return function (req, res) {
-        var expectedAuthorisation = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
+    function checkProxyAuthentication(req, res, next) {
+      var expectedAuthorisation = 'Basic ' + new Buffer('bob:secret').toString('base64');
 
-        if (expectedAuthorisation == req.headers['proxy-authorization']) {
-          next(req, res);
-        } else {
-          res.statusCode = 407;
-          res.end('bad proxy authentication');
-        }
-      };
+      if (expectedAuthorisation == req.headers['proxy-authorization']) {
+        next(req, res);
+      } else {
+        res.statusCode = 407;
+        res.end('bad proxy authentication');
+      }
     }
 
+    beforeEach(function() {
+      urlProxied = undefined;
+      proxy = httpProxy.createProxyServer();
+
+      proxyServer = http.createServer(function (req, res) {
+        if (proxyAuth) {
+          return checkProxyAuthentication(req, res, proxyRequest);
+        } else {
+          return proxyRequest(req, res);
+        }
+      });
+      proxyServer.listen(proxyPort);
+
+      proxyServer.on('connect', function(req, socket) {
+        var addr = req.url.split(':');
+        //creating TCP connection to remote server
+        var conn = net.connect(addr[1] || 443, addr[0], function() {
+          // tell the client that the connection is established
+          socket.write('HTTP/' + req.httpVersion + ' 200 OK\r\n\r\n', 'UTF-8', function() {
+            // creating pipes in both ends
+            conn.pipe(socket);
+            socket.pipe(conn);
+          });
+        });
+
+        conn.on('error', function(e) {
+          console.log("Server connection error: " + e, addr);
+          socket.end();
+        });
+      });
+    });
+
+    afterEach(function() {
+      proxyServer.close();
+    });
+
+    var httpsServer;
+    var httpsPort = 23456;
+    var httpsBaseurl = "https://localhost:" + httpsPort + "/";
+
+    beforeEach(function() {
+      var credentials = {
+        key: fs.readFileSync(__dirname + "/server.key", "utf-8"),
+        cert: fs.readFileSync(__dirname + "/server.crt", "utf-8")
+      };
+      httpsServer = https.createServer(credentials, app);
+      httpsServer.listen(httpsPort);
+    });
+
+    afterEach(function() {
+      httpsServer.close();
+    });
+
     context('unsecured proxy', function () {
-      beforeEach(function() {
-        proxy = httpProxy.createProxyServer();
-
-        proxyServer = http.createServer(proxyRequest);
-        proxyServer.listen(proxyPort);
-      });
-
-      afterEach(function() {
-        proxyServer.close();
-      });
 
       it('can use a proxy', function () {
         app.get("/", function(req, res) {
@@ -869,25 +910,26 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(baseurl, {proxy: 'http://localhost:' + proxyPort + '/'}).then(function (response) {
+        return httpism.get(baseurl, {proxy: proxyUrl}).then(function (response) {
           expect(response.body).to.eql({blah: 'blah'});
           expect(urlProxied).to.equal(baseurl);
+        });
+      });
+
+      it("can make HTTPS requests", function() {
+        app.get("/", function(req, res) {
+          res.send({
+            protocol: req.protocol
+          });
+        });
+
+        return httpism.get(httpsBaseurl, { proxy: proxyUrl, https: { rejectUnauthorized: false } }).then(function(response) {
+          response.body.protocol.should.equal("https");
         });
       });
     });
 
     context('secured proxy', function () {
-      beforeEach(function() {
-        proxy = httpProxy.createProxyServer();
-
-        proxyServer = http.createServer(checkProxyAuthentication('bob', 'secret', proxyRequest));
-        proxyServer.listen(proxyPort);
-      });
-
-      afterEach(function() {
-        proxyServer.close();
-      });
-
       it('can use a proxy', function () {
         app.get("/", function(req, res) {
           res.send({
@@ -895,9 +937,21 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(baseurl, {proxy: 'http://bob:secret@localhost:' + proxyPort + '/'}).then(function (response) {
+        return httpism.get(baseurl, {proxy: secureProxyUrl}).then(function (response) {
           expect(response.body).to.eql({blah: 'blah'});
           expect(urlProxied).to.equal(baseurl);
+        });
+      });
+
+      it("can make HTTPS requests", function() {
+        app.get("/", function(req, res) {
+          res.send({
+            protocol: req.protocol
+          });
+        });
+
+        return httpism.get(httpsBaseurl, { proxy: secureProxyUrl, https: { rejectUnauthorized: false } }).then(function(response) {
+          response.body.protocol.should.equal("https");
         });
       });
     });
