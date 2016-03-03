@@ -154,8 +154,38 @@ exports.nodeSend = function(request) {
   });
 };
 
+function obfuscateUrlPassword(url) {
+  var urlComponents = urlUtils.parse(url);
+  if (urlComponents.auth) {
+    urlComponents.auth = urlComponents.auth.replace(/:.*/, ':********');
+
+    return urlUtils.format(urlComponents);
+  } else {
+    return url;
+  }
+}
+
+function withoutPasswords(request, fn) {
+  var basicAuth = request.options && request.options.basicAuth;
+  var password = basicAuth && basicAuth.password;
+  var url = request.url;
+  var urlWithoutPassword = obfuscateUrlPassword(request.url);
+
+  request.url = urlWithoutPassword;
+  if (password) {
+    basicAuth.password = '********';
+  }
+
+  fn(request);
+
+  if (password) {
+    basicAuth.password = password;
+  }
+  request.url = url;
+}
+
 function logRequest(request) {
-  debugRequest(request);
+  withoutPasswords(request, debugRequest);
 }
 
 exports.log = function(request, next) {
@@ -176,11 +206,11 @@ exports.debugLog = function(request, next) {
     var startTime = Date.now();
     return next().then(function (response) {
       var time = Date.now() - startTime;
-      debug(request.method.toUpperCase() + ' ' + request.url + ' => ' + response.statusCode + ' (' + time + 'ms)');
+      debug(request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + response.statusCode + ' (' + time + 'ms)');
       return response;
     }, function (error) {
       var time = Date.now() - startTime;
-      debug(request.method + ' ' + request.url + ' => ' + error.message + ' (' + time + 'ms)');
+      debug(request.method + ' ' + obfuscateUrlPassword(request.url) + ' => ' + error.message + ' (' + time + 'ms)');
       throw error;
     });
   } else {
@@ -196,7 +226,7 @@ function logResponse(response) {
         delete responseToLog.body;
       }
 
-      debugResponse(responseToLog);
+      withoutPasswords(responseToLog, debugResponse);
     }
   }
 }
