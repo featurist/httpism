@@ -180,12 +180,15 @@ function withoutPasswords(request, fn) {
   var basicAuth = request.options && request.options.basicAuth;
   var password = basicAuth && basicAuth.password;
   var url = request.url;
+  var proxy = request.options && request.options.proxy;
 
   if (url) {
     var urlWithoutPassword = obfuscateUrlPassword(request.url);
     request.url = urlWithoutPassword;
-  } else {
-    debug('request without url', request);
+  }
+
+  if (proxy) {
+    request.options.proxy = obfuscateUrlPassword(proxy);
   }
 
   if (password) {
@@ -198,6 +201,10 @@ function withoutPasswords(request, fn) {
     basicAuth.password = password;
   }
   request.url = url;
+
+  if (proxy) {
+    request.options.proxy = proxy;
+  }
 }
 
 function logRequest(request) {
