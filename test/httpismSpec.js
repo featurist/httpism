@@ -6,6 +6,7 @@ chai.use(require("chai-as-promised"));
 var assert = chai.assert;
 var expect = chai.expect;
 chai.should();
+var http = require('http');
 var https = require("https");
 var fs = require("fs-promise");
 var qs = require("qs");
@@ -13,6 +14,7 @@ var middleware = require("../middleware");
 var basicAuth = require("basic-auth-connect");
 var cookieParser = require("cookie-parser");
 var toughCookie = require("tough-cookie");
+var httpProxy = require('http-proxy');
 
 describe("httpism", function() {
   var server;
@@ -816,6 +818,87 @@ describe("httpism", function() {
         sendContent: qs.stringify({
           json: "true"
         })
+      });
+    });
+  });
+
+  describe('proxy', function () {
+    var proxyServer;
+    var proxyPort = 12346;
+    var proxy;
+    var urlProxied;
+
+    beforeEach(function () {
+      urlProxied = undefined;
+    });
+
+    function proxyRequest(req, res) {
+      urlProxied = req.url;
+      proxy.web(req, res, { target: req.url });
+    }
+
+    function checkProxyAuthentication(username, password, next) {
+      return function (req, res) {
+        var expectedAuthorisation = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
+
+        if (expectedAuthorisation == req.headers['proxy-authorization']) {
+          next(req, res);
+        } else {
+          res.statusCode = 407;
+          res.end('bad proxy authentication');
+        }
+      };
+    }
+
+    context('unsecured proxy', function () {
+      beforeEach(function() {
+        proxy = httpProxy.createProxyServer();
+
+        proxyServer = http.createServer(proxyRequest);
+        proxyServer.listen(proxyPort);
+      });
+
+      afterEach(function() {
+        proxyServer.close();
+      });
+
+      it('can use a proxy', function () {
+        app.get("/", function(req, res) {
+          res.send({
+            blah: "blah"
+          });
+        });
+
+        return httpism.get(baseurl, {proxy: 'http://localhost:' + proxyPort + '/'}).then(function (response) {
+          expect(response.body).to.eql({blah: 'blah'});
+          expect(urlProxied).to.equal(baseurl);
+        });
+      });
+    });
+
+    context('secured proxy', function () {
+      beforeEach(function() {
+        proxy = httpProxy.createProxyServer();
+
+        proxyServer = http.createServer(checkProxyAuthentication('bob', 'secret', proxyRequest));
+        proxyServer.listen(proxyPort);
+      });
+
+      afterEach(function() {
+        proxyServer.close();
+      });
+
+      it('can use a proxy', function () {
+        app.get("/", function(req, res) {
+          res.send({
+            blah: "blah"
+          });
+        });
+
+        return httpism.get(baseurl, {proxy: 'http://bob:secret@localhost:' + proxyPort + '/'}).then(function (response) {
+          expect(response.body).to.eql({blah: 'blah'});
+          expect(urlProxied).to.equal(baseurl);
+        });
       });
     });
   });

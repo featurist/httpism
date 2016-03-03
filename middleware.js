@@ -100,6 +100,10 @@ function proxyUrl(request, proxy) {
 
   request.headers.host = url.hostname;
 
+  if (proxyUrl.auth) {
+    request.headers['proxy-authorization'] = encodeBasicAuthorizationHeader(proxyUrl.auth);
+  }
+
   return {
     hostname: proxyUrl.hostname,
     port: proxyUrl.port,
@@ -324,11 +328,11 @@ exports.form = function(request, next) {
   });
 };
 
-exports.basicAuth = function(request, next) {
-  function encodeBasicAuthorizationHeader(s) {
-    return "Basic " + new Buffer(s).toString("base64");
-  }
+function encodeBasicAuthorizationHeader(s) {
+  return "Basic " + new Buffer(s).toString("base64");
+}
 
+exports.basicAuth = function(request, next) {
   function basicAuthorizationHeader() {
     if (request.options.basicAuth) {
       return encodeBasicAuthorizationHeader(request.options.basicAuth.username.replace(/:/g, "") + ":" + request.options.basicAuth.password);

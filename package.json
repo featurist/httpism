@@ -20,6 +20,7 @@
     "es6-promise": "3.0.2",
     "express": "^4.4.5",
     "fs-promise": "0.4.1",
+    "http-proxy": "1.13.2",
     "karma": "0.13.9",
     "karma-browserify": "4.3.0",
     "karma-chrome-launcher": "0.2.0",
