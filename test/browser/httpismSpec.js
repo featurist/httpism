@@ -222,13 +222,15 @@ describe('httpism', function () {
 
   describe('jsonReviver', function() {
     it('uses the JSON reviver to decode JSON values', function() {
-      return httpism.get('/', {
+      return httpism.post('/', {
+        greeting: 'hi'
+      }, {
         jsonReviver: function(key, value) {
-          if (key != 'method') return value;
+          if (key != 'greeting') return value;
           return value + '!';
         }
       }).then(function (response) {
-        expect(response.body.method).to.equal('GET!');
+        expect(response.body.body.greeting).to.equal('hi!');
       });
     });
   });

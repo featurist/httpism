@@ -987,8 +987,7 @@ describe("httpism", function() {
 
     it("controls how the JSON response is deserialised", function() {
       app.get("/", function(req, res) {
-        res.header("content-type", "application/json");
-        res.status(200).send(JSON.stringify({ blah: 1234 }));
+        res.status(200).send({ blah: 1234 });
       });
 
       var api = httpism.api(baseurl, {
