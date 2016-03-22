@@ -12,7 +12,7 @@ function json(request, next) {
 
   return next().then(function(response) {
     if (utils.shouldParseAs(response, "json", request)) {
-      response.body = JSON.parse(response.body);
+      response.body = JSON.parse(response.body, request.options.jsonReviver);
     }
     return response;
   });

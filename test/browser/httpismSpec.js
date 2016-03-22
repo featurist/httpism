@@ -219,4 +219,17 @@ describe('httpism', function () {
       });
     });
   });
+
+  describe('jsonReviver', function() {
+    it('uses the JSON reviver to decode JSON values', function() {
+      return httpism.get('/', {
+        jsonReviver: function(key, value) {
+          if (key != 'method') return value;
+          return value + '!';
+        }
+      }).then(function (response) {
+        expect(response.body.method).to.equal('GET!');
+      });
+    });
+  });
 });

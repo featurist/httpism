@@ -982,4 +982,29 @@ describe("httpism", function() {
       });
     });
   });
+
+  describe("json reviver", function() {
+
+    it("controls how the JSON response is deserialised", function() {
+      app.get("/", function(req, res) {
+        res.header("content-type", "application/json");
+        res.status(200).send(JSON.stringify({ blah: 1234 }));
+      });
+
+      var api = httpism.api(baseurl, {
+        jsonReviver: function(key, value) {
+          if (key == '') { return value; }
+          return key + value + '!';
+        }
+      });
+
+      return api.get(baseurl).then(function(response) {
+        response.statusCode.should.equal(200);
+        response.body.should.eql({
+          blah: "blah1234!"
+        });
+      });
+    });
+
+  });
 });

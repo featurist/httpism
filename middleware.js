@@ -61,7 +61,7 @@ exports.json = function(request, next) {
   return next().then(function(response) {
     if (utils.shouldParseAs(response, "json", request)) {
       return exports.streamToString(response.body).then(function(jsonString) {
-        response.body = JSON.parse(jsonString);
+        response.body = JSON.parse(jsonString, request.options.jsonReviver);
         return response;
       });
     } else {
