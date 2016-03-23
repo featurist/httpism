@@ -1,5 +1,4 @@
 var middleware = require('./middleware');
-var utils = require('./middlewareUtils');
 var httpism = require('./httpism');
 
 module.exports = httpism(
@@ -11,13 +10,13 @@ module.exports = httpism(
     middleware.text,
     middleware.form,
     middleware.json,
-    utils.querystring,
+    middleware.querystring,
     middleware.basicAuth,
     middleware.redirect,
     middleware.cookies,
     middleware.debugLog,
-    middleware.nodeSend
+    middleware.http
   ]
 );
 
-module.exports.raw = httpism(undefined, {}, [middleware.nodeSend]);
+module.exports.raw = httpism(undefined, {}, [middleware.http]);

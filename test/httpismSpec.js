@@ -323,6 +323,71 @@ describe("httpism", function() {
           });
         });
       });
+
+      describe('cache example', function () {
+        var filename = __dirname + "/cachefile.txt";
+
+        beforeEach(function() {
+          return fs.writeFile(filename, '{"from": "cache"}');
+        });
+
+        afterEach(function() {
+          return fs.unlink(filename);
+        });
+
+        it('can insert a new middleware just before the http request, dealing with streams', function () {
+          app.get('/', function (req, res) {
+            res.send({from: 'server'});
+          });
+
+          var cache = function (req, next) {
+            return next().then(function (response) {
+              response.body = fs.createReadStream(filename);
+              return response;
+            });
+          };
+
+          cache.before = 'http';
+
+          var http = httpism.api(cache);
+
+          return http.get(baseurl).then(function (response) {
+            expect(response.body).to.eql({from: 'cache'});
+          });
+        });
+      });
+
+      it('can insert middleware before another', function () {
+        var m = function () {};
+        m.before = 'http';
+        var api = httpism.raw.api(m);
+        expect(api.middlewares).to.eql([
+          m,
+          middleware.http
+        ]);
+      });
+
+      it('can insert middleware after another', function () {
+        var m = function () {};
+        m.after = 'http';
+        var api = httpism.raw.api(m);
+        expect(api.middlewares).to.eql([
+          middleware.http,
+          m
+        ]);
+      });
+
+      it('throws if before middleware name cannot be found', function () {
+        var m = function () {};
+        m.before = 'notfound';
+        expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+      });
+
+      it('throws if after middleware name cannot be found', function () {
+        var m = function () {};
+        m.after = 'notfound';
+        expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+      });
     });
 
     describe("exceptions", function() {
@@ -1005,5 +1070,11 @@ describe("httpism", function() {
       });
     });
 
+  });
+
+  describe('use', function () {
+    it('can add a middleware to the outside', function () {
+
+    });
   });
 });

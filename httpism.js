@@ -46,6 +46,34 @@ function makeResponse(api, response) {
   return utils.extend(new Httpism(api.url, api._options, api.middlewares), response);
 }
 
+function insertMiddleware(middlewares, m) {
+  for(var n = 0; n < middlewares.length; n++) {
+    if (middlewares[n].middleware == m.before) {
+      middlewares.splice(n, 0, m);
+      return;
+    } else if (middlewares[n].middleware == m.after) {
+      middlewares.splice(n + 1, 0, m);
+      return;
+    }
+  }
+
+  throw new Error('no such middleware: ' + (m.before || m.after));
+}
+
+function extendMiddlewares(originalMiddlewares, newMiddlewares) {
+  var middlewares = originalMiddlewares.slice();
+
+  newMiddlewares.forEach(function (m) {
+    if (m.before || m.after) {
+      insertMiddleware(middlewares, m);
+    } else {
+      middlewares.unshift(m);
+    }
+  });
+
+  return middlewares;
+}
+
 Httpism.prototype.api = function (url, options, middlewares) {
   var args = parseClientArguments(url, options, middlewares);
 
@@ -53,7 +81,7 @@ Httpism.prototype.api = function (url, options, middlewares) {
     resolveUrl(this.url, args.url),
     merge(args.options, this._options),
     args.middlewares
-      ? args.middlewares.concat(this.middlewares)
+      ? extendMiddlewares(this.middlewares, args.middlewares)
       : this.middlewares
   );
 };

@@ -11,7 +11,13 @@ var debugResponse = createDebug("httpism:response");
 var debugRequest = createDebug("httpism:request");
 var HttpsProxyAgent = require('https-proxy-agent');
 
-exports.exception = utils.exception;
+function middleware(name, fn) {
+  exports[name] = fn;
+  fn.middleware = name;
+}
+
+middleware('exception', utils.exception);
+middleware('querystring', utils.querystring);
 
 exports.streamToString = function(s) {
   return new Promise(function(result, error) {
@@ -50,7 +56,7 @@ function isStream(body) {
   return body !== undefined && typeof body.pipe === 'function';
 }
 
-exports.json = function(request, next) {
+middleware('json', function(request, next) {
   if (request.body instanceof Object && !isStream(request.body)) {
     setBodyToString(request, JSON.stringify(request.body));
     utils.setHeaderTo(request, "content-type", "application/json");
@@ -68,7 +74,7 @@ exports.json = function(request, next) {
       return response;
     }
   });
-};
+});
 
 function setBodyToString(r, s) {
   r.body = stringToStream(s);
@@ -127,7 +133,7 @@ function parseUrl(request) {
   }
 }
 
-exports.nodeSend = function(request) {
+middleware('http', function(request) {
   return new Promise(function(result, error) {
     var url = parseUrl(request);
 
@@ -163,7 +169,7 @@ exports.nodeSend = function(request) {
       req.end();
     }
   });
-};
+});
 
 function obfuscateUrlPassword(url) {
   var urlComponents = urlUtils.parse(url);
@@ -211,7 +217,7 @@ function logRequest(request) {
   withoutPasswords(request, debugRequest);
 }
 
-exports.log = function(request, next) {
+middleware('log', function(request, next) {
   logRequest(request);
 
   return next().then(function(response) {
@@ -222,9 +228,9 @@ exports.log = function(request, next) {
     logResponse(res);
     throw e;
   });
-};
+});
 
-exports.debugLog = function(request, next) {
+middleware('debugLog', function(request, next) {
   if (debug.enabled) {
     var startTime = Date.now();
     return next().then(function (response) {
@@ -239,7 +245,7 @@ exports.debugLog = function(request, next) {
   } else {
     return next();
   }
-};
+});
 
 function logResponse(response) {
   if (debugResponse.enabled) {
@@ -253,7 +259,8 @@ function logResponse(response) {
     }
   }
 }
-exports.redirect = function(request, next, api) {
+
+middleware('redirect', function(request, next, api) {
   return next().then(function(response) {
     var statusCode = response.statusCode;
     var location = response.headers.location;
@@ -271,7 +278,7 @@ exports.redirect = function(request, next, api) {
       return response;
     }
   });
-};
+});
 
 function loadCookies(cookies, url) {
   return cookies.getCookieStringSync(url);
@@ -290,7 +297,7 @@ function storeCookies(cookies, url, header) {
   }
 }
 
-exports.cookies = function (request, next, api) {
+middleware('cookies', function (request, next, api) {
   var cookies;
 
   if (api._options.cookies === true) {
@@ -309,9 +316,9 @@ exports.cookies = function (request, next, api) {
   } else {
     return next();
   }
-};
+});
 
-exports.text = function(request, next) {
+middleware('text', function(request, next) {
   if (typeof request.body === "string") {
       setBodyToString(request, request.body);
       utils.setHeaderTo(request, "content-type", "text/plain");
@@ -327,9 +334,9 @@ exports.text = function(request, next) {
       return response;
     }
   });
-};
+});
 
-exports.form = function(request, next) {
+middleware('form', function(request, next) {
   if (request.options.form && request.body instanceof Object && !isStream(request.body)) {
     setBodyToString(request, qs.stringify(request.body));
     utils.setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
@@ -345,13 +352,13 @@ exports.form = function(request, next) {
       return response;
     }
   });
-};
+});
 
 function encodeBasicAuthorizationHeader(s) {
   return "Basic " + new Buffer(s).toString("base64");
 }
 
-exports.basicAuth = function(request, next) {
+middleware('basicAuth', function(request, next) {
   function basicAuthorizationHeader() {
     if (request.options.basicAuth) {
       return encodeBasicAuthorizationHeader(request.options.basicAuth.username.replace(/:/g, "") + ":" + request.options.basicAuth.password);
@@ -369,4 +376,4 @@ exports.basicAuth = function(request, next) {
   }
 
   return next();
-};
+});

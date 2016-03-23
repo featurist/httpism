@@ -263,6 +263,14 @@ function middleware(request, next, httpism) {
 }
 ```
 
+Middlewares are ordered, and each one can have a name, and a preference to be placed before or after other named middleware.
+
+```js
+middleware.middleware = 'middleware name';
+middleware.before = 'http';
+middleware.after = 'redirect';
+```
+
 * `request` is an object with the following properties:
     * `url` the full URL of the request, e.g. `http://example.com/path?query=value`
     * `method` the method of the request, e.g. `GET` or `POST`
@@ -271,6 +279,9 @@ function middleware(request, next, httpism) {
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
 * `next` is a function that passes control onto the next middleware, it returns a promise of the [response](#responses).
 * `httpism` is a **httpism api** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
+* `middleware.middleware` is the name of the middleware, which can be referred to by other middlewares when adding themselves with `before` or `after`.
+* `middleware.before` ensure that the middleware is inserted just before the named middleware.
+* `middleware.after` ensure that the middleware is inserted just after the named middleware.
 
 ### Existing Middleware
 
