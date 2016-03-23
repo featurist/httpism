@@ -24,14 +24,14 @@ Httpism.prototype.send = function(method, url, body, _options, api) {
 
   var self = this;
 
-  function sendToMiddleware(index) {
+  function sendToMiddleware(index, req) {
     if (index < self.middlewares.length) {
       var middleware = self.middlewares[index];
-      return middleware(request, function () { return sendToMiddleware(index + 1); }, self);
+      return middleware(req, function (nextRequest) { return sendToMiddleware(index + 1, nextRequest || req); }, self);
     }
   }
 
-  return sendToMiddleware(0).then(function (response) {
+  return sendToMiddleware(0, request).then(function (response) {
     return makeResponse(self, response);
   }, function (e) {
     if (e.redirectResponse) {
