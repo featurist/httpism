@@ -296,7 +296,7 @@ The following middleware are available in `var middleware = require('httpism/mid
 * `middleware.form` when `options.form == true` sends and receives URL-encoded JS objects `application/x-www-form-urlencoded`.
 * `middleware.querystring` merges the URL-encoded `options.querystring` into the request URL.
 
-See [middleware.pogo](https://github.com/featurist/httpism/blob/master/middleware.pogo) for more info.
+See [middleware.js](https://github.com/featurist/httpism/blob/master/middleware.js) for more info.
 
 # License
 
