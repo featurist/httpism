@@ -162,6 +162,8 @@ response.send(method, url, [body], [options]);
 
 Responses are objects that contain
 
+* `statusCode` the status code as an integer, such as `200`, or `404`.
+* `statusText` the status text, such as `OK` or `Not Found`.
 * `url` the full URL of the response. In the browser, this will be root-relative if the request is for the same domain as the current page. This can be different to the `request.url` if there was a redirect.
 * `headers` the headers of the response
 * `body` the body of the response. Depending on the `Content-Type` header:
