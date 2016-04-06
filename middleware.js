@@ -239,7 +239,7 @@ middleware('debugLog', function(request, next) {
       return response;
     }, function (error) {
       var time = Date.now() - startTime;
-      debug(request.method + ' ' + obfuscateUrlPassword(request.url) + ' => ' + error.message + ' (' + time + 'ms)');
+      debug(request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + error.message + ' (' + time + 'ms)');
       throw error;
     });
   } else {

@@ -213,6 +213,16 @@ describe("httpism", function() {
           response.body.should.eql("application/custom");
         });
       });
+
+      it("can send a custom Accept header even mixed case", function() {
+        return httpism.get(baseurl, {
+          headers: {
+            Accept: "application/custom"
+          }
+        }).then(function(response) {
+          response.body.should.eql("application/custom");
+        });
+      });
     });
 
     describe("request headers", function() {

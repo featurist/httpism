@@ -17,7 +17,7 @@ Httpism.prototype.send = function(method, url, body, _options, api) {
   var request = {
     method: method,
     url: resolveUrl(this.url, url),
-    headers: options.headers || {},
+    headers: lowerCaseHeaders(options.headers || {}),
     body: body,
     options: options
   };
@@ -41,6 +41,18 @@ Httpism.prototype.send = function(method, url, body, _options, api) {
     }
   });
 };
+
+function lowerCaseHeaders(headers) {
+  Object.keys(headers).forEach(function (key) {
+    var lower = key.toLowerCase();
+    if (key.toLowerCase() != key) {
+      headers[lower] = headers[key];
+      delete headers[key];
+    }
+  });
+
+  return headers;
+}
 
 function makeResponse(api, response) {
   return utils.extend(new Httpism(api.url, api._options, api.middlewares), response);
