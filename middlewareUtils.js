@@ -17,7 +17,7 @@ var responseBodyTypes = {
   form: function(response) {
     return contentTypeIs(response, "application/x-www-form-urlencoded");
   },
-  stream: function(response) {
+  stream: function() {
     return false;
   }
 };
@@ -31,9 +31,7 @@ function contentTypeIsText(response) {
   return contentTypeIs(response, "text/.*");
 }
 
-module.exports.shouldParseAs = function(response, type, request, options) {
-  var contentType = options !== undefined && options.hasOwnProperty(options, "contentType") && options.contentType !== undefined ? options.contentType : undefined;
-
+module.exports.shouldParseAs = function(response, type, request) {
   if (request.options.responseBody) {
     return type === request.options.responseBody;
   } else {
