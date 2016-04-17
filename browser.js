@@ -1,3 +1,4 @@
+var window = require('global');
 var httpism = require('./httpism');
 var utils = require('./middlewareUtils');
 var qs = require('qs');
@@ -85,7 +86,7 @@ function responseUrl(xhr, requestUrl) {
 }
 
 function send(request) {
-  var xhr = new XMLHttpRequest();
+  var xhr = new window.XMLHttpRequest();
   var reject;
 
   var promise = new Promise(function (fulfil, _reject) {
