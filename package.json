@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "debug": "2.2.0",
+    "global": "4.3.0",
     "https-proxy-agent": "1.0.0",
     "qs": "^0.6.6",
     "tough-cookie": "2.2.0",
