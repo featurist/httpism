@@ -266,11 +266,11 @@ function middleware(request, next, httpism) {
 }
 ```
 
-Middlewares are ordered, and each one can have a name, and a preference to be placed before or after other named middleware.
+Middlewares are ordered, and each one can have a name, and a preference to be placed before or after other named middleware. You can place the middleware `before` any of the middleware in an array, or `after` any of the middleware in an array.
 
 ```js
 middleware.middleware = 'middleware name';
-middleware.before = 'http';
+middleware.before = ['http', 'debugLog'];
 middleware.after = 'redirect';
 ```
 

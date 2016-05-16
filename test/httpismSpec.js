@@ -367,36 +367,121 @@ describe("httpism", function() {
         });
       });
 
-      it('can insert middleware before another', function () {
-        var m = function () {};
-        m.before = 'http';
-        var api = httpism.raw.api(m);
-        expect(api.middlewares).to.eql([
-          m,
-          middleware.http
-        ]);
-      });
+      describe('inserting middleware', function () {
+        var pipeline, a, b;
 
-      it('can insert middleware after another', function () {
-        var m = function () {};
-        m.after = 'http';
-        var api = httpism.raw.api(m);
-        expect(api.middlewares).to.eql([
-          middleware.http,
-          m
-        ]);
-      });
+        function middlwareNamed(name) {
+          function middleware() {
+          }
 
-      it('throws if before middleware name cannot be found', function () {
-        var m = function () {};
-        m.before = 'notfound';
-        expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
-      });
+          middleware.middleware = name;
 
-      it('throws if after middleware name cannot be found', function () {
-        var m = function () {};
-        m.after = 'notfound';
-        expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+          return middleware;
+        }
+
+        beforeEach(function () {
+          pipeline = httpism.raw.api();
+          pipeline.middlewares = [
+            a = middlwareNamed('a'),
+            b = middlwareNamed('b')
+          ];
+        });
+
+        describe('before', function () {
+          it('can insert middleware before another', function () {
+            var m = function () {};
+            m.before = 'a';
+
+            var api = pipeline.api(m);
+
+            expect(api.middlewares).to.eql([
+              m,
+              a,
+              b
+            ]);
+          });
+
+          it('inserts before the named middleware if at lesat one is found', function () {
+            var m = function () {};
+            m.before = ['a', 'c'];
+            var api = pipeline.api(m);
+            expect(api.middlewares).to.eql([
+              m,
+              a,
+              b
+            ]);
+          });
+
+          it('inserts before all the named middleware if all are found', function () {
+            var m = function () {};
+            m.before = ['a', 'b'];
+            var api = pipeline.api(m);
+            expect(api.middlewares).to.eql([
+              m,
+              a,
+              b
+            ]);
+          });
+        });
+
+        describe('after', function () {
+          it('can insert middleware after another', function () {
+            var m = function () {};
+            m.after = 'a';
+            var api = pipeline.api(m);
+            expect(api.middlewares).to.eql([
+              a,
+              m,
+              b
+            ]);
+          });
+
+          it('inserts after the named middleware if at lesat one is found', function () {
+            var m = function () {};
+            m.after = ['a', 'c'];
+            var api = pipeline.api(m);
+            expect(api.middlewares).to.eql([
+              a,
+              m,
+              b
+            ]);
+          });
+
+          it('inserts after all the named middleware if all are found', function () {
+            var m = function () {};
+            m.after = ['a', 'b'];
+            var api = pipeline.api(m);
+            expect(api.middlewares).to.eql([
+              a,
+              b,
+              m
+            ]);
+          });
+        });
+
+        it('throws if before middleware name cannot be found', function () {
+          var m = function () {};
+          m.before = 'notfound';
+          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+        });
+
+        it('throws if none of the before middleware names can be found', function () {
+          var m = function () {};
+          m.before = ['notfound'];
+          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+        });
+
+        it('throws if after middleware name cannot be found', function () {
+          var m = function () {};
+          m.after = 'notfound';
+          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+        });
+
+        it('throws if none of the after middleware names can be found', function () {
+          var m = function () {};
+          m.after = ['notfound'];
+          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+        });
       });
     });
 

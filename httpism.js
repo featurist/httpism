@@ -58,18 +58,22 @@ function makeResponse(api, response) {
   return utils.extend(new Httpism(api.url, api._options, api.middlewares), response);
 }
 
-function insertMiddleware(middlewares, m) {
-  for(var n = 0; n < middlewares.length; n++) {
-    if (middlewares[n].middleware == m.before) {
-      middlewares.splice(n, 0, m);
-      return;
-    } else if (middlewares[n].middleware == m.after) {
-      middlewares.splice(n + 1, 0, m);
-      return;
+function findMiddlewareIndexes(names, middlewares) {
+  return names.map(function (name) {
+    for(var n = 0; n < middlewares.length; n++) {
+      if (middlewares[n].middleware == name) {
+        return n;
+      }
     }
-  }
 
-  throw new Error('no such middleware: ' + (m.before || m.after));
+    return -1;
+  }).filter(function (i) {
+    return i >= 0;
+  });
+}
+
+function insertMiddlewareIntoIndex(middlewares, m, index) {
+  middlewares.splice(index, 0, m);
 }
 
 function extendMiddlewares(originalMiddlewares, newMiddlewares) {
@@ -77,7 +81,19 @@ function extendMiddlewares(originalMiddlewares, newMiddlewares) {
 
   newMiddlewares.forEach(function (m) {
     if (m.before || m.after) {
-      insertMiddleware(middlewares, m);
+      var position = m.before || m.after;
+      var names = typeof position === 'string'? [position]: position;
+      var indexes = findMiddlewareIndexes(names, middlewares);
+      if (indexes.length) {
+        var index = m.before? Math.min.apply(Math, indexes): Math.max.apply(Math, indexes) + 1;
+
+        if (index >= 0) {
+          insertMiddlewareIntoIndex(middlewares, m, index);
+          return;
+        }
+      }
+
+      throw new Error('no such middleware: ' + (m.before || m.after));
     } else {
       middlewares.unshift(m);
     }
