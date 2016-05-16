@@ -1,7 +1,7 @@
 var window = require('global');
 var httpism = require('./httpism');
 var utils = require('./middlewareUtils');
-var qs = require('qs');
+var querystringLite = require('./querystring-lite');
 
 function json(request, next) {
   if (request.body instanceof Object) {
@@ -29,13 +29,15 @@ function text(request, next) {
 
 function form(request, next) {
   if (request.options.form && request.body instanceof Object) {
-    setBodyToString(request, qs.stringify(request.body));
+    var querystring = request.options.qs || querystringLite;
+    setBodyToString(request, querystring.stringify(request.body));
     utils.setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
   }
 
   return next().then(function(response) {
+    var querystring = request.options.qs || querystringLite;
     if (utils.shouldParseAs(response, "form", request)) {
-      response.body = qs.parse(response.body);
+      response.body = querystring.parse(response.body);
     }
     return response;
   });
@@ -92,7 +94,7 @@ function send(request) {
   var promise = new Promise(function (fulfil, _reject) {
     reject = _reject;
     xhr.open(request.method, request.url, true);
-    xhr.onload = function (event) {
+    xhr.onload = function () {
       var statusCode = xhr.status;
 
       var response = {
@@ -107,7 +109,7 @@ function send(request) {
       fulfil(response);
     };
 
-    xhr.onerror = function (error) {
+    xhr.onerror = function () {
       reject(new Error('failed to connect to ' + request.method + ' ' + request.url));
     };
 

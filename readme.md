@@ -24,9 +24,9 @@ Compatible with browserify too!
 
 ## Browser Size
 
-* httpism.js: 20K
-* httpism.min.js: 9.3K
-* httpism.min.js.gz: 3.4K
+* httpism.js: 13K
+* httpism.min.js: 6.8K
+* httpism.min.js.gz: 2.6K
 
 ## GET JSON
 
@@ -214,7 +214,8 @@ httpism.get('http://example.com/api/').then(function (api) {
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
 * `basicAuth`: use Basic Authentication, pass an object `{ username: 'bob', password: "bob's secret" }`.
-* `querystring`: default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any.
+* `querystring`: default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any. This is parsed and stringified using `options.qs.parse` and `options.qs.stringify` if provided, or using a very lite internal query string parser.
+* `qs`: optional override for parsing and stringifying querystrings, you can pass node's `querystring` or `qs`. Any object that contains the methods `parse` and `stringify` can be used. If not provided, httpism will use an internal (and very small) query string parser/stringifier.
 * `form`: when `true`, treats the incoming JSON data as a form and encodes it as `application/x-www-form-urlencoded`.
 * `responseBody`: can be used to force the parsing of the response, ignoring the `Content-Type`, it can be a string of one of the following:
     * `'stream'`: always downloads the response as a stream

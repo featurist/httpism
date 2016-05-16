@@ -134,8 +134,8 @@ describe('httpism', function () {
     });
 
     it('can make a form post request', function () {
-      return httpism.post('/', {data: ['hehey', 'hoho']}, {form: true}).then(function (response) {
-        expect(response.body.body).to.eql({data: ['hehey', 'hoho']});
+      return httpism.post('/', {message: 'hehey', to: 'bob'}, {form: true}).then(function (response) {
+        expect(response.body.body).to.eql({message: 'hehey', to: 'bob'});
         expect(response.body.headers['content-type']).to.equal('application/x-www-form-urlencoded');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
         expect(response.url).to.equal('/');

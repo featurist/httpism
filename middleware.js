@@ -3,7 +3,7 @@ var https = require("https");
 var urlUtils = require("url");
 var _ = require("underscore");
 var merge = require("./merge");
-var qs = require("qs");
+var querystringLite = require("./querystring-lite");
 var utils = require('./middlewareUtils');
 var createDebug = require("debug");
 var debug = createDebug("httpism");
@@ -338,14 +338,16 @@ middleware('text', function(request, next) {
 
 middleware('form', function(request, next) {
   if (request.options.form && request.body instanceof Object && !isStream(request.body)) {
-    setBodyToString(request, qs.stringify(request.body));
+    var querystring = request.options.qs || querystringLite;
+    setBodyToString(request, querystring.stringify(request.body));
     utils.setHeaderTo(request, "content-type", "application/x-www-form-urlencoded");
   }
 
   return next().then(function(response) {
     if (utils.shouldParseAs(response, "form", request)) {
       return exports.streamToString(response.body).then(function(body) {
-        response.body = qs.parse(body);
+        var querystring = request.options.qs || querystringLite;
+        response.body = querystring.parse(body);
         return response;
       });
     } else {

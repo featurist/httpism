@@ -1,5 +1,5 @@
 var merge = require("./merge");
-var qs = require('qs');
+var querystringLite = require('./querystring-lite');
 
 module.exports.setHeaderTo = function (request, header, value) {
   if (!request.headers[header]) {
@@ -69,9 +69,11 @@ exports.exception = function(request, next) {
 
 exports.querystring = function(request, next) {
   if (request.options.querystring instanceof Object) {
+    var qs = request.options.qs || querystringLite;
+
     var split = request.url.split("?");
     var path = split[0];
-    var querystring = qs.parse(split[1]);
+    var querystring = qs.parse(split[1] || '');
     var mergedQueryString = merge(request.options.querystring, querystring);
     request.url = path + "?" + qs.stringify(mergedQueryString);
   }
