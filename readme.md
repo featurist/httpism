@@ -48,6 +48,16 @@ httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response
 });
 ```
 
+## POST www-form-urlencoded
+
+```JavaScript
+httpism.post('http://example.com/', { name: "Betty Boo" }, { form: true }).then(function (response) {
+  console.log('json', response.body);
+}, function (error) {
+  console.log('uh oh', error);
+});
+```
+
 ## Create an API
 
 Specify a base URL:
