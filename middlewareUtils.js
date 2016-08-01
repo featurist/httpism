@@ -1,5 +1,6 @@
 var merge = require("./merge");
 var querystringLite = require('./querystring-lite');
+var obfuscateUrlPassword = require('./obfuscateUrlPassword');
 
 module.exports.setHeaderTo = function (request, header, value) {
   if (!request.headers[header]) {
@@ -58,7 +59,7 @@ exports.extend = extend;
 exports.exception = function(request, next) {
   return next().then(function(response) {
     if (response.statusCode >= 400 && request.options.exceptions !== false) {
-      var msg = request.method.toUpperCase() + " " + request.url + " => " + response.statusCode + " " + response.statusText;
+      var msg = request.method.toUpperCase() + " " + obfuscateUrlPassword(request.url) + " => " + response.statusCode + " " + response.statusText;
       var error = extend(new Error(msg), response);
       throw error;
     } else {

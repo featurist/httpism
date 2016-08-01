@@ -504,6 +504,16 @@ describe("httpism", function() {
         });
       });
 
+      it("doesn't include the password in the error message", function() {
+        return httpism.api(`http://user:pass@localhost:${port}/`).get("/400").then(function () {
+          assert.fail("expected an exception to be thrown");
+        }).catch(function(e) {
+          e.message.should.equal("GET " + `http://user:********@localhost:${port}/400 => 400 Bad Request`);
+          e.statusCode.should.equal(400);
+          e.body.message.should.equal("oh dear");
+        });
+      });
+
       it("doesn't throw exceptions on 400-500 status codes, when specified", function() {
         return httpism.api(baseurl).get("/400", { exceptions: false }).then(function(response) {
           response.body.message.should.equal("oh dear");

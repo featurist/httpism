@@ -10,6 +10,7 @@ var debug = createDebug("httpism");
 var debugResponse = createDebug("httpism:response");
 var debugRequest = createDebug("httpism:request");
 var HttpsProxyAgent = require('https-proxy-agent');
+var obfuscateUrlPassword = require('./obfuscateUrlPassword');
 
 function middleware(name, fn) {
   exports[name] = fn;
@@ -170,17 +171,6 @@ middleware('http', function(request) {
     }
   });
 });
-
-function obfuscateUrlPassword(url) {
-  var urlComponents = urlUtils.parse(url);
-  if (urlComponents.auth) {
-    urlComponents.auth = urlComponents.auth.replace(/:.*/, ':********');
-
-    return urlUtils.format(urlComponents);
-  } else {
-    return url;
-  }
-}
 
 function withoutPasswords(request, fn) {
   var basicAuth = request.options && request.options.basicAuth;
