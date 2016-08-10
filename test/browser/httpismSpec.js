@@ -48,7 +48,7 @@ describe('httpism', function () {
     });
 
     it('throws if receives 404', function () {
-      return httpism.get('/status/404').then(function (response) {
+      return httpism.get('/status/404').then(function () {
         throw new Error('expected to throw exception');
       }, function (response) {
         expect(response.message).to.eql('GET /status/404 => 404 Not Found');
