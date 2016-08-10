@@ -57,6 +57,12 @@ describe('httpism', function () {
         expect(response.url).to.equal('/status/404');
       });
     });
+
+    it('can call JSONP', function () {
+      return httpism.get('/jsonp', {jsonp: 'callback'}).then(function (response) {
+        expect(response.body).to.eql({blah: 'blah'});
+      });
+    });
   });
 
   describe('cookies', function () {

@@ -238,6 +238,7 @@ httpism.get('http://example.com/api/').then(function (api) {
     Many of these options are ignored by default, so you should set `agent: undefined` to force a new agent to honour the options.
 * `https`: default `undefined`, object containing options that are passed to [Node.js https.request()](http://nodejs.org/api/https.html#https_https_request_options_callback).
     Many of these options are ignored by default, so you should set `agent: undefined` to force a new agent to honour the options.
+* `jsonp`: to perform a JSONP request, set this to the name of the parameter to contain the callback function, often this is simply `callback`.
 * `jsonReviver`: a [reviver function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) that is passed to `JSON.parse(string, [reviver])` to override how JSON response bodies are decoded.
 
 ## APIs

@@ -2,6 +2,7 @@ var window = require('global');
 var httpism = require('./httpism');
 var utils = require('./middlewareUtils');
 var querystringLite = require('./querystring-lite');
+var randomString = require('random-string');
 
 function json(request, next) {
   if (request.body instanceof Object) {
@@ -17,6 +18,30 @@ function json(request, next) {
     }
     return response;
   });
+}
+
+function jsonp(request, next) {
+  var jsonp = request.options.jsonp;
+  if (jsonp) {
+    request.options.querystring = request.options.querystring || {};
+
+    var callbackName = randomString({length: 20});
+    request.options.querystring[jsonp] = callbackName;
+
+    var value;
+    window[callbackName] = function(v) {
+      value = v;
+    };
+
+    return next().then(function (response) {
+      eval(response.body);
+      response.body = value;
+      delete window[callbackName];
+      return response;
+    });
+  }
+
+  return next();
 }
 
 function text(request, next) {
@@ -155,6 +180,7 @@ module.exports = httpism(
     utils.exception,
     form,
     json,
+    jsonp,
     text,
     utils.querystring,
     send

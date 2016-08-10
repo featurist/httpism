@@ -8,6 +8,7 @@
     "global": "4.3.0",
     "https-proxy-agent": "1.0.0",
     "qs": "^0.6.6",
+    "random-string": "0.1.2",
     "tough-cookie": "2.2.0",
     "underscore": "^1.6.0"
   },

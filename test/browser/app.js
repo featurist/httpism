@@ -51,4 +51,9 @@ app.get('/redirect', function (req, res) {
   res.redirect(req.query.url);
 });
 
+app.get('/jsonp', function(req, res) {
+  res.set('Content-Type', 'text/javascript');
+  res.send(`${req.query.callback}({blah: 'blah'})`);
+});
+
 module.exports = app;
