@@ -1,4 +1,6 @@
-var expect = require('chai').expect;
+var chai = require("chai");
+var expect = chai.expect;
+chai.use(require("chai-as-promised"));
 var httpism = require('../..');
 Promise = require('es6-promise').Promise;
 var serverSide = require('karma-server-side');
@@ -57,11 +59,17 @@ describe('httpism', function () {
         expect(response.url).to.equal('/status/404');
       });
     });
+  });
 
+  describe('jsonp', function () {
     it('can call JSONP', function () {
       return httpism.get(server + '/jsonp', {jsonp: 'callback'}).then(function (response) {
         expect(response.body).to.eql({blah: 'blah'});
       });
+    });
+
+    it('throws exception if there is an error', function () {
+      return expect(httpism.get(server + '/404', {jsonp: 'callback'})).to.be.rejectedWith(server + '/404');
     });
   });
 

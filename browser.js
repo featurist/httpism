@@ -38,7 +38,7 @@ function jsonp(request, next) {
   if (jsonp) {
     request.options.querystring = request.options.querystring || {};
 
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
       var callbackName = randomGlobal(function(v) {
         delete window[callbackName];
         document.head.removeChild(script);
@@ -56,6 +56,9 @@ function jsonp(request, next) {
       var script = document.createElement('script');
       script.type = 'text/javascript';
       script.src = request.url;
+      script.onerror = function(error) {
+        reject(new Error('could not load script tag for JSONP request: ' + request.url));
+      };
       document.head.appendChild(script);
     });
   }
