@@ -59,7 +59,7 @@ describe('httpism', function () {
     });
 
     it('can call JSONP', function () {
-      return httpism.get('/jsonp', {jsonp: 'callback'}).then(function (response) {
+      return httpism.get(server + '/jsonp', {jsonp: 'callback'}).then(function (response) {
         expect(response.body).to.eql({blah: 'blah'});
       });
     });

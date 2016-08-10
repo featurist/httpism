@@ -1,6 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-var cors = require('cors');
+var corsMiddleware = require('cors');
 var cookieParser = require('cookie-parser');
 
 var app = express();
@@ -8,7 +8,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser())
-app.use(cors({credentials: true, origin: true}));
+
+var cors = corsMiddleware({credentials: true, origin: true});
 
 function respond(req, res) {
   res.json({
@@ -22,7 +23,7 @@ function respond(req, res) {
   });
 }
 
-app.all('/', function (req, res) {
+app.all('/', cors, function (req, res) {
   respond(req, res);
 });
 
@@ -35,7 +36,7 @@ app.get('/text', function (req, res) {
   res.send(req.query.text);
 });
 
-app.get('/cookies', function (req, res) {
+app.get('/cookies', cors, function (req, res) {
   Object.keys(req.query).forEach(function (key) {
     res.cookie(key, req.query[key]);
   });

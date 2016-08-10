@@ -20,24 +20,43 @@ function json(request, next) {
   });
 }
 
+function randomGlobal(value) {
+  var name;
+
+  do {
+    name = '_' + randomString({length: 20});
+  } while(typeof window[name] !== 'undefined');
+
+  window[name] = value;
+
+  return name;
+}
+
 function jsonp(request, next) {
   var jsonp = request.options.jsonp;
+
   if (jsonp) {
     request.options.querystring = request.options.querystring || {};
 
-    var callbackName = randomString({length: 20});
-    request.options.querystring[jsonp] = callbackName;
+    return new Promise(function (resolve) {
+      var callbackName = randomGlobal(function(v) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        resolve({
+          statusCode: 200,
+          headers: {},
+          body: v
+        });
+      });
 
-    var value;
-    window[callbackName] = function(v) {
-      value = v;
-    };
+      request.options.querystring[jsonp] = callbackName;
 
-    return next().then(function (response) {
-      eval(response.body);
-      response.body = value;
-      delete window[callbackName];
-      return response;
+      utils.mergeQueryString(request);
+
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = request.url;
+      document.head.appendChild(script);
     });
   }
 
@@ -177,10 +196,10 @@ module.exports = httpism(
   undefined,
   {},
   [
+    jsonp,
     utils.exception,
     form,
     json,
-    jsonp,
     text,
     utils.querystring,
     send
