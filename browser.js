@@ -135,7 +135,8 @@ function responseUrl(xhr, requestUrl) {
 }
 
 function send(request) {
-  var xhr = new window.XMLHttpRequest();
+  var Xhr = request.options.xhr || window.XMLHttpRequest;
+  var xhr = new Xhr();
   var reject;
 
   var promise = new Promise(function (fulfil, _reject) {

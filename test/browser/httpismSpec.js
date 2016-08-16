@@ -2,8 +2,9 @@ var chai = require("chai");
 var expect = chai.expect;
 chai.use(require("chai-as-promised"));
 var httpism = require('../..');
-Promise = require('es6-promise').Promise;
+require('es6-promise').polyfill();
 var serverSide = require('karma-server-side');
+var FakeXMLHttpRequest = require('fake-xml-http-request');
 
 var server = 'http://' + window.location.hostname + ':12345';
 var badServer = 'http://' + window.location.hostname + ':12346';
@@ -245,6 +246,17 @@ describe('httpism', function () {
         }
       }).then(function (response) {
         expect(response.body.body.greeting).to.equal('hi!');
+      });
+    });
+  });
+
+  describe('xhr option', function () {
+    it('can override the XHR used in the request', function () {
+      FakeXMLHttpRequest.prototype.onSend = function (xhr) {
+        xhr.respond(200, {'Content-Type': 'text/plain'}, 'faked response');
+      };
+      return httpism.get('/', {xhr: FakeXMLHttpRequest}).then(function (response) {
+        expect(response.body).to.equal('faked response');
       });
     });
   });

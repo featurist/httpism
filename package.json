@@ -22,6 +22,7 @@
     "cors": "2.7.1",
     "es6-promise": "3.0.2",
     "express": "^4.4.5",
+    "fake-xml-http-request": "1.4.0",
     "fs-promise": "0.4.1",
     "http-proxy": "1.13.2",
     "karma": "0.13.9",
