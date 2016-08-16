@@ -110,12 +110,21 @@ function parseHeaders(headers) {
   return object;
 }
 
+function toUpperCase(x) {
+  return x.toUpperCase();
+}
+
+function formatHeaderName(name) {
+  return name.replace(/^([a-z])/, toUpperCase).replace(/-([a-z])/g, toUpperCase);
+}
+
 function setHeaders(headers, xhr) {
   var headerNames = Object.keys(headers);
 
   for (var n = 0; n < headerNames.length; n++) {
-    var headerName = headerNames[n];
-    xhr.setRequestHeader(headerName, headers[headerName]);
+    var key = headerNames[n];
+    var headerName = formatHeaderName(key);
+    xhr.setRequestHeader(headerName, headers[key]);
   }
 }
 
