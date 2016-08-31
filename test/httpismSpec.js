@@ -16,6 +16,8 @@ var cookieParser = require("cookie-parser");
 var toughCookie = require("tough-cookie");
 var httpProxy = require('http-proxy');
 var net = require('net');
+var FormData = require('form-data');
+var multiparty = require('multiparty');
 
 describe("httpism", function() {
   var server;
@@ -795,12 +797,12 @@ describe("httpism", function() {
         });
 
         return httpism.post(baseurl + "/form", {
-          name: "Betty Boo",
+          name: "Betty Boop",
           address: "one & two"
         }, {
           form: true
         }).then(function(response) {
-          response.body.should.equal("name=Betty%20Boo&address=one%20%26%20two");
+          response.body.should.equal("name=Betty%20Boop&address=one%20%26%20two");
           response.headers["received-content-type"].should.equal("application/x-www-form-urlencoded");
         });
       });
@@ -809,17 +811,78 @@ describe("httpism", function() {
         app.get("/form", function(req, res) {
           res.header("content-type", "application/x-www-form-urlencoded");
           res.send(qs.stringify({
-            name: "Betty Boo",
+            name: "Betty Boop",
             address: "one & two"
           }));
         });
 
         return httpism.get(baseurl + "/form").then(function(response) {
           response.body.should.eql({
-            name: "Betty Boo",
+            name: "Betty Boop",
             address: "one & two"
           });
           response.headers["content-type"].should.equal("application/x-www-form-urlencoded; charset=utf-8");
+        });
+      });
+
+      describe('multipart forms', function () {
+        var filename = __dirname + "/afile.jpg";
+
+        beforeEach(function() {
+          return fs.writeFile(filename, 'an image');
+        });
+
+        afterEach(function() {
+          return fs.unlink(filename);
+        });
+
+        it('can send multipart forms with `form-data`', function () {
+          app.post("/form", function(req, res) {
+            var form = new multiparty.Form();
+
+            form.parse(req, function (err, fields, files) {
+              if (err) {
+                console.log(err);
+                res.status(500).send({message: err.message});
+              }
+              var response = {};
+
+              Object.keys(fields).forEach(function (field) {
+                response[field] = fields[field][0];
+              });
+              Promise.all(Object.keys(files).map(function (field) {
+                var file = files[field][0];
+                return middleware.streamToString(fs.createReadStream(file.path)).then(function(contents) {
+                  response[field] = {
+                    contents: contents,
+                    headers: file.headers
+                  };
+                });
+              })).then(function () {
+                res.send(response);
+              });
+            });
+          });
+
+          var form = new FormData();
+
+          form.append('name', 'Betty Boop');
+          form.append('address', 'one & two');
+          form.append('photo', fs.createReadStream(filename));
+
+          return httpism.post(baseurl + "/form", form).then(function(response) {
+            response.body.should.eql({
+              name: 'Betty Boop',
+              address: 'one & two',
+              photo: {
+                contents: 'an image',
+                headers: {
+                  'content-disposition': 'form-data; name="photo"; filename="afile.jpg"',
+                  'content-type': 'image/jpeg'
+                }
+              }
+            });
+          });
         });
       });
     });
@@ -921,6 +984,15 @@ describe("httpism", function() {
     itCanUploadAStreamWithContentType("application/json");
     itCanUploadAStreamWithContentType("text/plain");
     itCanUploadAStreamWithContentType("application/x-www-form-urlencoded");
+
+    it('it guesses the Content-Type of the stream when created from a file', function() {
+      var stream = fs.createReadStream(filename);
+
+      return httpism.post(baseurl + "/file", stream).then(function(response) {
+        response.headers["received-content-type"].should.equal('text/plain');
+        response.body.should.equal("received: some content");
+      });
+    });
 
     it("can download a stream", function() {
       return httpism.get(baseurl + "/file").then(function(response) {
