@@ -11,6 +11,8 @@ var debugResponse = createDebug("httpism:response");
 var debugRequest = createDebug("httpism:request");
 var HttpsProxyAgent = require('https-proxy-agent');
 var obfuscateUrlPassword = require('./obfuscateUrlPassword');
+var FormData = require('form-data');
+var mimeTypes = require('mime-types');
 
 function middleware(name, fn) {
   exports[name] = fn;
@@ -344,6 +346,21 @@ middleware('form', function(request, next) {
       return response;
     }
   });
+});
+
+function contentTypeOfStream(stream) {
+  if (typeof stream.getHeaders === 'function') {
+    return stream.getHeaders()['content-type'];
+  } else if (stream.path) {
+    return mimeTypes.lookup(stream.path);
+  }
+}
+
+middleware('streamContentType', function(request, next) {
+  if (isStream(request.body) && !request.headers['content-type']) {
+    request.headers['content-type'] = contentTypeOfStream(request.body);
+  }
+  return next();
 });
 
 function encodeBasicAuthorizationHeader(s) {

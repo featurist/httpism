@@ -14,6 +14,7 @@ module.exports = httpism(
     middleware.basicAuth,
     middleware.redirect,
     middleware.cookies,
+    middleware.streamContentType,
     middleware.debugLog,
     middleware.http
   ]

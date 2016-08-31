@@ -41,7 +41,7 @@ httpism.get('http://example.com/').then(function (response) {
 ## POST JSON
 
 ```js
-httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response) {
+httpism.post('http://example.com/', {name: 'Betty Boop'}).then(function (response) {
   console.log('json', response.body);
 }, function (error) {
   console.log('uh oh', error);
@@ -51,7 +51,7 @@ httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response
 ## POST www-form-urlencoded
 
 ```js
-httpism.post('http://example.com/', { name: "Betty Boo" }, { form: true }).then(function (response) {
+httpism.post('http://example.com/', { name: "Betty Boop" }, { form: true }).then(function (response) {
   console.log('json', response.body);
 }, function (error) {
   console.log('uh oh', error);
@@ -60,18 +60,35 @@ httpism.post('http://example.com/', { name: "Betty Boo" }, { form: true }).then(
 
 ## POST streams and files
 
-Pass a stream as the second argument, don't forget to set the Content-Type.
+Pass a stream as the second argument, it will try to guess the `Content-Type` from the filename if possible, but you can override it if you know better.
 
 ```js
 var stream = fs.createReadStream('afile.txt');
 
-httpism.post('http://example.com/', stream, {'content-type': 'text/plain'}).then(function (response) {
+httpism.post('http://example.com/', stream).then(function (response) {
   console.log('json', response.body);
 }, function (error) {
   console.log('uh oh', error);
 });
 ```
 
+## POST multipart forms
+
+Httpism works with [form-data](https://github.com/form-data/form-data), all you need to do is pass a `FormData` instance as the body:
+
+```js
+var form = new FormData();
+
+form.append('name', 'Betty Boop');
+form.append('address', 'New York');
+form.append('photo', fs.createReadStream('betty.jpg'));
+
+httpism.post('http://example.com/', form).then(function (response) {
+  console.log('json', response.body);
+}, function (error) {
+  console.log('uh oh', error);
+});
+```
 
 ## Create an API
 
@@ -163,7 +180,7 @@ response.method (url, body, [options])
 * `body` the request body to send
     * by default a JS object is encoded as JSON and sent as `application/json`
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
-    * a stream (where `typeof(stream.pipe) === 'function'`) is sent as is. Be sure to set `Content-Type` header: `{headers: {'content-type': '...'}}`.
+    * a stream. It will try to guess the `Content-Type` from a file stream, but if not, pass `{headers: {'content-type': ...}}` as options.
 * `options` request options, see [options](#options).
 * `response` a response from another request.
 
@@ -178,7 +195,7 @@ response.send(method, url, [body], [options]);
 * `body` the request body to send
     * by default a JS object is encoded as JSON and sent as `application/json`
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
-    * a stream (where `typeof(stream.pipe) === 'function'`) is sent as is. Be sure to set `Content-Type` header: `{headers: {'content-type': '...'}}`.
+    * a stream. It will try to guess the `Content-Type` from a file stream, but if not, pass `{headers: {'content-type': ...}}` as options.
 * `options` request options, see [options](#options).
 * `response` a response from another request.
 

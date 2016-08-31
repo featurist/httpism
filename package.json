@@ -7,6 +7,7 @@
     "debug": "2.2.0",
     "global": "4.3.0",
     "https-proxy-agent": "1.0.0",
+    "mime-types": "2.1.11",
     "random-string": "0.1.2",
     "tough-cookie": "2.3.1",
     "underscore": "1.8.3"
@@ -22,6 +23,7 @@
     "es6-promise": "3.2.1",
     "express": "^4.4.5",
     "fake-xml-http-request": "1.4.0",
+    "form-data": "1.0.1",
     "fs-promise": "0.5.0",
     "http-proxy": "1.14.0",
     "karma": "1.2.0",
