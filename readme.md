@@ -16,7 +16,7 @@ npm install httpism
 
 Then
 
-```JavaScript
+```js
 var httpism = require('httpism');
 ```
 
@@ -30,7 +30,7 @@ Compatible with browserify too!
 
 ## GET JSON
 
-```JavaScript
+```js
 httpism.get('http://example.com/').then(function (response) {
   console.log('json', response.body);
 }, function (error) {
@@ -40,7 +40,7 @@ httpism.get('http://example.com/').then(function (response) {
 
 ## POST JSON
 
-```JavaScript
+```js
 httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response) {
   console.log('json', response.body);
 }, function (error) {
@@ -50,7 +50,7 @@ httpism.post('http://example.com/', {name: 'Betty Boo'}).then(function (response
 
 ## POST www-form-urlencoded
 
-```JavaScript
+```js
 httpism.post('http://example.com/', { name: "Betty Boo" }, { form: true }).then(function (response) {
   console.log('json', response.body);
 }, function (error) {
@@ -58,11 +58,26 @@ httpism.post('http://example.com/', { name: "Betty Boo" }, { form: true }).then(
 });
 ```
 
+## POST streams and files
+
+Pass a stream as the second argument, don't forget to set the Content-Type.
+
+```js
+var stream = fs.createReadStream('afile.txt');
+
+httpism.post('http://example.com/', stream, {'content-type': 'text/plain'}).then(function (response) {
+  console.log('json', response.body);
+}, function (error) {
+  console.log('uh oh', error);
+});
+```
+
+
 ## Create an API
 
 Specify a base URL:
 
-```JavaScript
+```js
 var example = httpism.api('http://example.com/');
 
 // GET http://example.com/a
@@ -73,7 +88,7 @@ example.get('a').then(function (response) {
 
 Specify some options:
 
-```JavaScript
+```js
 var loggingHttpism = httpism.api({exceptions: false});
 
 loggingHttpism.get('http://example.com/').then(function (response) {
@@ -83,7 +98,7 @@ loggingHttpism.get('http://example.com/').then(function (response) {
 
 Add some middleware:
 
-```JavaScript
+```js
 var authHttpism = httpism.api(function (request, next) {
   request.url += '?apikey=myapikey';
   return next();
@@ -126,7 +141,7 @@ More information in debug's README.
 
 ### GET, HEAD, DELETE
 
-```JavaScript
+```js
 httpism.method (url, [options])
 response.method (url, [options])
 ```
@@ -139,7 +154,7 @@ returns a promise
 
 ### POST, PUT, PATCH, OPTIONS
 
-```JavaScript
+```js
 httpism.method (url, body, [options])
 response.method (url, body, [options])
 ```
@@ -204,7 +219,7 @@ Cookies are always on in the browser, using native browser cookies.
 
 All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `api()`, see [apis](#apis) below.
 
-```JavaScript
+```js
 httpism.get('http://example.com/api/').then(function (api) {
   // api.body is:
   // {
@@ -248,7 +263,7 @@ API clients give you a way to build or customise a HTTP client for the purpose o
 
 You can create API clients, either from `httpism`, giving you a fairly complete HTTP client, or from `httpism.raw` giving you no frills streaming HTTP client to do what you will with. 
 
-```JavaScript
+```js
 var api = httpism.api([url], [options], [middleware]);
 var api = httpism.raw.api([url], [options], [middleware]);
 var api = response.api([url], [options], [middleware]);
@@ -266,7 +281,7 @@ var api = response.api([url], [options], [middleware]);
 
 Middleware commonly works like this:
 
-```JavaScript
+```js
 function middleware(request, next, httpism) {
   // change request
   request.url = ...;
