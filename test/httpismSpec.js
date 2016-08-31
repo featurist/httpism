@@ -18,6 +18,7 @@ var httpProxy = require('http-proxy');
 var net = require('net');
 var FormData = require('form-data');
 var multiparty = require('multiparty');
+var obfuscateUrlPassword = require('../obfuscateUrlPassword');
 
 describe("httpism", function() {
   var server;
@@ -1252,6 +1253,23 @@ describe("httpism", function() {
   describe('use', function () {
     it('can add a middleware to the outside', function () {
 
+    });
+  });
+
+  describe('obfuscating passwords', function () {
+    it('can obfuscate passwords from http URLs', function () {
+      var obfuscated = obfuscateUrlPassword('https://user:password@example.com/a/:path/user:password/user:password.thing');
+      expect(obfuscated).to.equal('https://user:********@example.com/a/:path/user:password/user:password.thing');
+    });
+
+    it("doesn't do anything to relative paths", function () {
+      var obfuscated = obfuscateUrlPassword('/a/:path/user:password/user:password.thing');
+      expect(obfuscated).to.equal('/a/:path/user:password/user:password.thing');
+    });
+
+    it("doesn't do anything to hosts with ports", function () {
+      var obfuscated = obfuscateUrlPassword('http://localhost:4000/a/:path/user:password/user:password.thing');
+      expect(obfuscated).to.equal('http://localhost:4000/a/:path/user:password/user:password.thing');
     });
   });
 });
