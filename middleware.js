@@ -174,6 +174,17 @@ middleware('http', function(request) {
   });
 });
 
+function prepareForLogging(r) {
+  return {
+    method: r.method,
+    url: obfuscateUrlPassword(r.url),
+    headers: r.headers,
+    body: isStream(r.body)? '[Stream]': r.body,
+    statusCode: r.statusCode,
+    statusText: r.statusText
+  };
+}
+
 function withoutPasswords(request, fn) {
   var basicAuth = request.options && request.options.basicAuth;
   var password = basicAuth && basicAuth.password;
@@ -206,20 +217,28 @@ function withoutPasswords(request, fn) {
 }
 
 function logRequest(request) {
-  withoutPasswords(request, debugRequest);
+  if (debugRequest.enabled) {
+    debugRequest(prepareForLogging(request));
+  }
 }
 
 middleware('log', function(request, next) {
   logRequest(request);
 
-  return next().then(function(response) {
-    logResponse(response);
-    return response;
-  }, function(e) {
-    var res = _.extend({}, e);
-    logResponse(res);
-    throw e;
-  });
+  var promise = next();
+
+  if (debugResponse.enabled) {
+    return promise.then(function(response) {
+      logResponse(response);
+      return response;
+    }, function(e) {
+      var res = _.extend({}, e);
+      logResponse(res);
+      throw e;
+    });
+  } else {
+    return promise;
+  }
 });
 
 middleware('debugLog', function(request, next) {
@@ -240,15 +259,8 @@ middleware('debugLog', function(request, next) {
 });
 
 function logResponse(response) {
-  if (debugResponse.enabled) {
-    if (!response.redirectResponse) {
-      var responseToLog = _.extend({}, response);
-      if (isStream(response.body)) {
-        delete responseToLog.body;
-      }
-
-      withoutPasswords(responseToLog, debugResponse);
-    }
+  if (!response.redirectResponse) {
+    debugResponse(prepareForLogging(response));
   }
 }
 
