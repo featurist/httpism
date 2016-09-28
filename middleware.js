@@ -127,7 +127,7 @@ function proxyUrl(request, proxy) {
 }
 
 function parseUrl(request) {
-  var proxy = process.env.http_proxy || request.options.proxy;
+  var proxy = process.env.http_proxy || process.env.HTTP_PROXY || request.options.proxy;
 
   if (proxy) {
     return proxyUrl(request, proxy);
