@@ -250,6 +250,15 @@ httpism.get('http://example.com/api/').then(function (api) {
 });
 ```
 
+## Cancel a request
+
+Requests can be cancelled by calling `.abort()` on the promise returned from any request method:
+
+```js
+var promise = httpism.get('/something');
+promise.abort();
+```
+
 ## Options
 
 * `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response.
