@@ -13,8 +13,13 @@ module.exports = {
   },
 
   stringify: function (params) {
-    return Object.keys(params).map(function (key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
-    }).join('&');
+    return Object.keys(params)
+      .filter(function (key) {
+        return typeof(params[key]) !== 'undefined';
+      })
+      .map(function (key) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+      })
+      .join('&');
   }
 };
