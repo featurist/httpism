@@ -327,6 +327,16 @@ middleware.before = ['http', 'debugLog'];
 middleware.after = 'redirect';
 ```
 
+You can insert the middleware by passing it to `httpism.api()`, or by calling `api.insertMiddleware()`:
+
+```js
+var api = httpism.api(middleware);
+api.insertMiddleware(middleware);
+
+// globally, and for all new APIs
+httpism.insertMiddleware(middleware);
+```
+
 * `request` is an object with the following properties:
     * `url` the full URL of the request, e.g. `http://example.com/path?query=value`
     * `method` the method of the request, e.g. `GET` or `POST`

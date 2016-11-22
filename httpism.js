@@ -76,43 +76,43 @@ function insertMiddlewareIntoIndex(middlewares, m, index) {
   middlewares.splice(index, 0, m);
 }
 
-function extendMiddlewares(originalMiddlewares, newMiddlewares) {
-  var middlewares = originalMiddlewares.slice();
-
-  newMiddlewares.forEach(function (m) {
-    if (m.before || m.after) {
-      var position = m.before || m.after;
-      var names = typeof position === 'string'? [position]: position;
-      var indexes = findMiddlewareIndexes(names, middlewares);
-      if (indexes.length) {
-        var index = m.before? Math.min.apply(Math, indexes): Math.max.apply(Math, indexes) + 1;
-
-        if (index >= 0) {
-          insertMiddlewareIntoIndex(middlewares, m, index);
-          return;
-        }
-      }
-
-      throw new Error('no such middleware: ' + (m.before || m.after));
-    } else {
-      middlewares.unshift(m);
-    }
-  });
-
-  return middlewares;
-}
-
 Httpism.prototype.api = function (url, options, middlewares) {
   var args = parseClientArguments(url, options, middlewares);
 
-  return new Httpism(
+  var api = new Httpism(
     resolveUrl(this.url, args.url),
     merge(args.options, this._options),
-    args.middlewares
-      ? extendMiddlewares(this.middlewares, args.middlewares)
-      : this.middlewares
+    this.middlewares.slice()
   );
+
+  if (args.middlewares) {
+    args.middlewares.forEach(function (m) {
+      api.insertMiddleware(m);
+    });
+  }
+
+  return api;
 };
+
+Httpism.prototype.insertMiddleware = function(m) {
+  if (m.before || m.after) {
+    var position = m.before || m.after;
+    var names = typeof position === 'string'? [position]: position;
+    var indexes = findMiddlewareIndexes(names, this.middlewares);
+    if (indexes.length) {
+      var index = m.before? Math.min.apply(Math, indexes): Math.max.apply(Math, indexes) + 1;
+
+      if (index >= 0) {
+        insertMiddlewareIntoIndex(this.middlewares, m, index);
+        return;
+      }
+    }
+
+    throw new Error('no such middleware: ' + (m.before || m.after));
+  } else {
+    this.middlewares.unshift(m);
+  }
+}
 
 function addMethod(method) {
   Httpism.prototype[method] = function (url, options) {

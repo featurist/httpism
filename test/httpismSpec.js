@@ -404,7 +404,20 @@ describe("httpism", function() {
             ]);
           });
 
-          it('inserts before the named middleware if at lesat one is found', function () {
+          it('can insert middleware into same api before another', function () {
+            var m = function () {};
+            m.before = 'a';
+
+            pipeline.insertMiddleware(m);
+
+            expect(pipeline.middlewares).to.eql([
+              m,
+              a,
+              b
+            ]);
+          });
+
+          it('inserts before the named middleware if at least one is found', function () {
             var m = function () {};
             m.before = ['a', 'c'];
             var api = pipeline.api(m);
@@ -524,7 +537,7 @@ describe("httpism", function() {
       });
 
       it("throws if it cannot connect", function() {
-        return expect(httpism.get("http://localhost:4001/")).to.eventually.be.rejectedWith("ECONNREFUSED");
+        return expect(httpism.get("http://localhost:50000/")).to.eventually.be.rejectedWith("ECONNREFUSED");
       });
     });
 
