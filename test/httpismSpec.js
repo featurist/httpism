@@ -475,6 +475,15 @@ describe("httpism", function() {
           });
         });
 
+        it('can remove middleware', function () {
+          pipeline.removeMiddleware('b');
+
+          expect(pipeline.middlewares).to.eql([
+            a
+          ]);
+        });
+
+
         it('throws if before middleware name cannot be found', function () {
           var m = function () {};
           m.before = 'notfound';

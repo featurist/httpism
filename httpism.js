@@ -114,6 +114,13 @@ Httpism.prototype.insertMiddleware = function(m) {
   }
 }
 
+Httpism.prototype.removeMiddleware = function(name) {
+  var indexes = findMiddlewareIndexes([name], this.middlewares);
+  for (var i=indexes.length-1; i>=0; i--) {
+    this.middlewares.splice(indexes[i], 1);
+  }
+}
+
 function addMethod(method) {
   Httpism.prototype[method] = function (url, options) {
     return this.send(method, url, undefined, options, this);
