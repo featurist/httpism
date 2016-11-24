@@ -1,3 +1,4 @@
+var window = require('global');
 var utils = require('./middlewareUtils');
 var querystringLite = require('./querystring-lite');
 var randomString = require('random-string');

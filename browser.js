@@ -1,4 +1,3 @@
-var window = require('global');
 var httpism = require('./httpism');
 var middleware = require('./browserMiddleware');
 var utils = require('./middlewareUtils');
