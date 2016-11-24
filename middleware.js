@@ -11,7 +11,6 @@ var debugResponse = createDebug("httpism:response");
 var debugRequest = createDebug("httpism:request");
 var HttpsProxyAgent = require('https-proxy-agent');
 var obfuscateUrlPassword = require('./obfuscateUrlPassword');
-var FormData = require('form-data');
 var mimeTypes = require('mime-types');
 
 function middleware(name, fn) {
