@@ -141,14 +141,6 @@ addMethodWithBody('put');
 addMethodWithBody('patch');
 addMethodWithBody('options');
 
-function resolveUrl(base, url) {
-  if (base) {
-    return resolveUrl(base, url);
-  } else {
-    return url;
-  }
-}
-
 function parseClientArguments() {
   var url, options, middlewares;
 
