@@ -173,46 +173,25 @@ middleware('http', function(request) {
   });
 });
 
+function removeUndefined(obj) {
+  Object.keys(obj).map(function (key) {
+    if (typeof obj[key] === 'undefined') {
+      delete obj[key];
+    }
+  });
+
+  return obj;
+}
+
 function prepareForLogging(r) {
-  return {
+  return removeUndefined({
     method: r.method,
-    url: obfuscateUrlPassword(r.url),
+    url: r.url && obfuscateUrlPassword(r.url),
     headers: r.headers,
     body: isStream(r.body)? '[Stream]': r.body,
     statusCode: r.statusCode,
     statusText: r.statusText
-  };
-}
-
-function withoutPasswords(request, fn) {
-  var basicAuth = request.options && request.options.basicAuth;
-  var password = basicAuth && basicAuth.password;
-  var url = request.url;
-  var proxy = request.options && request.options.proxy;
-
-  if (url) {
-    var urlWithoutPassword = obfuscateUrlPassword(request.url);
-    request.url = urlWithoutPassword;
-  }
-
-  if (proxy) {
-    request.options.proxy = obfuscateUrlPassword(proxy);
-  }
-
-  if (password) {
-    basicAuth.password = '********';
-  }
-
-  fn(request);
-
-  if (password) {
-    basicAuth.password = password;
-  }
-  request.url = url;
-
-  if (proxy) {
-    request.options.proxy = proxy;
-  }
+  });
 }
 
 function logRequest(request) {
