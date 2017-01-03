@@ -545,6 +545,32 @@ describe("httpism", function() {
         });
       });
 
+      describe('error predicate', function () {
+        it("throws exceptions when predicate returns true", function() {
+          function isError(response) {
+            return response.statusCode == 400;
+          }
+
+          return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function() {
+            assert.fail("expected an exception to be thrown");
+          }).catch(function(e) {
+            e.message.should.equal("GET " + baseurl + "/400 => 400 Bad Request");
+            e.statusCode.should.equal(400);
+            e.body.message.should.equal("oh dear");
+          });
+        });
+
+        it("doesn't throw exceptions when predicate returns false", function() {
+          function isError(response) {
+            return response.statusCode != 400;
+          }
+
+          return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function(response) {
+            response.body.message.should.equal("oh dear");
+          });
+        });
+      });
+
       it("throws if it cannot connect", function() {
         return expect(httpism.get("http://localhost:50000/")).to.eventually.be.rejectedWith("ECONNREFUSED");
       });

@@ -261,7 +261,7 @@ promise.abort();
 
 ## Options
 
-* `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response.
+* `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response. If set to a function, the function is passed the response, and returns true to throw the response as an exception, or false to treat it as a normal response.
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
 * `basicAuth`: use Basic Authentication, pass an object `{ username: 'bob', password: "bob's secret" }`.

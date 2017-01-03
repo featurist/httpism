@@ -58,7 +58,10 @@ exports.extend = extend;
 
 exports.exception = function(request, next) {
   return next().then(function(response) {
-    if (response.statusCode >= 400 && request.options.exceptions !== false) {
+    var exceptions = request.options.exceptions;
+    var isException = exceptions == false? false: typeof exceptions == 'function'? exceptions(response): response.statusCode >= 400;
+
+    if (isException) {
       var msg = request.method.toUpperCase() + " " + obfuscateUrlPassword(request.url) + " => " + response.statusCode + " " + response.statusText;
       var error = extend(new Error(msg), response);
       throw error;
