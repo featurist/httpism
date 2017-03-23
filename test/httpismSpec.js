@@ -49,8 +49,8 @@ describe("httpism", function() {
           });
         });
 
-        return httpism[method.toLowerCase()](baseurl).then(function(response) {
-          expect(response.body).to.eql({
+        return httpism[method.toLowerCase()](baseurl).then(function(body) {
+          expect(body).to.eql({
             method: method,
             path: "/",
             accept: "application/json"
@@ -85,8 +85,8 @@ describe("httpism", function() {
 
         return httpism[method.toLowerCase()](baseurl, {
           joke: "a chicken..."
-        }).then(function(response) {
-          expect(response.body).to.eql({
+        }).then(function(body) {
+          expect(body).to.eql({
             method: method,
             path: "/",
             accept: "application/json",
@@ -115,7 +115,7 @@ describe("httpism", function() {
       });
 
       it("can upload JSON as application/custom", function() {
-        return httpism.post(baseurl, { json: "json" }, { headers: { "content-type": "application/custom" } }).then(function(response) {
+        return httpism.post(baseurl, { json: "json" }, { response: true, headers: { "content-type": "application/custom" } }).then(function(response) {
           expect(JSON.parse(response.body)).to.eql({
             json: "json"
           });
@@ -125,10 +125,11 @@ describe("httpism", function() {
 
       it("can upload form as application/custom", function() {
         return httpism.post(baseurl, { json: "json" }, {
-            form: true,
-            headers: {
-                "content-type": "application/custom"
-            }
+          response: true,
+          form: true,
+          headers: {
+            "content-type": "application/custom"
+          }
         }).then(function(response) {
           expect(qs.parse(response.body)).to.eql({
             json: "json"
@@ -139,6 +140,7 @@ describe("httpism", function() {
 
       it("can upload string as application/custom", function() {
         return httpism.post(baseurl, "a string", {
+          response: true,
           headers: {
             "content-type": "application/custom"
           }
@@ -162,8 +164,8 @@ describe("httpism", function() {
       });
 
       it("sends content-length, and not transfer-encoding: chunked, with JSON", function() {
-        return httpism.post(baseurl, { json: unicodeText }).then(function(response) {
-          expect(response.body).to.eql({
+        return httpism.post(baseurl, { json: unicodeText }).then(function(body) {
+          expect(body).to.eql({
             "content-length": Buffer.byteLength(JSON.stringify({
               json: unicodeText
             })).toString()
@@ -172,8 +174,8 @@ describe("httpism", function() {
       });
 
       it("sends content-length, and not transfer-encoding: chunked, with plain text", function() {
-        return httpism.post(baseurl, unicodeText).then(function(response) {
-          expect(response.body).to.eql({
+        return httpism.post(baseurl, unicodeText).then(function(body) {
+          expect(body).to.eql({
             "content-length": Buffer.byteLength(unicodeText).toString()
           });
         });
@@ -183,7 +185,7 @@ describe("httpism", function() {
         return httpism.post(baseurl, { formData: unicodeText }, {
           form: true
         }).then(function(response) {
-          expect(response.body).to.eql({
+          expect(response).to.eql({
             "content-length": Buffer.byteLength(qs.stringify({
               formData: unicodeText
             })).toString()
@@ -201,8 +203,8 @@ describe("httpism", function() {
       });
 
       it("sends Accept: application/json by default", function() {
-        return httpism.get(baseurl).then(function(response) {
-          expect(response.body).to.eql("application/json");
+        return httpism.get(baseurl).then(function(body) {
+          expect(body).to.eql("application/json");
         });
       });
 
@@ -211,8 +213,8 @@ describe("httpism", function() {
           headers: {
             accept: "application/custom"
           }
-        }).then(function(response) {
-          expect(response.body).to.eql("application/custom");
+        }).then(function(body) {
+          expect(body).to.eql("application/custom");
         });
       });
 
@@ -221,8 +223,8 @@ describe("httpism", function() {
           headers: {
             Accept: "application/custom"
           }
-        }).then(function(response) {
-          expect(response.body).to.eql("application/custom");
+        }).then(function(body) {
+          expect(body).to.eql("application/custom");
         });
       });
     });
@@ -239,8 +241,8 @@ describe("httpism", function() {
           headers: {
             "x-header": "haha"
           }
-        }).then(function(response) {
-          expect(response.body["x-header"]).to.equal("haha");
+        }).then(function(body) {
+          expect(body["x-header"]).to.equal("haha");
         });
       });
     });
@@ -253,8 +255,8 @@ describe("httpism", function() {
             res.send("content as string");
           });
 
-          return httpism.get(baseurl).then(function(response) {
-            expect(response.body).to.equal("content as string");
+          return httpism.get(baseurl).then(function(body) {
+            expect(body).to.equal("content as string");
           });
         });
       }
@@ -272,7 +274,7 @@ describe("httpism", function() {
           req.pipe(res);
         });
 
-        return httpism.post(baseurl + "/text", "content as string").then(function(response) {
+        return httpism.post(baseurl + "/text", "content as string", {response: true}).then(function(response) {
           expect(response.headers["received-content-type"]).to.equal("text/plain");
           expect(response.body).to.equal("content as string");
         });
@@ -292,8 +294,8 @@ describe("httpism", function() {
             a: "a",
             b: "b"
           }
-        }).then(function(response) {
-          expect(response.body).to.eql({
+        }).then(function(body) {
+          expect(body).to.eql({
             a: "a",
             b: "b"
           });
@@ -306,8 +308,8 @@ describe("httpism", function() {
             a: "newa",
             b: "b"
           }
-        }).then(function(response) {
-          expect(response.body).to.eql({
+        }).then(function(body) {
+          expect(body).to.eql({
             a: "newa",
             b: "b",
             c: "c"
@@ -329,8 +331,8 @@ describe("httpism", function() {
           return next(request);
         });
 
-        return client.get(baseurl).then(function(response) {
-          expect(response.body).to.eql({
+        return client.get(baseurl).then(function(body) {
+          expect(body).to.eql({
             joke: "a chicken..."
           });
         });
@@ -363,8 +365,8 @@ describe("httpism", function() {
 
           var http = httpism.api(cache);
 
-          return http.get(baseurl).then(function (response) {
-            expect(response.body).to.eql({from: 'cache'});
+          return http.get(baseurl).then(function (body) {
+            expect(body).to.eql({from: 'cache'});
           });
         });
       });
@@ -539,8 +541,8 @@ describe("httpism", function() {
       });
 
       it("doesn't throw exceptions on 400-500 status codes, when specified", function() {
-        return httpism.api(baseurl).get("/400", { exceptions: false }).then(function(response) {
-          expect(response.body.message).to.equal("oh dear");
+        return httpism.api(baseurl).get("/400", { exceptions: false }).then(function(body) {
+          expect(body.message).to.equal("oh dear");
         });
       });
 
@@ -564,8 +566,8 @@ describe("httpism", function() {
             return response.statusCode != 400;
           }
 
-          return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function(response) {
-            expect(response.body.message).to.equal("oh dear");
+          return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function(body) {
+            expect(body.message).to.equal("oh dear");
           });
         });
       });
@@ -591,20 +593,20 @@ describe("httpism", function() {
 
       it("clients have options, which can be overwritten on each request", function() {
         var root = client.api(baseurl);
-        return root.post("", undefined, { b: "b" }).then(function(response) {
-          expect(response.body).to.eql({
+        return root.post("", undefined, { b: "b" }).then(function(body) {
+          expect(body).to.eql({
             a: "a",
             b: "b"
           });
 
-          return response.post("", undefined, { c: "c" }).then(function(response) {
-            expect(response.body).to.eql({
+          return root.api().post("", undefined, { c: "c" }).then(function(body) {
+            expect(body).to.eql({
               a: "a",
               c: "c"
             });
 
-            return root.post("", undefined).then(function(response) {
-              expect(response.body).eql({
+            return root.post("", undefined).then(function(body) {
+              expect(body).eql({
                 a: "a"
               });
             });
@@ -613,63 +615,73 @@ describe("httpism", function() {
       });
     });
 
-    describe("responses act as clients", function() {
-      var path;
-
+    describe('responses', function () {
       beforeEach(function() {
-        function pathResponse(req, res) {
-          res.send({
-            path: req.path
+        app.get("/", function(req, res) {
+          res.set({'x-custom-header': 'header value'})
+          res.status(234)
+          res.send({data: 'data'})
+        });
+      });
+
+      describe('response: true', function () {
+        var response
+
+        beforeEach(function() {
+          return httpism.get(baseurl, {response: true}).then(function(_response) {
+            response = _response;
           });
-        }
-
-        app.get("/", pathResponse);
-        app.get("/rootfile", pathResponse);
-        app.get("/path/", pathResponse);
-        app.get("/path/file", pathResponse);
-
-        var api = httpism.api(baseurl);
-
-        return api.get("/path/").then(function(response) {
-          path = response;
         });
-      });
 
-      it("resources respond with their url", function() {
-        expect(path.url).to.equal(baseurl + "/path/");
-        expect(path.body.path).to.equal("/path/");
-      });
+        it('contains the url', function () {
+          expect(response.url).to.equal(baseurl)
+        })
 
-      it("addresses original resource if url is ''", function() {
-        return path.get("").then(function(response) {
-          expect(response.body.path).to.equal("/path/");
+        it('contains the status code', function () {
+          expect(response.statusCode).to.equal(234)
+        })
+
+        it('contains the headers', function () {
+          expect(response.headers['x-custom-header']).to.equal('header value')
+        })
+
+        it('contains the body', function () {
+          expect(response.body).to.eql({data: 'data'})
+        })
+      })
+
+      describe('response: false (default)', function () {
+        var body
+
+        beforeEach(function() {
+          return httpism.get(baseurl).then(function(_body) {
+            body = _body;
+          });
         });
-      });
 
-      it("makes relative sub path", function() {
-        return path.get("file").then(function(response) {
-          expect(response.body.path).to.equal("/path/file");
-        });
-      });
+        describe('2.x compatibility', function () {
+          it('contains the url', function () {
+            expect(body.url).to.equal(baseurl)
+          })
 
-      it("addresses root", function() {
-        return path.get("/").then(function(response) {
-          expect(response.body.path).to.equal("/");
-        });
-      });
+          it('contains the status code', function () {
+            expect(body.statusCode).to.equal(234)
+          })
 
-      it("can address ../ paths", function() {
-        return path.get("../rootfile").then(function(response) {
-          expect(response.body.path).to.equal("/rootfile");
-        });
-      });
+          it('contains the headers', function () {
+            expect(body.headers['x-custom-header']).to.equal('header value')
+          })
 
-      it("can create new apis from relative paths", function() {
-        return path.api("file").get("").then(function(response) {
-          expect(response.body.path).to.equal("/path/file");
-        });
-      });
-    });
+          it('contains the body', function () {
+            expect(body.body).to.eql({data: 'data'})
+          })
+        })
+
+        it('returns the body', function () {
+          expect(body).to.eql({data: 'data'})
+        })
+      })
+    })
 
     describe("redirects", function() {
       beforeEach(function() {
@@ -701,7 +713,7 @@ describe("httpism", function() {
       });
 
       it("follows redirects by default", function() {
-        return httpism.get(baseurl + "/redirect").then(function(response) {
+        return httpism.get(baseurl + "/redirect", {response: true}).then(function(response) {
           expect(response.body).to.eql({
             path: "/path/"
           });
@@ -716,7 +728,7 @@ describe("httpism", function() {
             res.status(statusCode).send();
           });
 
-          return httpism.get(baseurl + "/" + statusCode).then(function(response) {
+          return httpism.get(baseurl + "/" + statusCode, {response: true}).then(function(response) {
             expect(response.body).to.eql({
               path: "/path/"
             });
@@ -733,16 +745,8 @@ describe("httpism", function() {
         itFollowsRedirects(307);
       });
 
-      it("paths are relative to destination resource", function() {
-        return httpism.get(baseurl + "/redirect").then(function(response) {
-          return response.get("file").then(function(response) {
-            expect(response.body.path).to.equal("/path/file");
-          });
-        });
-      });
-
       it("follows a more than one redirect", function() {
-        return httpism.get(baseurl + "/redirecttoredirect").then(function(response) {
+        return httpism.get(baseurl + "/redirecttoredirect", {response: true}).then(function(response) {
           expect(response.body).to.eql({
             path: "/path/"
           });
@@ -752,7 +756,8 @@ describe("httpism", function() {
 
       it("doesn't follow redirects when specified", function() {
         return httpism.get(baseurl + "/redirect", {
-          redirect: false
+          redirect: false,
+          response: true
         }).then(function(response) {
           expect(response.body).to.eql({
             path: "/redirect"
@@ -783,8 +788,8 @@ describe("httpism", function() {
         }).then(function() {
           return httpism.get(baseurl + "/getcookie", {
             cookies: cookies
-          }).then(function(response) {
-            expect(response.body).to.eql({
+          }).then(function(body) {
+            expect(body).to.eql({
               mycookie: "value"
             });
           });
@@ -796,8 +801,8 @@ describe("httpism", function() {
           cookies: true
         });
         return api.get(baseurl + "/setcookie").then(function() {
-          return api.get(baseurl + "/getcookie").then(function(response) {
-            expect(response.body).to.eql({
+          return api.get(baseurl + "/getcookie").then(function(body) {
+            expect(body).to.eql({
               mycookie: "value"
             });
           });
@@ -830,8 +835,8 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(httpsBaseurl, { https: { rejectUnauthorized: false } }).then(function(response) {
-          expect(response.body.protocol).to.equal("https");
+        return httpism.get(httpsBaseurl, { https: { rejectUnauthorized: false } }).then(function(body) {
+          expect(body.protocol).to.equal("https");
         });
       });
     });
@@ -848,7 +853,8 @@ describe("httpism", function() {
           name: "Betty Boop",
           address: "one & two"
         }, {
-          form: true
+          form: true,
+          response: true
         }).then(function(response) {
           expect(response.body).to.equal("name=Betty%20Boop&address=one%20%26%20two");
           expect(response.headers["received-content-type"]).to.equal("application/x-www-form-urlencoded");
@@ -864,7 +870,7 @@ describe("httpism", function() {
           }));
         });
 
-        return httpism.get(baseurl + "/form").then(function(response) {
+        return httpism.get(baseurl + "/form", {response: true}).then(function(response) {
           expect(response.body).to.eql({
             name: "Betty Boop",
             address: "one & two"
@@ -918,8 +924,8 @@ describe("httpism", function() {
           form.append('address', 'one & two');
           form.append('photo', fs.createReadStream(filename));
 
-          return httpism.post(baseurl + "/form", form).then(function(response) {
-            expect(response.body).to.eql({
+          return httpism.post(baseurl + "/form", form).then(function(body) {
+            expect(body).to.eql({
               name: 'Betty Boop',
               address: 'one & two',
               photo: {
@@ -951,15 +957,15 @@ describe("httpism", function() {
             username: "good user",
             password: "good password!"
           }
-        }).then(function(response) {
-          expect(response.body).to.equal("this is secret");
+        }).then(function(body) {
+          expect(body).to.equal("this is secret");
         });
       });
 
       it("can authenticate using username password encoded in URL", function() {
         var u = encodeURIComponent;
-        return httpism.get("http://" + u("good user") + ":" + u("good password!") + "@localhost:" + port + "/secret").then(function(response) {
-          expect(response.body).to.equal("this is secret");
+        return httpism.get("http://" + u("good user") + ":" + u("good password!") + "@localhost:" + port + "/secret").then(function(body) {
+          expect(body).to.equal("this is secret");
         });
       });
 
@@ -969,8 +975,8 @@ describe("httpism", function() {
             username: "good: :user",
             password: "good password!"
           }
-        }).then(function(response) {
-          expect(response.body).to.equal("this is secret");
+        }).then(function(body) {
+          expect(body).to.equal("this is secret");
         });
       });
 
@@ -980,8 +986,9 @@ describe("httpism", function() {
             username: "good user",
             password: "bad password!"
           },
-          exceptions: false
+          exceptions: false,
         }).then(function(response) {
+          // console.log('response', response)
           expect(response.statusCode).to.equal(401);
         });
       });
@@ -1020,7 +1027,8 @@ describe("httpism", function() {
         return httpism.post(baseurl + "/file", stream, {
           headers: {
             "content-type": contentType
-          }
+          },
+          response: true
         }).then(function(response) {
           expect(response.headers["received-content-type"]).to.equal(contentType);
           expect(response.body).to.equal("received: some content");
@@ -1036,14 +1044,14 @@ describe("httpism", function() {
     it('it guesses the Content-Type of the stream when created from a file', function() {
       var stream = fs.createReadStream(filename);
 
-      return httpism.post(baseurl + "/file", stream).then(function(response) {
+      return httpism.post(baseurl + "/file", stream, {response: true}).then(function(response) {
         expect(response.headers["received-content-type"]).to.equal('text/plain');
         expect(response.body).to.equal("received: some content");
       });
     });
 
     it("can download a stream", function() {
-      return httpism.get(baseurl + "/file").then(function(response) {
+      return httpism.get(baseurl + "/file", {response: true}).then(function(response) {
         expect(response.headers["content-type"]).to.equal("application/blah");
         return middleware.streamToString(response.body).then(function(response) {
           expect(response).to.equal("some content");
@@ -1066,7 +1074,8 @@ describe("httpism", function() {
             });
 
             return httpism.get(baseurl + "/content", {
-              responseBody: "stream"
+              responseBody: "stream",
+              response: true
             }).then(function(response) {
               expect(response.headers["content-type"]).to.equal(contentType);
               return middleware.streamToString(response.body).then(function(response) {
@@ -1082,7 +1091,8 @@ describe("httpism", function() {
             });
 
             return httpism.get(baseurl + "/content", {
-              responseBody: type
+              responseBody: type,
+              response: true
             }).then(function(response) {
               expect(response.headers["content-type"]).to.equal("application/blah; charset=utf-8");
               expect(response.body).to.eql(content);
@@ -1200,8 +1210,8 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(baseurl, {proxy: proxyUrl}).then(function (response) {
-          expect(response.body).to.eql({blah: 'blah'});
+        return httpism.get(baseurl, {proxy: proxyUrl}).then(function (body) {
+          expect(body).to.eql({blah: 'blah'});
           expect(urlProxied).to.equal(baseurl);
         });
       });
@@ -1213,8 +1223,8 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(httpsBaseurl, { proxy: proxyUrl, https: { rejectUnauthorized: false } }).then(function(response) {
-          expect(response.body.protocol).to.equal("https");
+        return httpism.get(httpsBaseurl, { proxy: proxyUrl, https: { rejectUnauthorized: false } }).then(function(body) {
+          expect(body.protocol).to.equal("https");
         });
       });
     });
@@ -1227,8 +1237,8 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(baseurl, {proxy: secureProxyUrl}).then(function (response) {
-          expect(response.body).to.eql({blah: 'blah'});
+        return httpism.get(baseurl, {proxy: secureProxyUrl}).then(function (body) {
+          expect(body).to.eql({blah: 'blah'});
           expect(urlProxied).to.equal(baseurl);
         });
       });
@@ -1240,8 +1250,8 @@ describe("httpism", function() {
           });
         });
 
-        return httpism.get(httpsBaseurl, { proxy: secureProxyUrl, https: { rejectUnauthorized: false } }).then(function(response) {
-          expect(response.body.protocol).to.equal("https");
+        return httpism.get(httpsBaseurl, { proxy: secureProxyUrl, https: { rejectUnauthorized: false } }).then(function(body) {
+          expect(body.protocol).to.equal("https");
         });
       });
     });
@@ -1264,7 +1274,7 @@ describe("httpism", function() {
         });
       });
 
-      return api.get(baseurl).then(function(response) {
+      return api.get(baseurl, {response: true}).then(function(response) {
         expect(response.statusCode).to.equal(400);
         expect(JSON.parse(response.body)).to.eql({
           blah: "blah"
@@ -1287,7 +1297,7 @@ describe("httpism", function() {
         }
       });
 
-      return api.get(baseurl).then(function(response) {
+      return api.get(baseurl, {response: true}).then(function(response) {
         expect(response.statusCode).to.equal(200);
         expect(response.body).to.eql({
           blah: "blah1234!"
