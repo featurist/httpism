@@ -5,7 +5,6 @@ var chai = require("chai");
 chai.use(require("chai-as-promised"));
 var assert = chai.assert;
 var expect = chai.expect;
-chai.should();
 var http = require('http');
 var https = require("https");
 var fs = require("fs-promise");
@@ -68,8 +67,8 @@ describe("httpism", function() {
       });
 
       return httpism.head(baseurl).then(function(response) {
-        response.headers["x-method"].should.equal("HEAD");
-        response.headers["x-path"].should.equal("/");
+        expect(response.headers["x-method"]).to.equal("HEAD");
+        expect(response.headers["x-path"]).to.equal("/");
       });
     });
 
@@ -87,7 +86,7 @@ describe("httpism", function() {
         return httpism[method.toLowerCase()](baseurl, {
           joke: "a chicken..."
         }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             method: method,
             path: "/",
             accept: "application/json",
@@ -117,7 +116,7 @@ describe("httpism", function() {
 
       it("can upload JSON as application/custom", function() {
         return httpism.post(baseurl, { json: "json" }, { headers: { "content-type": "application/custom" } }).then(function(response) {
-          JSON.parse(response.body).should.eql({
+          expect(JSON.parse(response.body)).to.eql({
             json: "json"
           });
           expect(response.headers["received-content-type"]).to.eql("application/custom");
@@ -131,10 +130,10 @@ describe("httpism", function() {
                 "content-type": "application/custom"
             }
         }).then(function(response) {
-          qs.parse(response.body).should.eql({
+          expect(qs.parse(response.body)).to.eql({
             json: "json"
           });
-          response.headers["received-content-type"].should.eql("application/custom");
+          expect(response.headers["received-content-type"]).to.eql("application/custom");
         });
       });
 
@@ -144,8 +143,8 @@ describe("httpism", function() {
             "content-type": "application/custom"
           }
         }).then(function(response) {
-          response.body.should.eql("a string");
-          response.headers["received-content-type"].should.eql("application/custom");
+          expect(response.body).to.eql("a string");
+          expect(response.headers["received-content-type"]).to.eql("application/custom");
         });
       });
     });
@@ -164,7 +163,7 @@ describe("httpism", function() {
 
       it("sends content-length, and not transfer-encoding: chunked, with JSON", function() {
         return httpism.post(baseurl, { json: unicodeText }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             "content-length": Buffer.byteLength(JSON.stringify({
               json: unicodeText
             })).toString()
@@ -174,7 +173,7 @@ describe("httpism", function() {
 
       it("sends content-length, and not transfer-encoding: chunked, with plain text", function() {
         return httpism.post(baseurl, unicodeText).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             "content-length": Buffer.byteLength(unicodeText).toString()
           });
         });
@@ -184,7 +183,7 @@ describe("httpism", function() {
         return httpism.post(baseurl, { formData: unicodeText }, {
           form: true
         }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             "content-length": Buffer.byteLength(qs.stringify({
               formData: unicodeText
             })).toString()
@@ -203,7 +202,7 @@ describe("httpism", function() {
 
       it("sends Accept: application/json by default", function() {
         return httpism.get(baseurl).then(function(response) {
-          response.body.should.eql("application/json");
+          expect(response.body).to.eql("application/json");
         });
       });
 
@@ -213,7 +212,7 @@ describe("httpism", function() {
             accept: "application/custom"
           }
         }).then(function(response) {
-          response.body.should.eql("application/custom");
+          expect(response.body).to.eql("application/custom");
         });
       });
 
@@ -223,7 +222,7 @@ describe("httpism", function() {
             Accept: "application/custom"
           }
         }).then(function(response) {
-          response.body.should.eql("application/custom");
+          expect(response.body).to.eql("application/custom");
         });
       });
     });
@@ -241,7 +240,7 @@ describe("httpism", function() {
             "x-header": "haha"
           }
         }).then(function(response) {
-          response.body["x-header"].should.equal("haha");
+          expect(response.body["x-header"]).to.equal("haha");
         });
       });
     });
@@ -255,7 +254,7 @@ describe("httpism", function() {
           });
 
           return httpism.get(baseurl).then(function(response) {
-            response.body.should.equal("content as string");
+            expect(response.body).to.equal("content as string");
           });
         });
       }
@@ -274,8 +273,8 @@ describe("httpism", function() {
         });
 
         return httpism.post(baseurl + "/text", "content as string").then(function(response) {
-          response.headers["received-content-type"].should.equal("text/plain");
-          response.body.should.equal("content as string");
+          expect(response.headers["received-content-type"]).to.equal("text/plain");
+          expect(response.body).to.equal("content as string");
         });
       });
     });
@@ -294,7 +293,7 @@ describe("httpism", function() {
             b: "b"
           }
         }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             a: "a",
             b: "b"
           });
@@ -308,7 +307,7 @@ describe("httpism", function() {
             b: "b"
           }
         }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             a: "newa",
             b: "b",
             c: "c"
@@ -331,7 +330,7 @@ describe("httpism", function() {
         });
 
         return client.get(baseurl).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             joke: "a chicken..."
           });
         });
@@ -523,9 +522,9 @@ describe("httpism", function() {
         return httpism.api(baseurl).get("/400").then(function () {
           assert.fail("expected an exception to be thrown");
         }).catch(function(e) {
-          e.message.should.equal("GET " + baseurl + "/400 => 400 Bad Request");
-          e.statusCode.should.equal(400);
-          e.body.message.should.equal("oh dear");
+          expect(e.message).to.equal("GET " + baseurl + "/400 => 400 Bad Request");
+          expect(e.statusCode).to.equal(400);
+          expect(e.body.message).to.equal("oh dear");
         });
       });
 
@@ -533,15 +532,15 @@ describe("httpism", function() {
         return httpism.api(`http://user:pass@localhost:${port}/`).get("/400").then(function () {
           assert.fail("expected an exception to be thrown");
         }).catch(function(e) {
-          e.message.should.equal("GET " + `http://user:********@localhost:${port}/400 => 400 Bad Request`);
-          e.statusCode.should.equal(400);
-          e.body.message.should.equal("oh dear");
+          expect(e.message).to.equal("GET " + `http://user:********@localhost:${port}/400 => 400 Bad Request`);
+          expect(e.statusCode).to.equal(400);
+          expect(e.body.message).to.equal("oh dear");
         });
       });
 
       it("doesn't throw exceptions on 400-500 status codes, when specified", function() {
         return httpism.api(baseurl).get("/400", { exceptions: false }).then(function(response) {
-          response.body.message.should.equal("oh dear");
+          expect(response.body.message).to.equal("oh dear");
         });
       });
 
@@ -554,9 +553,9 @@ describe("httpism", function() {
           return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function() {
             assert.fail("expected an exception to be thrown");
           }).catch(function(e) {
-            e.message.should.equal("GET " + baseurl + "/400 => 400 Bad Request");
-            e.statusCode.should.equal(400);
-            e.body.message.should.equal("oh dear");
+            expect(e.message).to.equal("GET " + baseurl + "/400 => 400 Bad Request");
+            expect(e.statusCode).to.equal(400);
+            expect(e.body.message).to.equal("oh dear");
           });
         });
 
@@ -566,7 +565,7 @@ describe("httpism", function() {
           }
 
           return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function(response) {
-            response.body.message.should.equal("oh dear");
+            expect(response.body.message).to.equal("oh dear");
           });
         });
       });
@@ -593,19 +592,19 @@ describe("httpism", function() {
       it("clients have options, which can be overwritten on each request", function() {
         var root = client.api(baseurl);
         return root.post("", undefined, { b: "b" }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             a: "a",
             b: "b"
           });
 
           return response.post("", undefined, { c: "c" }).then(function(response) {
-            response.body.should.eql({
+            expect(response.body).to.eql({
               a: "a",
               c: "c"
             });
 
             return root.post("", undefined).then(function(response) {
-              return response.body.should.eql({
+              expect(response.body).eql({
                 a: "a"
               });
             });
@@ -637,37 +636,37 @@ describe("httpism", function() {
       });
 
       it("resources respond with their url", function() {
-        path.url.should.equal(baseurl + "/path/");
-        path.body.path.should.equal("/path/");
+        expect(path.url).to.equal(baseurl + "/path/");
+        expect(path.body.path).to.equal("/path/");
       });
 
       it("addresses original resource if url is ''", function() {
         return path.get("").then(function(response) {
-          response.body.path.should.equal("/path/");
+          expect(response.body.path).to.equal("/path/");
         });
       });
 
       it("makes relative sub path", function() {
         return path.get("file").then(function(response) {
-          response.body.path.should.equal("/path/file");
+          expect(response.body.path).to.equal("/path/file");
         });
       });
 
       it("addresses root", function() {
         return path.get("/").then(function(response) {
-          response.body.path.should.equal("/");
+          expect(response.body.path).to.equal("/");
         });
       });
 
       it("can address ../ paths", function() {
         return path.get("../rootfile").then(function(response) {
-          response.body.path.should.equal("/rootfile");
+          expect(response.body.path).to.equal("/rootfile");
         });
       });
 
       it("can create new apis from relative paths", function() {
         return path.api("file").get("").then(function(response) {
-          response.body.path.should.equal("/path/file");
+          expect(response.body.path).to.equal("/path/file");
         });
       });
     });
@@ -703,10 +702,10 @@ describe("httpism", function() {
 
       it("follows redirects by default", function() {
         return httpism.get(baseurl + "/redirect").then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             path: "/path/"
           });
-          response.url.should.eql(baseurl + "/path/");
+          expect(response.url).to.eql(baseurl + "/path/");
         });
       });
 
@@ -718,10 +717,10 @@ describe("httpism", function() {
           });
 
           return httpism.get(baseurl + "/" + statusCode).then(function(response) {
-            response.body.should.eql({
+            expect(response.body).to.eql({
               path: "/path/"
             });
-            response.url.should.eql(baseurl + "/path/");
+            expect(response.url).to.eql(baseurl + "/path/");
           });
         });
       }
@@ -737,17 +736,17 @@ describe("httpism", function() {
       it("paths are relative to destination resource", function() {
         return httpism.get(baseurl + "/redirect").then(function(response) {
           return response.get("file").then(function(response) {
-            response.body.path.should.equal("/path/file");
+            expect(response.body.path).to.equal("/path/file");
           });
         });
       });
 
       it("follows a more than one redirect", function() {
         return httpism.get(baseurl + "/redirecttoredirect").then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             path: "/path/"
           });
-          response.url.should.eql(baseurl + "/path/");
+          expect(response.url).to.eql(baseurl + "/path/");
         });
       });
 
@@ -755,12 +754,12 @@ describe("httpism", function() {
         return httpism.get(baseurl + "/redirect", {
           redirect: false
         }).then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             path: "/redirect"
           });
-          response.url.should.eql(baseurl + "/redirect");
-          response.headers.location.should.equal("/path/");
-          response.statusCode.should.equal(302);
+          expect(response.url).to.eql(baseurl + "/redirect");
+          expect(response.headers.location).to.equal("/path/");
+          expect(response.statusCode).to.equal(302);
         });
       });
     });
@@ -785,7 +784,7 @@ describe("httpism", function() {
           return httpism.get(baseurl + "/getcookie", {
             cookies: cookies
           }).then(function(response) {
-            response.body.should.eql({
+            expect(response.body).to.eql({
               mycookie: "value"
             });
           });
@@ -798,7 +797,7 @@ describe("httpism", function() {
         });
         return api.get(baseurl + "/setcookie").then(function() {
           return api.get(baseurl + "/getcookie").then(function(response) {
-            response.body.should.eql({
+            expect(response.body).to.eql({
               mycookie: "value"
             });
           });
@@ -832,7 +831,7 @@ describe("httpism", function() {
         });
 
         return httpism.get(httpsBaseurl, { https: { rejectUnauthorized: false } }).then(function(response) {
-          response.body.protocol.should.equal("https");
+          expect(response.body.protocol).to.equal("https");
         });
       });
     });
@@ -851,8 +850,8 @@ describe("httpism", function() {
         }, {
           form: true
         }).then(function(response) {
-          response.body.should.equal("name=Betty%20Boop&address=one%20%26%20two");
-          response.headers["received-content-type"].should.equal("application/x-www-form-urlencoded");
+          expect(response.body).to.equal("name=Betty%20Boop&address=one%20%26%20two");
+          expect(response.headers["received-content-type"]).to.equal("application/x-www-form-urlencoded");
         });
       });
 
@@ -866,11 +865,11 @@ describe("httpism", function() {
         });
 
         return httpism.get(baseurl + "/form").then(function(response) {
-          response.body.should.eql({
+          expect(response.body).to.eql({
             name: "Betty Boop",
             address: "one & two"
           });
-          response.headers["content-type"].should.equal("application/x-www-form-urlencoded; charset=utf-8");
+          expect(response.headers["content-type"]).to.equal("application/x-www-form-urlencoded; charset=utf-8");
         });
       });
 
@@ -920,7 +919,7 @@ describe("httpism", function() {
           form.append('photo', fs.createReadStream(filename));
 
           return httpism.post(baseurl + "/form", form).then(function(response) {
-            response.body.should.eql({
+            expect(response.body).to.eql({
               name: 'Betty Boop',
               address: 'one & two',
               photo: {
@@ -953,14 +952,14 @@ describe("httpism", function() {
             password: "good password!"
           }
         }).then(function(response) {
-          response.body.should.equal("this is secret");
+          expect(response.body).to.equal("this is secret");
         });
       });
 
       it("can authenticate using username password encoded in URL", function() {
         var u = encodeURIComponent;
         return httpism.get("http://" + u("good user") + ":" + u("good password!") + "@localhost:" + port + "/secret").then(function(response) {
-          response.body.should.equal("this is secret");
+          expect(response.body).to.equal("this is secret");
         });
       });
 
@@ -971,7 +970,7 @@ describe("httpism", function() {
             password: "good password!"
           }
         }).then(function(response) {
-          response.body.should.equal("this is secret");
+          expect(response.body).to.equal("this is secret");
         });
       });
 
@@ -983,7 +982,7 @@ describe("httpism", function() {
           },
           exceptions: false
         }).then(function(response) {
-          response.statusCode.should.equal(401);
+          expect(response.statusCode).to.equal(401);
         });
       });
     });
@@ -1023,8 +1022,8 @@ describe("httpism", function() {
             "content-type": contentType
           }
         }).then(function(response) {
-          response.headers["received-content-type"].should.equal(contentType);
-          response.body.should.equal("received: some content");
+          expect(response.headers["received-content-type"]).to.equal(contentType);
+          expect(response.body).to.equal("received: some content");
         });
       });
     }
@@ -1038,16 +1037,16 @@ describe("httpism", function() {
       var stream = fs.createReadStream(filename);
 
       return httpism.post(baseurl + "/file", stream).then(function(response) {
-        response.headers["received-content-type"].should.equal('text/plain');
-        response.body.should.equal("received: some content");
+        expect(response.headers["received-content-type"]).to.equal('text/plain');
+        expect(response.body).to.equal("received: some content");
       });
     });
 
     it("can download a stream", function() {
       return httpism.get(baseurl + "/file").then(function(response) {
-        response.headers["content-type"].should.equal("application/blah");
+        expect(response.headers["content-type"]).to.equal("application/blah");
         return middleware.streamToString(response.body).then(function(response) {
-          response.should.equal("some content");
+          expect(response).to.equal("some content");
         });
       });
     });
@@ -1069,9 +1068,9 @@ describe("httpism", function() {
             return httpism.get(baseurl + "/content", {
               responseBody: "stream"
             }).then(function(response) {
-              response.headers["content-type"].should.equal(contentType);
+              expect(response.headers["content-type"]).to.equal(contentType);
               return middleware.streamToString(response.body).then(function(response) {
-                response.should.equal("some content");
+                expect(response).to.equal("some content");
               });
             });
           });
@@ -1085,8 +1084,8 @@ describe("httpism", function() {
             return httpism.get(baseurl + "/content", {
               responseBody: type
             }).then(function(response) {
-              response.headers["content-type"].should.equal("application/blah; charset=utf-8");
-              response.body.should.eql(content);
+              expect(response.headers["content-type"]).to.equal("application/blah; charset=utf-8");
+              expect(response.body).to.eql(content);
             });
           });
         });
@@ -1215,7 +1214,7 @@ describe("httpism", function() {
         });
 
         return httpism.get(httpsBaseurl, { proxy: proxyUrl, https: { rejectUnauthorized: false } }).then(function(response) {
-          response.body.protocol.should.equal("https");
+          expect(response.body.protocol).to.equal("https");
         });
       });
     });
@@ -1242,7 +1241,7 @@ describe("httpism", function() {
         });
 
         return httpism.get(httpsBaseurl, { proxy: secureProxyUrl, https: { rejectUnauthorized: false } }).then(function(response) {
-          response.body.protocol.should.equal("https");
+          expect(response.body.protocol).to.equal("https");
         });
       });
     });
@@ -1266,8 +1265,8 @@ describe("httpism", function() {
       });
 
       return api.get(baseurl).then(function(response) {
-        response.statusCode.should.equal(400);
-        JSON.parse(response.body).should.eql({
+        expect(response.statusCode).to.equal(400);
+        expect(JSON.parse(response.body)).to.eql({
           blah: "blah"
         });
       });
@@ -1289,8 +1288,8 @@ describe("httpism", function() {
       });
 
       return api.get(baseurl).then(function(response) {
-        response.statusCode.should.equal(200);
-        response.body.should.eql({
+        expect(response.statusCode).to.equal(200);
+        expect(response.body).to.eql({
           blah: "blah1234!"
         });
       });
