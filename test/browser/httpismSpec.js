@@ -26,7 +26,7 @@ describe('httpism', function () {
 
   describe('get', function () {
     it('can make a JSON GET request', function () {
-      return httpism.get('/').then(function (response) {
+      return httpism.get('/', {response: true}).then(function (response) {
         expect(response.body.method).to.equal('GET');
         expect(response.body.url).to.equal('/');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -35,7 +35,7 @@ describe('httpism', function () {
     });
 
     it('can GET with query string', function () {
-      return httpism.get('/?a=b&b=c&c=d', {querystring: {b: 'd'}}).then(function (response) {
+      return httpism.get('/?a=b&b=c&c=d', {response: true, querystring: {b: 'd'}}).then(function (response) {
         expect(response.body.method).to.equal('GET');
         expect(response.body.query).to.eql({a: 'b', b: 'd', c: 'd'});
         expect(response.body.url).to.equal('/?a=b&b=d&c=d');
@@ -45,8 +45,8 @@ describe('httpism', function () {
     });
 
     it('can make a string GET request', function () {
-      return httpism.get('/text?text=asdf').then(function (response) {
-        expect(response.body).to.equal('asdf');
+      return httpism.get('/text?text=asdf').then(function (body) {
+        expect(body).to.equal('asdf');
       });
     });
 
@@ -64,8 +64,8 @@ describe('httpism', function () {
 
   describe('jsonp', function () {
     it('can call JSONP', function () {
-      return httpism.get(server + '/jsonp', {jsonp: 'callback'}).then(function (response) {
-        expect(response.body).to.eql({blah: 'blah'});
+      return httpism.get(server + '/jsonp', {jsonp: 'callback'}).then(function (body) {
+        expect(body).to.eql({blah: 'blah'});
       });
     });
 
@@ -78,8 +78,8 @@ describe('httpism', function () {
     it('can send and receive cookies', function () {
       return httpism.get('/cookies', {querystring: {a: 'b'}}).then(function () {
         expect(document.cookie).to.equal('a=b');
-        return httpism.get('/').then(function (response) {
-          expect(response.body.cookies.a).to.equal('b');
+        return httpism.get('/').then(function (body) {
+          expect(body.cookies.a).to.equal('b');
         });
       });
     });
@@ -91,30 +91,30 @@ describe('httpism', function () {
 
       it("by default, doesn't send cookies cross-domain", function () {
         return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
-          return httpism.get(server + '/').then(function (response) {
-            expect(response.body.cookies.a).to.be.undefined;
+          return httpism.get(server + '/').then(function (body) {
+            expect(body.cookies.a).to.be.undefined;
           });
         });
       });
 
       it("withCredentials = true, sends cookies cross-domain", function () {
         return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
-          return httpism.get(server + '/', {withCredentials: true}).then(function (response) {
-            expect(response.body.cookies.a).to.equal('b');
+          return httpism.get(server + '/', {withCredentials: true}).then(function (body) {
+            expect(body.cookies.a).to.equal('b');
           });
         });
       });
 
       it("doesn't send x-requested-with if cross-domain", function () {
-        return httpism.get(server + '/').then(function (response) {
-          expect(response.body.xhr).to.be.false;
+        return httpism.get(server + '/').then(function (body) {
+          expect(body.xhr).to.be.false;
         });
       });
 
       it('throws when it cannot connect to the remote server', function () {
         return httpism.get(badServer + '/').then(function () {
           throw new Error('expected to be rejected');
-        }, function (response) {
+        }, function () {
         });
       });
     });
@@ -122,7 +122,7 @@ describe('httpism', function () {
 
   describe('post', function () {
     it('can make a json post request', function () {
-      return httpism.post('/', {data: 'hehey'}).then(function (response) {
+      return httpism.post('/', {data: 'hehey'}, {response: true}).then(function (response) {
         expect(response.body.body).to.eql({data: 'hehey'});
         expect(response.body.headers['content-type']).to.equal('application/json');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -131,7 +131,7 @@ describe('httpism', function () {
     });
 
     it('can make a cross-origin json post request', function () {
-      return httpism.post(server + '/', {data: 'hehey'}).then(function (response) {
+      return httpism.post(server + '/', {data: 'hehey'}, {response: true}).then(function (response) {
         expect(response.body.body).to.eql({data: 'hehey'});
         expect(response.body.headers['content-type']).to.equal('application/json');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -140,7 +140,7 @@ describe('httpism', function () {
     });
 
     it('can make a text post request', function () {
-      return httpism.post('/', 'hehey').then(function (response) {
+      return httpism.post('/', 'hehey', {response: true}).then(function (response) {
         expect(response.body.body).to.eql('hehey');
         expect(response.body.headers['content-type']).to.equal('text/plain;charset=UTF-8');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -149,7 +149,7 @@ describe('httpism', function () {
     });
 
     it('can make a form post request', function () {
-      return httpism.post('/', {message: 'hehey', to: 'bob'}, {form: true}).then(function (response) {
+      return httpism.post('/', {message: 'hehey', to: 'bob'}, {response: true, form: true}).then(function (response) {
         expect(response.body.body).to.eql({message: 'hehey', to: 'bob'});
         expect(response.body.headers['content-type']).to.equal('application/x-www-form-urlencoded');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -160,7 +160,7 @@ describe('httpism', function () {
 
   describe('put', function () {
     it('can make a json put request', function () {
-      return httpism.put('/', {data: 'hehey'}).then(function (response) {
+      return httpism.put('/', {data: 'hehey'}, {response: true}).then(function (response) {
         expect(response.body.body).to.eql({data: 'hehey'});
         expect(response.body.headers['content-type']).to.equal('application/json');
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
@@ -220,15 +220,15 @@ describe('httpism', function () {
 
   describe('x-requested-with header', function () {
     it('sends the x-requested-with header', function () {
-      return httpism.get('/').then(function (response) {
-        expect(response.body.xhr).to.be.true;
+      return httpism.get('/').then(function (body) {
+        expect(body.xhr).to.be.true;
       });
     });
   });
 
   describe('delete', function () {
     it('can respond with 204 and empty body', function () {
-      return httpism.delete('/delete').then(function (response) {
+      return httpism.delete('/delete', {response: true}).then(function (response) {
         expect(response.statusCode).to.equal(204);
         expect(response.body).to.be.undefined;
       });
@@ -244,8 +244,8 @@ describe('httpism', function () {
           if (key != 'greeting') return value;
           return value + '!';
         }
-      }).then(function (response) {
-        expect(response.body.body.greeting).to.equal('hi!');
+      }).then(function (body) {
+        expect(body.body.greeting).to.equal('hi!');
       });
     });
   });
@@ -255,8 +255,8 @@ describe('httpism', function () {
       FakeXMLHttpRequest.prototype.onSend = function (xhr) {
         xhr.respond(200, {'Content-Type': 'text/plain'}, 'faked response');
       };
-      return httpism.get('/', {xhr: FakeXMLHttpRequest}).then(function (response) {
-        expect(response.body).to.equal('faked response');
+      return httpism.get('/', {xhr: FakeXMLHttpRequest}).then(function (body) {
+        expect(body).to.equal('faked response');
       });
     });
   });
