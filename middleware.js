@@ -223,12 +223,15 @@ middleware('debugLog', function(request, next) {
   if (debug.enabled) {
     var startTime = Date.now();
     return next().then(function (response) {
-      var time = Date.now() - startTime;
-      debug(request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + response.statusCode + ' (' + time + 'ms)');
+      var headerTime = Date.now() - startTime;
+      response.body.on('end', function () {
+        var bodyTime = Date.now() - startTime;
+        debug(request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + response.statusCode + ' (' + headerTime + 'ms, ' + bodyTime + 'ms)');
+      })
       return response;
     }, function (error) {
-      var time = Date.now() - startTime;
-      debug(request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + error.message + ' (' + time + 'ms)');
+      var headerTime = Date.now() - startTime;
+      debug(request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + error.message + ' (' + headerTime + 'ms)');
       throw error;
     });
   } else {
