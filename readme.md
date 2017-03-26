@@ -90,12 +90,12 @@ httpism.post('http://example.com/', form).then(function (response) {
 });
 ```
 
-## Create an API
+## Create an API client
 
 Specify a base URL:
 
 ```js
-var example = httpism.api('http://example.com/');
+var example = httpism.client('http://example.com/');
 
 // GET http://example.com/a
 example.get('a').then(function (response) {
@@ -106,7 +106,7 @@ example.get('a').then(function (response) {
 Specify some options:
 
 ```js
-var loggingHttpism = httpism.api({exceptions: false});
+var loggingHttpism = httpism.client({exceptions: false});
 
 loggingHttpism.get('http://example.com/').then(function (response) {
   console.log(response.body);
@@ -116,18 +116,18 @@ loggingHttpism.get('http://example.com/').then(function (response) {
 Add some middleware:
 
 ```js
-var authHttpism = httpism.api(function (request, next) {
+var authHttpism = httpism.client(function (request, next) {
   request.url += '?apikey=myapikey';
   return next();
 });
 
-// GET https://secretapi.com/?apikey=myapikey
-authHttpism.get('https://secretapi.com/').then(function (response) {
+// GET https://secretclient.com/?apikey=myapikey
+authHttpism.get('https://secretclient.com/').then(function (response) {
   console.log(response.body);
 });
 ```
 
-See more about [apis](#apis).
+See more about [clients](#clients).
 
 ## In the Browser
 
@@ -216,10 +216,10 @@ Responses are objects that contain
 
 ## Cookies
 
-Cookies on the server are not handled by default, but you can enable them by using `httpism.api` passing the `{cookies: true}` option:
+Cookies on the server are not handled by default, but you can enable them by using `httpism.client` passing the `{cookies: true}` option:
 
 ```js
-var client = httpism.api('http://example.com/', {cookies: true});
+var client = httpism.client('http://example.com/', {cookies: true});
 
 client.post('/login', {username: 'jerome', password: 'password123'}, {form: true}).then(function () {
   return client.get('/profile').then(function (profileResponse) {
@@ -228,23 +228,23 @@ client.post('/login', {username: 'jerome', password: 'password123'}, {form: true
 });
 ```
 
-Different instances of httpism APIs will use different cookie jars.
+Different instances of httpism clients will use different cookie jars.
 
 Cookies are always on in the browser, using native browser cookies.
 
 ## Hypermedia
 
-All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `api()`, see [apis](#apis) below.
+All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `client()`, see [clients](#clients) below.
 
 ```js
-httpism.get('http://example.com/api/').then(function (api) {
-  // api.body is:
+httpism.get('http://example.com/api/').then(function (client) {
+  // client.body is:
   // {
   //   "documentsLink": "documents"
   // }
 
   // so we navigate to http://example.com/api/documents
-  api.get(api.body.documentsLink).then(function (documents) {
+  client.get(client.body.documentsLink).then(function (documents) {
     console.log('documents', documents.body);
   });
 });
@@ -283,21 +283,21 @@ promise.abort();
 * `xhr`: can be used to override `window.XMLHttpRequest` used to make the request, useful for mocking out requests during testing. It is expected to be used as a constructor, as in `new options.xhr()`.
 * `jsonReviver`: a [reviver function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) that is passed to `JSON.parse(string, [reviver])` to override how JSON response bodies are decoded.
 
-## APIs
+## Clients
 
-API clients give you a way to build or customise a HTTP client for the purpose of accessing a particular web API. Web APIs will often have special authorization, headers, or URL conventions that are common across all calls, and you only want to have to specify those things once.
+Clients give you a way to build or customise a HTTP client for the purpose of accessing a particular web API. Web APIs will often have special authorization, headers, or URL conventions that are common across all calls, and you only want to have to specify those things once.
 
-You can create API clients, either from `httpism`, giving you a fairly complete HTTP client, or from `httpism.raw` giving you no frills streaming HTTP client to do what you will with. 
+You can create API clients, either from `httpism`, giving you a fairly complete HTTP client, or from `httpism.raw` giving you no frills streaming HTTP client to do what you will with.
 
 ```js
-var api = httpism.api([url], [options], [middleware]);
-var api = httpism.raw.api([url], [options], [middleware]);
-var api = response.api([url], [options], [middleware]);
+var client = httpism.client([url], [options], [middleware]);
+var client = httpism.raw.client([url], [options], [middleware]);
+var client = response.client([url], [options], [middleware]);
 ```
 
 * `url` a URL string, which could be relative to the response, or absolute.
-* `options` options object to be used for all calls with this api. If `api` is called on a response, the options are merged with that responses api.
-* `middleware` a middleware function or array of middleware functions. Requests in middleware are processed from the beginning of the array to the end, and responses from the end of the array to the beginning. See [middleware](#middleware). Middleware specified on the new api is _prepended_ to the middleware currently in the api.
+* `options` options object to be used for all calls with this client. If `client` is called on a response, the options are merged with that responses client.
+* `middleware` a middleware function or array of middleware functions. Requests in middleware are processed from the beginning of the array to the end, and responses from the end of the array to the beginning. See [middleware](#middleware). Middleware specified on the new client is _prepended_ to the middleware currently in the client.
 
 * `httpism` is the basic client, with all the goodies described above.
 * `httpism.raw` is a raw client that has no other middleware.
@@ -327,11 +327,11 @@ middleware.before = ['http', 'debugLog'];
 middleware.after = 'redirect';
 ```
 
-You can insert the middleware by passing it to `httpism.api()`, or by calling `api.insertMiddleware()`:
+You can insert the middleware by passing it to `httpism.client()`, or by calling `client.insertMiddleware()`:
 
 ```js
-var api = httpism.api(middleware);
-api.insertMiddleware(middleware);
+var client = httpism.client(middleware);
+client.insertMiddleware(middleware);
 
 // globally, and for all new APIs
 httpism.insertMiddleware(middleware);
@@ -341,10 +341,10 @@ httpism.insertMiddleware(middleware);
     * `url` the full URL of the request, e.g. `http://example.com/path?query=value`
     * `method` the method of the request, e.g. `GET` or `POST`
     * `headers` the headers of the request as an object. All headers are lower-cased as per Node.js conventions. E.g. `{ 'content-type': 'application/json' }`
-    * `options` the [options](#options) as passed through from the request, either from the **api** or the individual request. E.g. `{exceptions: true}`.
+    * `options` the [options](#options) as passed through from the request, either from the **client** or the individual request. E.g. `{exceptions: true}`.
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
 * `next([request])` is a function that passes control onto the next middleware, optionally taking a request parameter. If the request parameter is not given it uses the request passed in to the middleware. It returns a promise of the [response](#responses).
-* `httpism` is a **httpism api** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
+* `httpism` is a **httpism client** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
 * `middleware.middleware` is the name of the middleware, which can be referred to by other middlewares when adding themselves with `before` or `after`.
 * `middleware.before` ensure that the middleware is inserted just before the named middleware.
 * `middleware.after` ensure that the middleware is inserted just after the named middleware.

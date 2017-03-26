@@ -318,7 +318,7 @@ describe("httpism", function() {
       });
     });
 
-    describe("apis", function() {
+    describe(".client()", function() {
       it("can make a new client that adds headers", function() {
         app.get("/", function(req, res) {
           res.send({
@@ -326,7 +326,7 @@ describe("httpism", function() {
           });
         });
 
-        var client = httpism.api(function(request, next) {
+        var client = httpism.client(function(request, next) {
           request.headers.joke = "a chicken...";
           return next(request);
         });
@@ -363,7 +363,7 @@ describe("httpism", function() {
 
           cache.before = 'http';
 
-          var http = httpism.api(cache);
+          var http = httpism.client(cache);
 
           return http.get(baseurl).then(function (body) {
             expect(body).to.eql({from: 'cache'});
@@ -384,7 +384,7 @@ describe("httpism", function() {
         }
 
         beforeEach(function () {
-          pipeline = httpism.raw.api();
+          pipeline = httpism.raw.client();
           pipeline.middlewares = [
             a = middlwareNamed('a'),
             b = middlwareNamed('b')
@@ -396,16 +396,16 @@ describe("httpism", function() {
             var m = function () {};
             m.before = 'a';
 
-            var api = pipeline.api(m);
+            var client = pipeline.client(m);
 
-            expect(api.middlewares).to.eql([
+            expect(client.middlewares).to.eql([
               m,
               a,
               b
             ]);
           });
 
-          it('can insert middleware into same api before another', function () {
+          it('can insert middleware into same client before another', function () {
             var m = function () {};
             m.before = 'a';
 
@@ -421,8 +421,8 @@ describe("httpism", function() {
           it('inserts before the named middleware if at least one is found', function () {
             var m = function () {};
             m.before = ['a', 'c'];
-            var api = pipeline.api(m);
-            expect(api.middlewares).to.eql([
+            var client = pipeline.client(m);
+            expect(client.middlewares).to.eql([
               m,
               a,
               b
@@ -432,8 +432,8 @@ describe("httpism", function() {
           it('inserts before all the named middleware if all are found', function () {
             var m = function () {};
             m.before = ['a', 'b'];
-            var api = pipeline.api(m);
-            expect(api.middlewares).to.eql([
+            var client = pipeline.client(m);
+            expect(client.middlewares).to.eql([
               m,
               a,
               b
@@ -445,8 +445,8 @@ describe("httpism", function() {
           it('can insert middleware after another', function () {
             var m = function () {};
             m.after = 'a';
-            var api = pipeline.api(m);
-            expect(api.middlewares).to.eql([
+            var client = pipeline.client(m);
+            expect(client.middlewares).to.eql([
               a,
               m,
               b
@@ -456,8 +456,8 @@ describe("httpism", function() {
           it('inserts after the named middleware if at lesat one is found', function () {
             var m = function () {};
             m.after = ['a', 'c'];
-            var api = pipeline.api(m);
-            expect(api.middlewares).to.eql([
+            var client = pipeline.client(m);
+            expect(client.middlewares).to.eql([
               a,
               m,
               b
@@ -467,8 +467,8 @@ describe("httpism", function() {
           it('inserts after all the named middleware if all are found', function () {
             var m = function () {};
             m.after = ['a', 'b'];
-            var api = pipeline.api(m);
-            expect(api.middlewares).to.eql([
+            var client = pipeline.client(m);
+            expect(client.middlewares).to.eql([
               a,
               b,
               m
@@ -488,27 +488,48 @@ describe("httpism", function() {
         it('throws if before middleware name cannot be found', function () {
           var m = function () {};
           m.before = 'notfound';
-          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+          expect(function () { httpism.client(m); }).to.throw('no such middleware: notfound');
         });
 
         it('throws if none of the before middleware names can be found', function () {
           var m = function () {};
           m.before = ['notfound'];
-          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+          expect(function () { httpism.client(m); }).to.throw('no such middleware: notfound');
         });
 
         it('throws if after middleware name cannot be found', function () {
           var m = function () {};
           m.after = 'notfound';
-          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+          expect(function () { httpism.client(m); }).to.throw('no such middleware: notfound');
         });
 
         it('throws if none of the after middleware names can be found', function () {
           var m = function () {};
           m.after = ['notfound'];
-          expect(function () { httpism.api(m); }).to.throw('no such middleware: notfound');
+          expect(function () { httpism.client(m); }).to.throw('no such middleware: notfound');
         });
       });
+
+      describe('2.x compatibility', function () {
+        it('can be created using `.api()`', function () {
+          app.get("/", function(req, res) {
+            res.send({
+              joke: req.headers.joke
+            });
+          });
+
+          var client = httpism.api(function(request, next) {
+            request.headers.joke = "a chicken...";
+            return next(request);
+          });
+
+          return client.get(baseurl).then(function(body) {
+            expect(body).to.eql({
+              joke: "a chicken..."
+            });
+          });
+        })
+      })
     });
 
     describe("exceptions", function() {
@@ -521,7 +542,7 @@ describe("httpism", function() {
       });
 
       it("throws exceptions on 400-500 status codes, by default", function() {
-        return httpism.api(baseurl).get("/400").then(function () {
+        return httpism.client(baseurl).get("/400").then(function () {
           assert.fail("expected an exception to be thrown");
         }).catch(function(e) {
           expect(e.message).to.equal("GET " + baseurl + "/400 => 400 Bad Request");
@@ -531,7 +552,7 @@ describe("httpism", function() {
       });
 
       it("doesn't include the password in the error message", function() {
-        return httpism.api(`http://user:pass@localhost:${port}/`).get("/400").then(function () {
+        return httpism.client(`http://user:pass@localhost:${port}/`).get("/400").then(function () {
           assert.fail("expected an exception to be thrown");
         }).catch(function(e) {
           expect(e.message).to.equal("GET " + `http://user:********@localhost:${port}/400 => 400 Bad Request`);
@@ -541,7 +562,7 @@ describe("httpism", function() {
       });
 
       it("doesn't throw exceptions on 400-500 status codes, when specified", function() {
-        return httpism.api(baseurl).get("/400", { exceptions: false }).then(function(body) {
+        return httpism.client(baseurl).get("/400", { exceptions: false }).then(function(body) {
           expect(body.message).to.equal("oh dear");
         });
       });
@@ -552,7 +573,7 @@ describe("httpism", function() {
             return response.statusCode == 400;
           }
 
-          return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function() {
+          return httpism.client(baseurl).get("/400", { exceptions: isError }).then(function() {
             assert.fail("expected an exception to be thrown");
           }).catch(function(e) {
             expect(e.message).to.equal("GET " + baseurl + "/400 => 400 Bad Request");
@@ -566,7 +587,7 @@ describe("httpism", function() {
             return response.statusCode != 400;
           }
 
-          return httpism.api(baseurl).get("/400", { exceptions: isError }).then(function(body) {
+          return httpism.client(baseurl).get("/400", { exceptions: isError }).then(function(body) {
             expect(body.message).to.equal("oh dear");
           });
         });
@@ -581,7 +602,7 @@ describe("httpism", function() {
       var client;
 
       beforeEach(function() {
-        client = httpism.api(function(request, next) {
+        client = httpism.client(function(request, next) {
           request.body = request.options;
           return next(request);
         }, { a: "a" });
@@ -592,14 +613,14 @@ describe("httpism", function() {
       });
 
       it("clients have options, which can be overwritten on each request", function() {
-        var root = client.api(baseurl);
+        var root = client.client(baseurl);
         return root.post("", undefined, { b: "b" }).then(function(body) {
           expect(body).to.eql({
             a: "a",
             b: "b"
           });
 
-          return root.api().post("", undefined, { c: "c" }).then(function(body) {
+          return root.client().post("", undefined, { c: "c" }).then(function(body) {
             expect(body).to.eql({
               a: "a",
               c: "c"
@@ -797,11 +818,11 @@ describe("httpism", function() {
       });
 
       it("can store cookies and send cookies", function() {
-        var api = httpism.api(baseurl, {
+        var client = httpism.client(baseurl, {
           cookies: true
         });
-        return api.get(baseurl + "/setcookie").then(function() {
-          return api.get(baseurl + "/getcookie").then(function(body) {
+        return client.get(baseurl + "/setcookie").then(function() {
+          return client.get(baseurl + "/getcookie").then(function(body) {
             expect(body).to.eql({
               mycookie: "value"
             });
@@ -1265,7 +1286,7 @@ describe("httpism", function() {
         });
       });
 
-      var api = httpism.raw.api(baseurl, function(request, next) {
+      var client = httpism.raw.client(baseurl, function(request, next) {
         return next().then(function(res) {
           return middleware.streamToString(res.body).then(function(response) {
             res.body = response;
@@ -1274,7 +1295,7 @@ describe("httpism", function() {
         });
       });
 
-      return api.get(baseurl, {response: true}).then(function(response) {
+      return client.get(baseurl, {response: true}).then(function(response) {
         expect(response.statusCode).to.equal(400);
         expect(JSON.parse(response.body)).to.eql({
           blah: "blah"
@@ -1290,14 +1311,14 @@ describe("httpism", function() {
         res.status(200).send({ blah: 1234 });
       });
 
-      var api = httpism.api(baseurl, {
+      var client = httpism.client(baseurl, {
         jsonReviver: function(key, value) {
           if (key == '') { return value; }
           return key + value + '!';
         }
       });
 
-      return api.get(baseurl, {response: true}).then(function(response) {
+      return client.get(baseurl, {response: true}).then(function(response) {
         expect(response.statusCode).to.equal(200);
         expect(response.body).to.eql({
           blah: "blah1234!"

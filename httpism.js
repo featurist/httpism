@@ -109,8 +109,8 @@ function lowerCaseHeaders(headers) {
   return headers;
 }
 
-function makeResponse(api, response) {
-  return utils.extend(new Httpism(api.url, api._options, api.middlewares), response);
+function makeResponse(client, response) {
+  return utils.extend(new Httpism(client.url, client._options, client.middlewares), response);
 }
 
 function findMiddlewareIndexes(names, middlewares) {
@@ -131,10 +131,10 @@ function insertMiddlewareIntoIndex(middlewares, m, index) {
   middlewares.splice(index, 0, m);
 }
 
-Httpism.prototype.api = function (url, options, middlewares) {
+Httpism.prototype.client = function (url, options, middlewares) {
   var args = parseClientArguments(url, options, middlewares);
 
-  var api = new Httpism(
+  var client = new Httpism(
     resolveUrl(this.url, args.url),
     merge(args.options, this._options),
     this.middlewares.slice()
@@ -142,12 +142,17 @@ Httpism.prototype.api = function (url, options, middlewares) {
 
   if (args.middlewares) {
     args.middlewares.forEach(function (m) {
-      api.insertMiddleware(m);
+      client.insertMiddleware(m);
     });
   }
 
-  return api;
+  return client;
 };
+
+Httpism.prototype.api = function (url, options, middlewares) {
+  console.warn('httpism >= 3.0.0 renamed httpism.api() to httpism.client(), please update your usage')
+  return this.client(url, options, middlewares)
+}
 
 Httpism.prototype.insertMiddleware = function(m) {
   if (m.before || m.after) {
