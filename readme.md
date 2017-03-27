@@ -31,8 +31,8 @@ Compatible with browserify too!
 ## GET JSON
 
 ```js
-httpism.get('http://example.com/').then(function (response) {
-  console.log('json', response.body);
+httpism.get('http://example.com/').then(function (responseBody) {
+  console.log('json', responseBody);
 }, function (error) {
   console.log('uh oh', error);
 });
@@ -41,8 +41,8 @@ httpism.get('http://example.com/').then(function (response) {
 ## POST JSON
 
 ```js
-httpism.post('http://example.com/', {name: 'Betty Boop'}).then(function (response) {
-  console.log('json', response.body);
+httpism.post('http://example.com/', {name: 'Betty Boop'}).then(function (responseBody) {
+  console.log('json', responseBody);
 }, function (error) {
   console.log('uh oh', error);
 });
@@ -51,8 +51,8 @@ httpism.post('http://example.com/', {name: 'Betty Boop'}).then(function (respons
 ## POST www-form-urlencoded
 
 ```js
-httpism.post('http://example.com/', { name: "Betty Boop" }, { form: true }).then(function (response) {
-  console.log('json', response.body);
+httpism.post('http://example.com/', { name: "Betty Boop" }, { form: true }).then(function (responseBody) {
+  console.log('json', responseBody);
 }, function (error) {
   console.log('uh oh', error);
 });
@@ -65,8 +65,8 @@ Pass a stream as the second argument, it will try to guess the `Content-Type` fr
 ```js
 var stream = fs.createReadStream('afile.txt');
 
-httpism.post('http://example.com/', stream).then(function (response) {
-  console.log('json', response.body);
+httpism.post('http://example.com/', stream).then(function (responseBody) {
+  console.log('json', responseBody);
 }, function (error) {
   console.log('uh oh', error);
 });
@@ -83,8 +83,8 @@ form.append('name', 'Betty Boop');
 form.append('address', 'New York');
 form.append('photo', fs.createReadStream('betty.jpg'));
 
-httpism.post('http://example.com/', form).then(function (response) {
-  console.log('json', response.body);
+httpism.post('http://example.com/', form).then(function (responseBody) {
+  console.log('json', responseBody);
 }, function (error) {
   console.log('uh oh', error);
 });
@@ -98,8 +98,8 @@ Specify a base URL:
 var example = httpism.client('http://example.com/');
 
 // GET http://example.com/a
-example.get('a').then(function (response) {
-  console.log(response.body);
+example.get('a').then(function (responseBody) {
+  console.log(responseBody);
 });
 ```
 
@@ -108,8 +108,8 @@ Specify some options:
 ```js
 var loggingHttpism = httpism.client({exceptions: false});
 
-loggingHttpism.get('http://example.com/').then(function (response) {
-  console.log(response.body);
+loggingHttpism.get('http://example.com/').then(function (responseBody) {
+  console.log(responseBody);
 });
 ```
 
@@ -122,8 +122,8 @@ var authHttpism = httpism.client(function (request, next) {
 });
 
 // GET https://secretapi.com/?apikey=myapikey
-authHttpism.get('https://secretapi.com/').then(function (response) {
-  console.log(response.body);
+authHttpism.get('https://secretapi.com/').then(function (responseBody) {
+  console.log(responseBody);
 });
 ```
 
@@ -202,7 +202,7 @@ response.send(method, url, [body], [options]);
 
 ## Responses
 
-Responses are objects that contain
+Responses bodies are returned by all methods by default. To access other details about responses, pass `{ response: true }` in the request options to receive a response object that contains:
 
 * `statusCode` the status code as an integer, such as `200`, or `404`.
 * `statusText` the status text, such as `OK` or `Not Found`.
@@ -222,8 +222,8 @@ Cookies on the server are not handled by default, but you can enable them by usi
 var client = httpism.client('http://example.com/', {cookies: true});
 
 client.post('/login', {username: 'jerome', password: 'password123'}, {form: true}).then(function () {
-  return client.get('/profile').then(function (profileResponse) {
-    console.log(profileResponse.body);
+  return client.get('/profile').then(function (profileResponseBody) {
+    console.log(profileResponseBody);
   });
 });
 ```
@@ -261,6 +261,7 @@ promise.abort();
 
 ## Options
 
+* `response`: default `false`, if true, returns the whole response, including URL, headers, status code and the body, otherwise return just the body.
 * `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response. If set to a function, the function is passed the response, and returns true to throw the response as an exception, or false to treat it as a normal response.
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
