@@ -988,7 +988,6 @@ describe("httpism", function() {
           },
           exceptions: false,
         }).then(function(response) {
-          // console.log('response', response)
           expect(response.statusCode).to.equal(401);
         });
       });
@@ -1127,13 +1126,15 @@ describe("httpism", function() {
     var proxyServer;
     var proxyPort = 12346;
     var proxy;
-    var urlProxied;
+    var urlProxied
+    var proxied
     var proxyAuth = false;
     var proxyUrl = 'http://localhost:' + proxyPort + '/';
     var secureProxyUrl = 'http://bob:secret@localhost:' + proxyPort + '/';
 
     function proxyRequest(req, res) {
       urlProxied = req.url;
+      proxied = true
       proxy.web(req, res, { target: req.url });
     }
 
@@ -1150,6 +1151,7 @@ describe("httpism", function() {
 
     beforeEach(function() {
       urlProxied = undefined;
+      proxied = false
       proxy = httpProxy.createProxyServer();
 
       proxyServer = http.createServer(function (req, res) {
@@ -1162,6 +1164,7 @@ describe("httpism", function() {
       proxyServer.listen(proxyPort);
 
       proxyServer.on('connect', function(req, socket) {
+        proxied = true
         var addr = req.url.split(':');
         //creating TCP connection to remote server
         var conn = net.connect(addr[1] || 443, addr[0], function() {
@@ -1228,6 +1231,75 @@ describe("httpism", function() {
         });
       });
     });
+
+    context('proxy environment variables', function () {
+      beforeEach(function () {
+        app.get("/", function(req, res) {
+          res.send({
+            blah: "blah"
+          });
+        });
+      })
+
+      afterEach(function () {
+        delete process.env.NO_PROXY
+        delete process.env.no_proxy
+        delete process.env.HTTP_PROXY
+        delete process.env.http_proxy
+        delete process.env.HTTPS_PROXY
+        delete process.env.https_proxy
+      })
+
+      function assertProxied(url) {
+        return httpism.get(url, { https: { rejectUnauthorized: false } }).then(function () {
+          expect(proxied).to.be.true
+        });
+      }
+
+      function assertNotProxied(url) {
+        return httpism.get(url, { https: { rejectUnauthorized: false } }).then(function () {
+          expect(proxied).to.be.false
+        });
+      }
+
+      it('uses http_proxy for HTTP requests', function () {
+        process.env.http_proxy = proxyUrl
+
+        return assertProxied(baseurl)
+      })
+
+      it('uses HTTP_PROXY for HTTP requests', function () {
+        process.env.HTTP_PROXY = proxyUrl
+
+        return assertProxied(baseurl)
+      })
+
+      it('uses https_proxy for HTTPS requests', function () {
+        process.env.https_proxy = proxyUrl
+
+        return assertProxied(httpsBaseurl)
+      })
+
+      it('uses HTTPS_PROXY for HTTPS requests', function () {
+        process.env.HTTPS_PROXY = proxyUrl
+
+        return assertProxied(httpsBaseurl)
+      })
+
+      it('use skips hosts defined in no_proxy', function () {
+        process.env.HTTP_PROXY = proxyUrl
+        process.env.no_proxy = 'localhost'
+
+        return assertNotProxied(httpsBaseurl)
+      })
+
+      it('use skips hosts defined in NO_PROXY', function () {
+        process.env.HTTP_PROXY = proxyUrl
+        process.env.NO_PROXY = 'localhost'
+
+        return assertNotProxied(baseurl)
+      })
+    })
 
     context('secured proxy', function () {
       it('can use a proxy', function () {

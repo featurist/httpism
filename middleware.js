@@ -12,6 +12,7 @@ var debugRequest = createDebug("httpism:request");
 var HttpsProxyAgent = require('https-proxy-agent');
 var obfuscateUrlPassword = require('./obfuscateUrlPassword');
 var mimeTypes = require('mime-types');
+var proxyForUrl = require('proxy-from-env').getProxyForUrl
 
 function middleware(name, fn) {
   exports[name] = fn;
@@ -126,7 +127,7 @@ function proxyUrl(request, proxy) {
 }
 
 function parseUrl(request) {
-  var proxy = process.env.http_proxy || process.env.HTTP_PROXY || request.options.proxy;
+  var proxy = proxyForUrl(request.url) || request.options.proxy
 
   if (proxy) {
     return proxyUrl(request, proxy);
