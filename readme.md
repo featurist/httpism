@@ -121,8 +121,8 @@ var authHttpism = httpism.client(function (request, next) {
   return next();
 });
 
-// GET https://secretclient.com/?apikey=myapikey
-authHttpism.get('https://secretclient.com/').then(function (response) {
+// GET https://secretapi.com/?apikey=myapikey
+authHttpism.get('https://secretapi.com/').then(function (response) {
   console.log(response.body);
 });
 ```
