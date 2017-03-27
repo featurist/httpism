@@ -189,7 +189,7 @@ describe('httpism', function () {
     it('can abort a request even with user middleware', function () {
       var middlewareRequest, middlewareResponse;
 
-      var http = httpism.api([
+      var http = httpism.client([
         function (request, next) {
           middlewareRequest = true;
           return next().then(function (response) {

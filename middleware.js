@@ -245,7 +245,7 @@ function logResponse(response) {
   }
 }
 
-middleware('redirect', function(request, next, api) {
+middleware('redirect', function(request, next, client) {
   return next().then(function(response) {
     var statusCode = response.statusCode;
     var location = response.headers.location;
@@ -253,7 +253,7 @@ middleware('redirect', function(request, next, api) {
     if (request.options.redirect !== false && location && (statusCode === 300 || statusCode === 301 || statusCode === 302 || statusCode === 303 || statusCode === 307)) {
       return exports.consumeStream(response.body).then(function() {
         logResponse(response);
-        return api.get(urlUtils.resolve(request.url, location), request.options).then(function(redirectResponse) {
+        return client.get(urlUtils.resolve(request.url, location), request.options).then(function(redirectResponse) {
           throw {
             redirectResponse: redirectResponse
           };
@@ -282,12 +282,12 @@ function storeCookies(cookies, url, header) {
   }
 }
 
-middleware('cookies', function (request, next, api) {
+middleware('cookies', function (request, next, client) {
   var cookies;
 
-  if (api._options.cookies === true) {
+  if (client._options.cookies === true) {
     var toughCookie = require('tough-cookie');
-    cookies = request.options.cookies = api._options.cookies = new toughCookie.CookieJar();
+    cookies = request.options.cookies = client._options.cookies = new toughCookie.CookieJar();
   } else {
     cookies = request.options.cookies;
   }
