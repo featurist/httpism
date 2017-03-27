@@ -232,24 +232,6 @@ Different instances of httpism APIs will use different cookie jars.
 
 Cookies are always on in the browser, using native browser cookies.
 
-## Hypermedia
-
-All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `api()`, see [apis](#apis) below.
-
-```js
-httpism.get('http://example.com/api/').then(function (api) {
-  // api.body is:
-  // {
-  //   "documentsLink": "documents"
-  // }
-
-  // so we navigate to http://example.com/api/documents
-  api.get(api.body.documentsLink).then(function (documents) {
-    console.log('documents', documents);
-  });
-});
-```
-
 ## Cancel a request
 
 Requests can be cancelled by calling `.abort()` on the promise returned from any request method:
@@ -261,6 +243,7 @@ promise.abort();
 
 ## Options
 
+* `response`: default `false`, if true, returns the whole response, including URL, headers, status code and the body, otherwise return just the body.
 * `exceptions`: default `true`, throw exceptions on reception of 400-500 status codes. Set to `false` to simply return the response. If set to a function, the function is passed the response, and returns true to throw the response as an exception, or false to treat it as a normal response.
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
