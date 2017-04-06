@@ -20,6 +20,7 @@ function middleware(name, fn) {
 
 middleware('exception', utils.exception);
 middleware('querystring', utils.querystring);
+middleware('expandUrl', utils.expandUrl);
 
 exports.streamToString = function(s) {
   return new Promise(function(result, error) {

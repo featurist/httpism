@@ -73,11 +73,21 @@ exports.exception = function(request, next) {
 
 exports.querystring = function(request, next) {
   if (request.options.querystring instanceof Object) {
+    console.warn('options.querystring is deprecated, please see https://github.com/featurist/httpism#params')
     exports.mergeQueryString(request);
   }
 
   return next();
 };
+
+exports.expandUrl = function(request, next) {
+  if (request.options.params instanceof Object) {
+    var render = request.options.expandUrl || expandUrl
+    request.url = render(request.url, request.options.params, request.options.qs || querystringLite)
+  }
+
+  return next()
+}
 
 exports.mergeQueryString = function(request) {
   var qs = request.options.qs || querystringLite;
@@ -88,3 +98,36 @@ exports.mergeQueryString = function(request) {
   var mergedQueryString = merge(request.options.querystring, querystring);
   request.url = path + "?" + qs.stringify(mergedQueryString);
 };
+
+function expandUrl (pattern, _params, qs) {
+  var params = _params || {}
+  var onlyQueryParams = extend({}, params)
+
+  var url = pattern.replace(/:([a-z_][a-z0-9_]*)\*/gi, function (_, id) {
+    var param = params[id]
+    delete onlyQueryParams[id]
+    return encodeURI(paramToString(param))
+  })
+
+  url = url.replace(/:([a-z_][a-z0-9_]*)/gi, function (_, id) {
+    var param = params[id]
+    delete onlyQueryParams[id]
+    return encodeURIComponent(paramToString(param))
+  })
+
+  var query = qs.stringify(onlyQueryParams)
+
+  if (query) {
+    return url + '?' + query
+  } else {
+    return url
+  }
+}
+
+function paramToString(p) {
+  if (p === undefined || p === null) {
+    return ''
+  } else {
+    return p
+  }
+}

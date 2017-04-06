@@ -10,6 +10,7 @@ module.exports = httpism(
     middleware.text,
     middleware.form,
     middleware.json,
+    middleware.expandUrl,
     middleware.querystring,
     middleware.basicAuth,
     middleware.redirect,

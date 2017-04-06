@@ -8,6 +8,10 @@ function middleware(name, fn) {
   fn.middleware = name;
 }
 
+middleware('exception', utils.exception);
+middleware('querystring', utils.querystring);
+middleware('expandUrl', utils.expandUrl);
+
 middleware('json', function(request, next) {
   if (request.body instanceof Object) {
     request.body = JSON.stringify(request.body);

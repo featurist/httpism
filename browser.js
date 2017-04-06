@@ -11,6 +11,7 @@ module.exports = httpism(
     middleware.form,
     middleware.json,
     middleware.text,
+    utils.expandUrl,
     utils.querystring,
     middleware.send
   ]

@@ -109,10 +109,6 @@ function lowerCaseHeaders(headers) {
   return headers;
 }
 
-function makeResponse(client, response) {
-  return utils.extend(new Httpism(client.url, client._options, client.middlewares), response);
-}
-
 function findMiddlewareIndexes(names, middlewares) {
   return names.map(function (name) {
     for(var n = 0; n < middlewares.length; n++) {

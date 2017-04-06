@@ -159,11 +159,11 @@ More information in debug's README.
 ### GET, HEAD, DELETE
 
 ```js
-httpism.method (url, [options])
-response.method (url, [options])
+httpism.method(url, [options])
+response.method(url, [options])
 ```
 
-* `url` a string url, full or relative to the response, or '' to request the response again
+* `url` a string URL, this is a URL template if the `params` option is used, see [params](#params).
 * `options` request options, see [options](#options).
 * `response` a response from another request.
 
@@ -172,11 +172,11 @@ returns a promise
 ### POST, PUT, PATCH, OPTIONS
 
 ```js
-httpism.method (url, body, [options])
-response.method (url, body, [options])
+httpism.method(url, body, [options])
+response.method(url, body, [options])
 ```
 
-* `url` a string url, full or relative to the response, or '' to request the response again
+* `url` a string URL, this is a URL template if the `params` option is used, see [params](#params).
 * `body` the request body to send
     * by default a JS object is encoded as JSON and sent as `application/json`
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
@@ -184,11 +184,78 @@ response.method (url, body, [options])
 * `options` request options, see [options](#options).
 * `response` a response from another request.
 
+### Params
+
+Httpism will render a URL template if the `params` option is used, the params are interpolated into the URL template, any params left over will form the query string.
+
+```js
+httpism.get('http://example.com/users/:user/posts', {
+  params: {
+    user: 'bob',
+    page: 3,
+    search: 'lakes'
+  }
+})
+```
+
+Will become
+
+```
+GET http://example.com/users/bob/posts?page=3&search=lakes
+```
+
+A template contains two forms of parameter, varying on the way special characters are encoded for URLs.
+
+* `:param` - uses `encodeURIComponent`, and is useful for most applications
+* `:param*` - uses `encodeURI` and can be used to interpolate paths, such as `a/path/to/something` without encoding the slash characters.
+
+Any remaining parameters will be encoded in the query string, you can override how the query string is encoded using the `qs` option.
+
+The template interpolation itself can be overridden with the `expandUrl` option, and is used as follows:
+
+```js
+var url = expandUrl(template, params, querystring)
+```
+
+* `template` - the URL template, passed in as the `url` argument to `httpism.get`, etc.
+* `params` - the object containing the parameters to be interpolated.
+* `querystring` - the `qs` option, can be used to encode the query string parameters, e.g. `querystring.stringify(params)`.
+
+For example, you could use RFC 6570 templates like this
+
+```js
+var urlTemplate = require('url-template')
+
+function expandUrl(url, params) {
+  var template = urlTemplate.parse(url)
+  return template.expand(params)
+}
+
+httpism.get('http://example.com/users/{user}/posts{?page,search}', {
+  params: {
+    user: 'bob',
+    page: 3,
+    search: 'lakes'
+  },
+  expandUrl: expandUrl
+})
+```
+
+Or indeed create a new client to use this by default:
+
+```js
+var httpism = require('httpsim').client({
+  expandUrl: expandUrl
+})
+
+httpism.get('http://example.com/users/{user}/posts{?page,search}')
+```
+
 ### Send
 
 ```js
-httpism.send(method, url, [body], [options]);
-response.send(method, url, [body], [options]);
+httpism.send(method, url, [body], [options])
+response.send(method, url, [body], [options])
 ```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
