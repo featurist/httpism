@@ -3,10 +3,21 @@
 httpism is a node and browser HTTP client that does a few things differently:
 
 * **middleware**: customise a HTTP client for your API by sticking together middleware, for example, for content handlers or authentication schemes.
-* **hypermedia**: responses can be used to make further requests relative to the response URI, just like a browser.
 * **useful by default**: sends and receives JSON, throws exceptions on 400-500s, follows redirects. Of course, you can disable this stuff when it gets in your way, or hit raw HTTP and streams when you need to get clever.
 * **promises**: no messing about with callbacks.
 * for **browser** and **server** alike.
+
+In addition, httpism supports:
+
+* URL templates
+* Cookies
+* HTTP proxies for HTTP and HTTPS traffic, with proxy authentication
+* Basic authentication
+* JSON
+* URL encoded forms
+* streams
+* CORS
+* JSONP
 
 ## NPM: [httpism](https://www.npmjs.org/package/httpism)
 
@@ -333,6 +344,7 @@ promise.abort();
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
 * `basicAuth`: use Basic Authentication, pass an object `{ username: 'bob', password: "bob's secret" }`.
+* `cookies`: default `false`, use cookies.
 * `querystring`: default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any. This is parsed and stringified using `options.qs.parse` and `options.qs.stringify` if provided, or using a very lite internal query string parser.
 * `qs`: optional override for parsing and stringifying querystrings, you can pass node's `querystring` or `qs`. Any object that contains the methods `parse` and `stringify` can be used. If not provided, httpism will use an internal (and very small) query string parser/stringifier.
 * `form`: when `true`, treats the incoming JSON data as a form and encodes it as `application/x-www-form-urlencoded`.
