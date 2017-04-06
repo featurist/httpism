@@ -39,6 +39,7 @@
     "phantomjs-prebuilt": "2.1.14",
     "qs": "6.4.0",
     "server-destroy": "1.0.1",
+    "uglify-js": "2.8.21",
     "url-template": "2.0.8",
     "watchify": "3.9.0"
   },

@@ -35,9 +35,9 @@ Compatible with browserify too!
 
 ## Browser Size
 
-* httpism.js: 13K
-* httpism.min.js: 6.8K
-* httpism.min.js.gz: 2.6K
+* httpism.js: 20K
+* httpism.min.js: 11K
+* httpism.min.js.gz: 3.9K
 
 ## GET JSON
 
