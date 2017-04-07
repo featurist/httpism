@@ -3,10 +3,21 @@
 httpism is a node and browser HTTP client that does a few things differently:
 
 * **middleware**: customise a HTTP client for your API by sticking together middleware, for example, for content handlers or authentication schemes.
-* **hypermedia**: responses can be used to make further requests relative to the response URI, just like a browser.
 * **useful by default**: sends and receives JSON, throws exceptions on 400-500s, follows redirects. Of course, you can disable this stuff when it gets in your way, or hit raw HTTP and streams when you need to get clever.
 * **promises**: no messing about with callbacks.
 * for **browser** and **server** alike.
+
+In addition, httpism supports:
+
+* URL templates
+* Cookies
+* HTTP proxies for HTTP and HTTPS traffic, with proxy authentication
+* Basic authentication
+* JSON
+* URL encoded forms
+* streams
+* CORS
+* JSONP
 
 ## NPM: [httpism](https://www.npmjs.org/package/httpism)
 
@@ -24,9 +35,9 @@ Compatible with browserify too!
 
 ## Browser Size
 
-* httpism.js: 13K
-* httpism.min.js: 6.8K
-* httpism.min.js.gz: 2.6K
+* httpism.js: 20K
+* httpism.min.js: 11K
+* httpism.min.js.gz: 3.9K
 
 ## GET JSON
 
@@ -170,11 +181,11 @@ For more details please see [proxy-from-env](https://github.com/Rob--W/proxy-fro
 ### GET, HEAD, DELETE
 
 ```js
-httpism.method (url, [options])
-response.method (url, [options])
+httpism.method(url, [options])
+response.method(url, [options])
 ```
 
-* `url` a string url, full or relative to the response, or '' to request the response again
+* `url` a string URL, this is a URL template if the `params` option is used, see [params](#params).
 * `options` request options, see [options](#options).
 * `response` a response from another request.
 
@@ -183,11 +194,11 @@ returns a promise
 ### POST, PUT, PATCH, OPTIONS
 
 ```js
-httpism.method (url, body, [options])
-response.method (url, body, [options])
+httpism.method(url, body, [options])
+response.method(url, body, [options])
 ```
 
-* `url` a string url, full or relative to the response, or '' to request the response again
+* `url` a string URL, this is a URL template if the `params` option is used, see [params](#params).
 * `body` the request body to send
     * by default a JS object is encoded as JSON and sent as `application/json`
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
@@ -195,11 +206,78 @@ response.method (url, body, [options])
 * `options` request options, see [options](#options).
 * `response` a response from another request.
 
+### Params
+
+Httpism will render a URL template if the `params` option is used, the params are interpolated into the URL template, any params left over will form the query string.
+
+```js
+httpism.get('http://example.com/users/:user/posts', {
+  params: {
+    user: 'bob',
+    page: 3,
+    search: 'lakes'
+  }
+})
+```
+
+Will become
+
+```
+GET http://example.com/users/bob/posts?page=3&search=lakes
+```
+
+A template contains two forms of parameter, varying on the way special characters are encoded for URLs.
+
+* `:param` - uses `encodeURIComponent`, and is useful for most applications
+* `:param*` - uses `encodeURI` and can be used to interpolate paths, such as `a/path/to/something` without encoding the slash characters.
+
+Any remaining parameters will be encoded in the query string, you can override how the query string is encoded using the `qs` option.
+
+The template interpolation itself can be overridden with the `expandUrl` option, and is used as follows:
+
+```js
+var url = expandUrl(template, params, querystring)
+```
+
+* `template` - the URL template, passed in as the `url` argument to `httpism.get`, etc.
+* `params` - the object containing the parameters to be interpolated.
+* `querystring` - the `qs` option, can be used to encode the query string parameters, e.g. `querystring.stringify(params)`.
+
+For example, you could use RFC 6570 templates like this
+
+```js
+var urlTemplate = require('url-template')
+
+function expandUrl(url, params) {
+  var template = urlTemplate.parse(url)
+  return template.expand(params)
+}
+
+httpism.get('http://example.com/users/{user}/posts{?page,search}', {
+  params: {
+    user: 'bob',
+    page: 3,
+    search: 'lakes'
+  },
+  expandUrl: expandUrl
+})
+```
+
+Or indeed create a new client to use this by default:
+
+```js
+var httpism = require('httpsim').client({
+  expandUrl: expandUrl
+})
+
+httpism.get('http://example.com/users/{user}/posts{?page,search}')
+```
+
 ### Send
 
 ```js
-httpism.send(method, url, [body], [options]);
-response.send(method, url, [body], [options]);
+httpism.send(method, url, [body], [options])
+response.send(method, url, [body], [options])
 ```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
@@ -277,6 +355,7 @@ promise.abort();
 * `redirect`: default `true`, follow redirects for 300, 301, 302, 303 and 307 status codes with `Location` response headers. Set to `false` to simply return the redirect response.
 * `headers`: default `undefined`, can be set to an object that is merged with middleware headers.
 * `basicAuth`: use Basic Authentication, pass an object `{ username: 'bob', password: "bob's secret" }`.
+* `cookies`: default `false`, use cookies.
 * `querystring`: default `undefined`, can be set to an object containing fields that are URL-encoded and merged with the querystring already on the URL, if any. This is parsed and stringified using `options.qs.parse` and `options.qs.stringify` if provided, or using a very lite internal query string parser.
 * `qs`: optional override for parsing and stringifying querystrings, you can pass node's `querystring` or `qs`. Any object that contains the methods `parse` and `stringify` can be used. If not provided, httpism will use an internal (and very small) query string parser/stringifier.
 * `form`: when `true`, treats the incoming JSON data as a form and encodes it as `application/x-www-form-urlencoded`.

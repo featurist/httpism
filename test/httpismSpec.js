@@ -18,6 +18,7 @@ var net = require('net');
 var FormData = require('form-data');
 var multiparty = require('multiparty');
 var obfuscateUrlPassword = require('../obfuscateUrlPassword');
+var urlTemplate = require('url-template')
 
 describe("httpism", function() {
   var server;
@@ -281,7 +282,7 @@ describe("httpism", function() {
       });
     });
 
-    describe("query strings", function() {
+    describe("query strings (deprecated)", function() {
       beforeEach(function() {
         app.get("/", function(req, res) {
           res.send(req.query);
@@ -314,6 +315,64 @@ describe("httpism", function() {
             b: "b",
             c: "c"
           });
+        });
+      });
+    });
+
+    describe('params', function() {
+      beforeEach(function() {
+        app.get('*', function(req, res) {
+          res.send(req.url);
+        });
+      });
+
+      it('can set params', function() {
+        return httpism.get(baseurl + '/:a', {
+          params: {
+            a: "aa",
+            b: "bb"
+          }
+        }).then(function(body) {
+          expect(body).to.eql('/aa?b=bb')
+        });
+      });
+
+      it('can set path params', function() {
+        return httpism.get(baseurl + '/:a*/:b', {
+          params: {
+            a: "a/long/path",
+            b: "bb"
+          }
+        }).then(function(body) {
+          expect(body).to.eql('/a/long/path/bb')
+        });
+      });
+
+      it('uses escapes', function() {
+        return httpism.get(baseurl + '/:a/:b', {
+          params: {
+            a: 'a/a',
+            b: 'b/b',
+            c: 'c/c'
+          }
+        }).then(function(body) {
+          expect(body).to.eql('/a%2Fa/b%2Fb?c=c%2Fc')
+        });
+      });
+
+      it('can use other template engines', function() {
+        return httpism.get(baseurl + '/{a}{?b,c}', {
+          params: {
+            a: 'x',
+            b: 'y',
+            c: 'z'
+          },
+          expandUrl: function (url, params) {
+            var template = urlTemplate.parse(url)
+            return template.expand(params)
+          }
+        }).then(function(body) {
+          expect(body).to.eql('/x?b=y&c=z')
         });
       });
     });
