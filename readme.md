@@ -35,9 +35,9 @@ Compatible with browserify too!
 
 ## Browser Size
 
-* httpism.js: 20K
-* httpism.min.js: 11K
-* httpism.min.js.gz: 3.9K
+* httpism.js: 23K
+* httpism.min.js: 10K
+* httpism.min.js.gz: 3.7K
 
 ## GET JSON
 
@@ -182,12 +182,10 @@ For more details please see [proxy-from-env](https://github.com/Rob--W/proxy-fro
 
 ```js
 httpism.method(url, [options])
-response.method(url, [options])
 ```
 
 * `url` a string URL, this is a URL template if the `params` option is used, see [params](#params).
 * `options` request options, see [options](#options).
-* `response` a response from another request.
 
 returns a promise
 
@@ -195,7 +193,6 @@ returns a promise
 
 ```js
 httpism.method(url, body, [options])
-response.method(url, body, [options])
 ```
 
 * `url` a string URL, this is a URL template if the `params` option is used, see [params](#params).
@@ -204,7 +201,6 @@ response.method(url, body, [options])
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
     * a stream. It will try to guess the `Content-Type` from a file stream, but if not, pass `{headers: {'content-type': ...}}` as options.
 * `options` request options, see [options](#options).
-* `response` a response from another request.
 
 ### Params
 
@@ -277,7 +273,6 @@ httpism.get('http://example.com/users/{user}/posts{?page,search}')
 
 ```js
 httpism.send(method, url, [body], [options])
-response.send(method, url, [body], [options])
 ```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
@@ -286,7 +281,6 @@ response.send(method, url, [body], [options])
     * a JS object with options `{form: true}` is url-encoded and sent as `application/x-www-form-urlencoded`
     * a stream. It will try to guess the `Content-Type` from a file stream, but if not, pass `{headers: {'content-type': ...}}` as options.
 * `options` request options, see [options](#options).
-* `response` a response from another request.
 
 
 ## Responses
@@ -383,7 +377,7 @@ You can create API clients, either from `httpism`, giving you a fairly complete 
 ```js
 var client = httpism.client([url], [options], [middleware]);
 var client = httpism.raw.client([url], [options], [middleware]);
-var client = response.client([url], [options], [middleware]);
+var anotherClient = client.client([url], [options], [middleware]);
 ```
 
 * `url` a URL string, which could be relative to the response, or absolute.
@@ -391,8 +385,7 @@ var client = response.client([url], [options], [middleware]);
 * `middleware` a middleware function or array of middleware functions. Requests in middleware are processed from the beginning of the array to the end, and responses from the end of the array to the beginning. See [middleware](#middleware). Middleware specified on the new client is _prepended_ to the middleware currently in the client.
 
 * `httpism` is the basic client, with all the goodies described above.
-* `httpism.raw` is a raw client that has no other middleware.
-* `response` is a response from another request.
+* `httpism.raw` is a raw client that has only the base transport, `http` or `https` on node, and `xhr` in the browser.
 
 ## Middleware
 
@@ -445,22 +438,9 @@ httpism.use(middleware);
 * `middleware.before` ensure that the middleware is inserted just before the named middleware.
 * `middleware.after` ensure that the middleware is inserted just after the named middleware.
 
-Middleware is stored in an array `client.middleware`, you're free to this directly.
+Middleware is stored in an array `client.middleware`, you're free to manipulate this directly.
 
-### Existing Middleware
-
-The following middleware are available in `var middleware = require('httpism/middleware')`:
-
-* `middleware.json` sends and receives JSON objects as `application/json`, also sets `Accept: application/json` on request.
-* `middleware.text` sends strings as `text/plain` and receives strings when `text/*` or `application/javascript`.
-* `middleware.exception` throws an exception when the response status code is 400-500.
-* `middleware.logger` logs requests and responses.
-* `middleware.redirect` follows redirects.
-* `middleware.headers` honours `options.headers`.
-* `middleware.form` when `options.form == true` sends and receives URL-encoded JS objects `application/x-www-form-urlencoded`.
-* `middleware.querystring` merges the URL-encoded `options.querystring` into the request URL.
-
-See [middleware.js](https://github.com/featurist/httpism/blob/master/middleware.js) for more info.
+See the [middleware](middleware) directory for a full list of existing middleware.
 
 # License
 

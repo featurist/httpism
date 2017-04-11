@@ -2,7 +2,8 @@ var merge = require('./merge')
 var resolveUrl = require('./resolveUrl')
 
 function client (url, options, middleware) {
-  return new Httpism(url, options, middleware)
+  var args = parseClientArguments(url, options, middleware)
+  return new Httpism(args.url, args.options || {}, args.middleware)
 }
 
 function Httpism (url, options, middleware) {
