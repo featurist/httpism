@@ -37,12 +37,12 @@ describe('httpism', function () {
     })
 
     it('can GET with query string', function () {
-      return httpism.get('/?a=b&b=c&c=d', {response: true, querystring: {b: 'd'}}).then(function (response) {
+      return httpism.get('/', {response: true, params: {a: 'b', b: 'c', c: 'd'}}).then(function (response) {
         expect(response.body.method).to.equal('GET')
-        expect(response.body.query).to.eql({a: 'b', b: 'd', c: 'd'})
-        expect(response.body.url).to.equal('/?a=b&b=d&c=d')
+        expect(response.body.query).to.eql({a: 'b', b: 'c', c: 'd'})
+        expect(response.body.url).to.equal('/?a=b&b=c&c=d')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
-        expect(response.url).to.equal('/?a=b&b=d&c=d')
+        expect(response.url).to.equal('/?a=b&b=c&c=d')
       })
     })
 
@@ -78,7 +78,7 @@ describe('httpism', function () {
 
   describe('cookies', function () {
     it('can send and receive cookies', function () {
-      return httpism.get('/cookies', {querystring: {a: 'b'}}).then(function () {
+      return httpism.get('/cookies', {params: {a: 'b'}}).then(function () {
         expect(document.cookie).to.equal('a=b')
         return httpism.get('/').then(function (body) {
           expect(body.cookies.a).to.equal('b')
@@ -88,11 +88,11 @@ describe('httpism', function () {
 
     describe('cross-domain', function () {
       beforeEach(function () {
-        return httpism.get(server + '/cookies', {querystring: {a: ''}, withCredentials: true})
+        return httpism.get(server + '/cookies', {params: {a: ''}, withCredentials: true})
       })
 
       it("by default, doesn't send cookies cross-domain", function () {
-        return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
+        return httpism.get(server + '/cookies', {params: {a: 'b'}, withCredentials: true}).then(function () {
           return httpism.get(server + '/').then(function (body) {
             expect(body.cookies.a).to.equal(undefined)
           })
@@ -100,7 +100,7 @@ describe('httpism', function () {
       })
 
       it('withCredentials = true, sends cookies cross-domain', function () {
-        return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
+        return httpism.get(server + '/cookies', {params: {a: 'b'}, withCredentials: true}).then(function () {
           return httpism.get(server + '/', {withCredentials: true}).then(function (body) {
             expect(body.cookies.a).to.equal('b')
           })

@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser')
 var app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.text())
-app.use(bodyParser.urlencoded())
+app.use(bodyParser.urlencoded({extended: true}))
 app.use(cookieParser())
 
 var cors = corsMiddleware({credentials: true, origin: true})
