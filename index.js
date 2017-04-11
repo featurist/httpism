@@ -1,5 +1,5 @@
-var middleware = require('./middleware');
-var httpism = require('./httpism');
+var middleware = require('./middleware')
+var httpism = require('./httpism')
 
 module.exports = httpism(
   undefined,
@@ -19,6 +19,6 @@ module.exports = httpism(
     middleware.debugLog,
     middleware.http
   ]
-);
+)
 
-module.exports.raw = httpism(undefined, {}, [middleware.http]);
+module.exports.raw = httpism(undefined, {}, [middleware.http])

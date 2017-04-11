@@ -1,19 +1,19 @@
-module.exports = function(x, y) {
+module.exports = function (x, y) {
   if (x && y) {
-    var r = {};
+    var r = {}
 
     Object.keys(y).forEach(function (ykey) {
-      r[ykey] = y[ykey];
-    });
+      r[ykey] = y[ykey]
+    })
 
     Object.keys(x).forEach(function (xkey) {
-      r[xkey] = x[xkey];
-    });
+      r[xkey] = x[xkey]
+    })
 
-    return r;
+    return r
   } else if (y) {
-    return y;
+    return y
   } else {
-    return x;
+    return x
   }
-};
+}

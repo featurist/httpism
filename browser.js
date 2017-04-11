@@ -1,6 +1,6 @@
-var httpism = require('./httpism');
-var middleware = require('./browserMiddleware');
-var utils = require('./middlewareUtils');
+var httpism = require('./httpism')
+var middleware = require('./browserMiddleware')
+var utils = require('./middlewareUtils')
 
 module.exports = httpism(
   undefined,
@@ -15,4 +15,4 @@ module.exports = httpism(
     utils.querystring,
     middleware.send
   ]
-);
+)
