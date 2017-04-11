@@ -269,10 +269,10 @@ var httpism = require('httpsim').client({
 httpism.get('http://example.com/users/{user}/posts{?page,search}')
 ```
 
-### Send
+### Request
 
 ```js
-httpism.send(method, url, [body], [options])
+httpism.request(method, url, [body], [options])
 ```
 
 * `url` a string url, full or relative to the response, or '' to request the response again
@@ -433,7 +433,7 @@ httpism.use(middleware);
     * `options` the [options](#options) as passed through from the request, either from the **client** or the individual request. E.g. `{exceptions: true}`.
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
 * `next([request])` is a function that passes control onto the next middleware, optionally taking a request parameter. If the request parameter is not given it uses the request passed in to the middleware. It returns a promise of the [response](#responses).
-* `client` is a **httpism client** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
+* `client` is a **httpism client** object, for which you can make further requests inside the middleware with `client.request(request)`. For example, the redirect middleware uses this.
 * `middleware.middleware` is the name of the middleware, which can be referred to by other middlewares when adding themselves with `before` or `after`.
 * `middleware.before` ensure that the middleware is inserted just before the named middleware.
 * `middleware.after` ensure that the middleware is inserted just after the named middleware.

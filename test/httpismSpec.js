@@ -399,6 +399,57 @@ describe('httpism', function () {
       })
 
       describe('middleware', function () {
+        describe('defining middleware', function () {
+          var client
+
+          beforeEach(function () {
+            app.get('/', function (req, res) {
+              res.send(req.query)
+            })
+
+            client = httpism.client(baseurl)
+          })
+
+          it('can modify the request', function () {
+            client.use(function (req, next) {
+              req.url += '?param=hi'
+              return next()
+            })
+
+            return client.get('/').then(function (response) {
+              expect(response).to.eql({param: 'hi'})
+            })
+          })
+
+          it('can send an entirely new request', function () {
+            client.use(function (req, next) {
+              return next({
+                url: req.url + '?param=hi',
+                options: {},
+                headers: {}
+              })
+            })
+
+            return client.get('/').then(function (response) {
+              expect(response).to.eql({param: 'hi'})
+            })
+          })
+
+          it('can return an entirely new response', function () {
+            client.use(function (req, next) {
+              return next().then(function (response) {
+                return {
+                  body: 'body'
+                }
+              })
+            })
+
+            return client.get('/').then(function (response) {
+              expect(response).to.eql('body')
+            })
+          })
+        })
+
         describe('inserting middleware', function () {
           var pipeline, a, b
 

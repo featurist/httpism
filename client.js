@@ -13,6 +13,11 @@ function Httpism (url, options, middleware) {
 }
 
 Httpism.prototype.send = function (method, url, body, _options) {
+  console.warn('httpism.send() is deprecated please use httpism.request()')
+  return this.request.apply(this, arguments)
+}
+
+Httpism.prototype.request = function (method, url, body, _options) {
   var request
 
   if (method instanceof Object) {
@@ -38,7 +43,7 @@ Httpism.prototype.send = function (method, url, body, _options) {
   }
 
   return sendToMiddleware(0, request).then(function (response) {
-    if (options.response === true) {
+    if (request.options.response === true) {
       return response
     } else {
       responseCompatibility(response)
@@ -187,13 +192,13 @@ Httpism.prototype.remove = function (name) {
 
 function addMethod (method) {
   Httpism.prototype[method] = function (url, options) {
-    return this.send(method, url, undefined, options)
+    return this.request(method, url, undefined, options)
   }
 }
 
 function addMethodWithBody (method) {
   Httpism.prototype[method] = function (url, body, options) {
-    return this.send(method, url, body, options)
+    return this.request(method, url, body, options)
   }
 }
 
