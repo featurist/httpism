@@ -285,43 +285,6 @@ describe('httpism', function () {
       })
     })
 
-    describe('query strings (deprecated)', function () {
-      beforeEach(function () {
-        app.get('/', function (req, res) {
-          res.send(req.query)
-        })
-      })
-
-      it('can set query string', function () {
-        return httpism.get(baseurl, {
-          querystring: {
-            a: 'a',
-            b: 'b'
-          }
-        }).then(function (body) {
-          expect(body).to.eql({
-            a: 'a',
-            b: 'b'
-          })
-        })
-      })
-
-      it('can override query string in url', function () {
-        return httpism.get(baseurl + '/?a=a&c=c', {
-          querystring: {
-            a: 'newa',
-            b: 'b'
-          }
-        }).then(function (body) {
-          expect(body).to.eql({
-            a: 'newa',
-            b: 'b',
-            c: 'c'
-          })
-        })
-      })
-    })
-
     describe('params', function () {
       beforeEach(function () {
         app.get('*', function (req, res) {
@@ -433,141 +396,143 @@ describe('httpism', function () {
         })
       })
 
-      describe('inserting middleware', function () {
-        var pipeline, a, b
+      describe('middleware', function () {
+        describe('inserting middleware', function () {
+          var pipeline, a, b
 
-        function middlwareNamed (name) {
-          function middleware () {
+          function middlwareNamed (name) {
+            function middleware () {
+            }
+
+            middleware.middleware = name
+
+            return middleware
           }
 
-          middleware.middleware = name
-
-          return middleware
-        }
-
-        beforeEach(function () {
-          pipeline = httpism.raw.client()
-          pipeline.middlewares = [
-            a = middlwareNamed('a'),
-            b = middlwareNamed('b')
-          ]
-        })
-
-        describe('before', function () {
-          it('can insert middleware before another', function () {
-            var m = function () {}
-            m.before = 'a'
-
-            var client = pipeline.client(m)
-
-            expect(client.middlewares).to.eql([
-              m,
-              a,
-              b
-            ])
+          beforeEach(function () {
+            pipeline = httpism.raw.client()
+            pipeline.middlewares = [
+              a = middlwareNamed('a'),
+              b = middlwareNamed('b')
+            ]
           })
 
-          it('can insert middleware into same client before another', function () {
-            var m = function () {}
-            m.before = 'a'
+          describe('before', function () {
+            it('can insert middleware before another', function () {
+              var m = function () {}
+              m.before = 'a'
 
-            pipeline.insertMiddleware(m)
+              var client = pipeline.client(m)
+
+              expect(client.middlewares).to.eql([
+                m,
+                a,
+                b
+              ])
+            })
+
+            it('can insert middleware into same client before another', function () {
+              var m = function () {}
+              m.before = 'a'
+
+              pipeline.use(m)
+
+              expect(pipeline.middlewares).to.eql([
+                m,
+                a,
+                b
+              ])
+            })
+
+            it('inserts before the named middleware if at least one is found', function () {
+              var m = function () {}
+              m.before = ['a', 'c']
+              var client = pipeline.client(m)
+              expect(client.middlewares).to.eql([
+                m,
+                a,
+                b
+              ])
+            })
+
+            it('inserts before all the named middleware if all are found', function () {
+              var m = function () {}
+              m.before = ['a', 'b']
+              var client = pipeline.client(m)
+              expect(client.middlewares).to.eql([
+                m,
+                a,
+                b
+              ])
+            })
+          })
+
+          describe('after', function () {
+            it('can insert middleware after another', function () {
+              var m = function () {}
+              m.after = 'a'
+              var client = pipeline.client(m)
+              expect(client.middlewares).to.eql([
+                a,
+                m,
+                b
+              ])
+            })
+
+            it('inserts after the named middleware if at lesat one is found', function () {
+              var m = function () {}
+              m.after = ['a', 'c']
+              var client = pipeline.client(m)
+              expect(client.middlewares).to.eql([
+                a,
+                m,
+                b
+              ])
+            })
+
+            it('inserts after all the named middleware if all are found', function () {
+              var m = function () {}
+              m.after = ['a', 'b']
+              var client = pipeline.client(m)
+              expect(client.middlewares).to.eql([
+                a,
+                b,
+                m
+              ])
+            })
+          })
+
+          it('can remove middleware', function () {
+            pipeline.remove('b')
 
             expect(pipeline.middlewares).to.eql([
-              m,
-              a,
-              b
+              a
             ])
           })
 
-          it('inserts before the named middleware if at least one is found', function () {
+          it('throws if before middleware name cannot be found', function () {
             var m = function () {}
-            m.before = ['a', 'c']
-            var client = pipeline.client(m)
-            expect(client.middlewares).to.eql([
-              m,
-              a,
-              b
-            ])
+            m.before = 'notfound'
+            expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
 
-          it('inserts before all the named middleware if all are found', function () {
+          it('throws if none of the before middleware names can be found', function () {
             var m = function () {}
-            m.before = ['a', 'b']
-            var client = pipeline.client(m)
-            expect(client.middlewares).to.eql([
-              m,
-              a,
-              b
-            ])
+            m.before = ['notfound']
+            expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
-        })
 
-        describe('after', function () {
-          it('can insert middleware after another', function () {
+          it('throws if after middleware name cannot be found', function () {
             var m = function () {}
-            m.after = 'a'
-            var client = pipeline.client(m)
-            expect(client.middlewares).to.eql([
-              a,
-              m,
-              b
-            ])
+            m.after = 'notfound'
+            expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
 
-          it('inserts after the named middleware if at lesat one is found', function () {
+          it('throws if none of the after middleware names can be found', function () {
             var m = function () {}
-            m.after = ['a', 'c']
-            var client = pipeline.client(m)
-            expect(client.middlewares).to.eql([
-              a,
-              m,
-              b
-            ])
+            m.after = ['notfound']
+            expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
-
-          it('inserts after all the named middleware if all are found', function () {
-            var m = function () {}
-            m.after = ['a', 'b']
-            var client = pipeline.client(m)
-            expect(client.middlewares).to.eql([
-              a,
-              b,
-              m
-            ])
-          })
-        })
-
-        it('can remove middleware', function () {
-          pipeline.removeMiddleware('b')
-
-          expect(pipeline.middlewares).to.eql([
-            a
-          ])
-        })
-
-        it('throws if before middleware name cannot be found', function () {
-          var m = function () {}
-          m.before = 'notfound'
-          expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
-        })
-
-        it('throws if none of the before middleware names can be found', function () {
-          var m = function () {}
-          m.before = ['notfound']
-          expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
-        })
-
-        it('throws if after middleware name cannot be found', function () {
-          var m = function () {}
-          m.after = 'notfound'
-          expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
-        })
-
-        it('throws if none of the after middleware names can be found', function () {
-          var m = function () {}
-          m.after = ['notfound']
-          expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
         })
       })
 
@@ -587,6 +552,43 @@ describe('httpism', function () {
           return client.get(baseurl).then(function (body) {
             expect(body).to.eql({
               joke: 'a chicken...'
+            })
+          })
+        })
+      })
+
+      describe('query strings (deprecated)', function () {
+        beforeEach(function () {
+          app.get('/', function (req, res) {
+            res.send(req.query)
+          })
+        })
+
+        it('can set query string', function () {
+          return httpism.get(baseurl, {
+            querystring: {
+              a: 'a',
+              b: 'b'
+            }
+          }).then(function (body) {
+            expect(body).to.eql({
+              a: 'a',
+              b: 'b'
+            })
+          })
+        })
+
+        it('can override query string in url', function () {
+          return httpism.get(baseurl + '/?a=a&c=c', {
+            querystring: {
+              a: 'newa',
+              b: 'b'
+            }
+          }).then(function (body) {
+            expect(body).to.eql({
+              a: 'newa',
+              b: 'b',
+              c: 'c'
             })
           })
         })
@@ -1455,12 +1457,6 @@ describe('httpism', function () {
           blah: 'blah1234!'
         })
       })
-    })
-  })
-
-  describe('use', function () {
-    it('can add a middleware to the outside', function () {
-
     })
   })
 

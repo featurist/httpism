@@ -137,7 +137,7 @@ Httpism.prototype.client = function (url, options, middlewares) {
 
   if (args.middlewares) {
     args.middlewares.forEach(function (m) {
-      client.insertMiddleware(m)
+      client.use(m)
     })
   }
 
@@ -150,6 +150,11 @@ Httpism.prototype.api = function (url, options, middlewares) {
 }
 
 Httpism.prototype.insertMiddleware = function (m) {
+  console.warn('httpism >= 3.0.0 renamed httpism.insertMiddleware() to httpism.use(), please update your usage')
+  return this.use(m)
+}
+
+Httpism.prototype.use = function (m) {
   if (m.before || m.after) {
     var position = m.before || m.after
     var names = typeof position === 'string' ? [position] : position
@@ -169,7 +174,7 @@ Httpism.prototype.insertMiddleware = function (m) {
   }
 }
 
-Httpism.prototype.removeMiddleware = function (name) {
+Httpism.prototype.remove = function (name) {
   var indexes = findMiddlewareIndexes([name], this.middlewares)
   for (var i = indexes.length - 1; i >= 0; i--) {
     this.middlewares.splice(indexes[i], 1)

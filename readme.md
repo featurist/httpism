@@ -418,14 +418,17 @@ middleware.before = ['http', 'debugLog'];
 middleware.after = 'redirect';
 ```
 
-You can insert the middleware by passing it to `httpism.client()`, or by calling `client.insertMiddleware()`:
+You can insert the middleware by passing it to `httpism.client()`, or by calling `client.use()`:
 
 ```js
+// create a new client with middleware
 var client = httpism.client(middleware);
-client.insertMiddleware(middleware);
 
-// globally, and for all new APIs
-httpism.insertMiddleware(middleware);
+// add middleware to an existing client
+client.use(middleware);
+
+// add middleware globally and to all new clients
+httpism.use(middleware);
 ```
 
 * `request` is an object with the following properties:
