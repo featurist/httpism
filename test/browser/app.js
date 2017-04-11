@@ -54,7 +54,7 @@ app.get('/redirect', function (req, res) {
 
 app.get('/jsonp', function (req, res) {
   res.set('Content-Type', 'text/javascript')
-  res.send(`${req.query.callback}({blah: 'blah'})`)
+  res.send(req.query.callback + "({blah: 'blah'})")
 })
 
 module.exports = app

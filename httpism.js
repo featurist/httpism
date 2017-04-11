@@ -1,6 +1,5 @@
 var merge = require('./merge')
 var resolveUrl = require('./resolveUrl')
-var utils = require('./middlewareUtils')
 
 function client (url, options, middlewares) {
   return new Httpism(url, options, middlewares)
@@ -38,7 +37,7 @@ Httpism.prototype.send = function (method, url, body, _options) {
   }
 
   return sendToMiddleware(0, request).then(function (response) {
-    if (options.response == true) {
+    if (options.response === true) {
       return response
     } else {
       responseCompatibility(response)
@@ -100,7 +99,7 @@ function responseCompatibility (response) {
 function lowerCaseHeaders (headers) {
   Object.keys(headers).forEach(function (key) {
     var lower = key.toLowerCase()
-    if (key.toLowerCase() != key) {
+    if (key.toLowerCase() !== key) {
       headers[lower] = headers[key]
       delete headers[key]
     }
@@ -112,7 +111,7 @@ function lowerCaseHeaders (headers) {
 function findMiddlewareIndexes (names, middlewares) {
   return names.map(function (name) {
     for (var n = 0; n < middlewares.length; n++) {
-      if (middlewares[n].middleware == name) {
+      if (middlewares[n].middleware === name) {
         return n
       }
     }

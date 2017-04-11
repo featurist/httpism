@@ -24,7 +24,7 @@ middleware('querystring', utils.querystring)
 middleware('expandUrl', utils.expandUrl)
 
 exports.streamToString = function (s) {
-  return new Promise(function (result, error) {
+  return new Promise(function (resolve, reject) {
     s.setEncoding('utf-8')
     var strings = []
 
@@ -33,23 +33,23 @@ exports.streamToString = function (s) {
     })
 
     s.on('end', function () {
-      result(strings.join(''))
+      resolve(strings.join(''))
     })
 
     s.on('error', function (e) {
-      error(e)
+      reject(e)
     })
   })
 }
 
 exports.consumeStream = function (s) {
-  return new Promise(function (result, error) {
+  return new Promise(function (resolve, reject) {
     s.on('end', function () {
-      result()
+      resolve()
     })
 
     s.on('error', function (e) {
-      error(e)
+      reject(e)
     })
 
     s.resume()
@@ -138,7 +138,7 @@ function parseUrl (request) {
 }
 
 middleware('http', function (request) {
-  return new Promise(function (result, error) {
+  return new Promise(function (resolve, reject) {
     var url = parseUrl(request)
 
     var req = nodeRequest(
@@ -153,7 +153,7 @@ middleware('http', function (request) {
       request.options,
       url.protocol,
       function (res) {
-        return result({
+        return resolve({
           statusCode: res.statusCode,
           statusText: http.STATUS_CODES[res.statusCode],
           url: request.url,
@@ -164,7 +164,7 @@ middleware('http', function (request) {
     )
 
     req.on('error', function (e) {
-      error(e)
+      reject(e)
     })
 
     if (request.body) {
@@ -256,9 +256,9 @@ middleware('redirect', function (request, next, client) {
       return exports.consumeStream(response.body).then(function () {
         logResponse(response)
         return client.get(urlUtils.resolve(request.url, location), request.options).then(function (redirectResponse) {
-          throw {
-            redirectResponse: redirectResponse
-          }
+          var error = new Error('redirect')
+          error.redirectResponse = redirectResponse
+          throw error
         })
       })
     } else {
@@ -359,7 +359,7 @@ middleware('streamContentType', function (request, next) {
 })
 
 function encodeBasicAuthorizationHeader (s) {
-  return 'Basic ' + new Buffer(s).toString('base64')
+  return 'Basic ' + Buffer.from(s).toString('base64')
 }
 
 middleware('basicAuth', function (request, next) {

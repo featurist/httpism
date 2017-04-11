@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 var httpism = require('../index')
 var express = require('express')
 var bodyParser = require('body-parser')
@@ -19,6 +21,7 @@ var FormData = require('form-data')
 var multiparty = require('multiparty')
 var obfuscateUrlPassword = require('../obfuscateUrlPassword')
 var urlTemplate = require('url-template')
+var pathUtils = require('path')
 
 describe('httpism', function () {
   var server
@@ -398,7 +401,7 @@ describe('httpism', function () {
       })
 
       describe('cache example', function () {
-        var filename = __dirname + '/cachefile.txt'
+        var filename = pathUtils.join(__dirname, 'cachefile.txt')
 
         beforeEach(function () {
           return fs.writeFile(filename, '{"from": "cache"}')
@@ -610,10 +613,10 @@ describe('httpism', function () {
       })
 
       it("doesn't include the password in the error message", function () {
-        return httpism.client(`http://user:pass@localhost:${port}/`).get('/400').then(function () {
+        return httpism.client('http://user:pass@localhost:' + port + '/').get('/400').then(function () {
           assert.fail('expected an exception to be thrown')
         }).catch(function (e) {
-          expect(e.message).to.equal('GET ' + `http://user:********@localhost:${port}/400 => 400 Bad Request`)
+          expect(e.message).to.equal('GET http://user:********@localhost:' + port + '/400 => 400 Bad Request')
           expect(e.statusCode).to.equal(400)
           expect(e.body.message).to.equal('oh dear')
         })
@@ -628,7 +631,7 @@ describe('httpism', function () {
       describe('error predicate', function () {
         it('throws exceptions when predicate returns true', function () {
           function isError (response) {
-            return response.statusCode == 400
+            return response.statusCode === 400
           }
 
           return httpism.client(baseurl).get('/400', { exceptions: isError }).then(function () {
@@ -642,7 +645,7 @@ describe('httpism', function () {
 
         it("doesn't throw exceptions when predicate returns false", function () {
           function isError (response) {
-            return response.statusCode != 400
+            return response.statusCode !== 400
           }
 
           return httpism.client(baseurl).get('/400', { exceptions: isError }).then(function (body) {
@@ -896,8 +899,8 @@ describe('httpism', function () {
 
       beforeEach(function () {
         var credentials = {
-          key: fs.readFileSync(__dirname + '/server.key', 'utf-8'),
-          cert: fs.readFileSync(__dirname + '/server.crt', 'utf-8')
+          key: fs.readFileSync(pathUtils.join(__dirname, 'server.key'), 'utf-8'),
+          cert: fs.readFileSync(pathUtils.join(__dirname, 'server.crt'), 'utf-8')
         }
         httpsServer = https.createServer(credentials, app)
         httpsServer.listen(httpsPort)
@@ -959,7 +962,7 @@ describe('httpism', function () {
       })
 
       describe('multipart forms', function () {
-        var filename = __dirname + '/afile.jpg'
+        var filename = pathUtils.join(__dirname, 'afile.jpg')
 
         beforeEach(function () {
           return fs.writeFile(filename, 'an image')
@@ -1074,7 +1077,7 @@ describe('httpism', function () {
   })
 
   describe('streams', function () {
-    var filename = __dirname + '/afile.txt'
+    var filename = pathUtils.join(__dirname, 'afile.txt')
 
     beforeEach(function () {
       return fs.writeFile(filename, 'some content').then(function () {
@@ -1218,9 +1221,9 @@ describe('httpism', function () {
     }
 
     function checkProxyAuthentication (req, res, next) {
-      var expectedAuthorisation = 'Basic ' + new Buffer('bob:secret').toString('base64')
+      var expectedAuthorisation = 'Basic ' + Buffer.from('bob:secret').toString('base64')
 
-      if (expectedAuthorisation == req.headers['proxy-authorization']) {
+      if (expectedAuthorisation === req.headers['proxy-authorization']) {
         next(req, res)
       } else {
         res.statusCode = 407
@@ -1272,8 +1275,8 @@ describe('httpism', function () {
 
     beforeEach(function () {
       var credentials = {
-        key: fs.readFileSync(__dirname + '/server.key', 'utf-8'),
-        cert: fs.readFileSync(__dirname + '/server.crt', 'utf-8')
+        key: fs.readFileSync(pathUtils.join(__dirname, 'server.key'), 'utf-8'),
+        cert: fs.readFileSync(pathUtils.join(__dirname, 'server.crt'), 'utf-8')
       }
       httpsServer = https.createServer(credentials, app)
       httpsServer.listen(httpsPort)
@@ -1330,13 +1333,13 @@ describe('httpism', function () {
 
       function assertProxied (url) {
         return httpism.get(url, { https: { rejectUnauthorized: false } }).then(function () {
-          expect(proxied).to.be.true
+          expect(proxied).to.equal(true)
         })
       }
 
       function assertNotProxied (url) {
         return httpism.get(url, { https: { rejectUnauthorized: false } }).then(function () {
-          expect(proxied).to.be.false
+          expect(proxied).to.equal(false)
         })
       }
 
@@ -1441,7 +1444,7 @@ describe('httpism', function () {
 
       var client = httpism.client(baseurl, {
         jsonReviver: function (key, value) {
-          if (key == '') { return value }
+          if (key === '') { return value }
           return key + value + '!'
         }
       })

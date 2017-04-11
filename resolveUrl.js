@@ -3,7 +3,7 @@
 /* jslint regexp: true, white: true, maxerr: 50, indent: 2 */
 
 function parseURI (url) {
-  var m = String(url).replace(/^\s+|\s+$/g, '').match(/^([^:\/?#]+:)?(\/\/(?:[^:@]*(?::[^:@]*)?@)?(([^:\/?#]*)(?::(\d*))?))?([^?#]*)(\?[^#]*)?(#[\s\S]*)?/)
+  var m = String(url).replace(/^\s+|\s+$/g, '').match(/^([^:/?#]+:)?(\/\/(?:[^:@]*(?::[^:@]*)?@)?(([^:/?#]*)(?::(\d*))?))?([^?#]*)(\?[^#]*)?(#[\s\S]*)?/)
   // authority = '//' + user + ':' + pass '@' + hostname + ':' port
   return (m ? {
     href: m[0] || '',
@@ -24,7 +24,7 @@ module.exports = function (base, href) { // RFC 3986
     input.replace(/^(\.\.?(\/|$))+/, '')
          .replace(/\/(\.(\/|$))+/g, '/')
          .replace(/\/\.\.$/, '/../')
-         .replace(/\/?[^\/]*/g, function (p) {
+         .replace(/\/?[^/]*/g, function (p) {
            if (p === '/..') {
              output.pop()
            } else {

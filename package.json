@@ -22,6 +22,13 @@
     "cookie-parser": "1.4.3",
     "cors": "2.8.1",
     "es6-promise": "4.1.0",
+    "eslint": "3.19.0",
+    "eslint-config-standard": "10.2.0",
+    "eslint-plugin-es5": "1.0.1",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-node": "4.2.2",
+    "eslint-plugin-promise": "3.5.0",
+    "eslint-plugin-standard": "3.0.1",
     "express": "4.15.2",
     "fake-xml-http-request": "1.4.0",
     "form-data": "2.1.2",
@@ -40,6 +47,7 @@
     "phantomjs-prebuilt": "2.1.14",
     "qs": "6.4.0",
     "server-destroy": "1.0.1",
+    "standard": "10.0.1",
     "uglify-js": "2.8.21",
     "url-template": "2.0.8",
     "watchify": "3.9.0"
@@ -48,7 +56,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run test-mocha && npm run test-browser -- --single-run --browsers PhantomJS",
+    "test": "npm run test-mocha && npm run test-browser -- --single-run --browsers PhantomJS && eslint .",
     "test-browser": "karma start",
     "test-mocha": "mocha",
     "size": "browserify browser.js > _httpism.js && uglifyjs --compress warnings=false --mangle -- _httpism.js > _httpism.min.js && gzip < _httpism.min.js > _httpism.min.js.gz && ls -lh _httpism.*"

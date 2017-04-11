@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 var chai = require('chai')
 var expect = chai.expect
 chai.use(require('chai-as-promised'))
@@ -16,8 +18,8 @@ describe('httpism', function () {
         this.server.destroy()
       }
 
-      var app = serverRequire('./test/browser/app')
-      var serverDestroy = serverRequire('server-destroy')
+      var app = serverRequire('./test/browser/app') // eslint-disable-line no-undef
+      var serverDestroy = serverRequire('server-destroy') // eslint-disable-line no-undef
 
       this.server = app.listen(12345)
       serverDestroy(this.server)
@@ -92,7 +94,7 @@ describe('httpism', function () {
       it("by default, doesn't send cookies cross-domain", function () {
         return httpism.get(server + '/cookies', {querystring: {a: 'b'}, withCredentials: true}).then(function () {
           return httpism.get(server + '/').then(function (body) {
-            expect(body.cookies.a).to.be.undefined
+            expect(body.cookies.a).to.equal(undefined)
           })
         })
       })
@@ -107,7 +109,7 @@ describe('httpism', function () {
 
       it("doesn't send x-requested-with if cross-domain", function () {
         return httpism.get(server + '/').then(function (body) {
-          expect(body.xhr).to.be.false
+          expect(body.xhr).to.equal(false)
         })
       })
 
@@ -173,14 +175,14 @@ describe('httpism', function () {
     it('can abort a request', function () {
       var request = httpism.get('/')
       request.abort()
-      return new Promise(function (fulfil, reject) {
+      return new Promise(function (resolve, reject) {
         request.then(function (response) {
           reject(new Error("didn't expect response"))
         }, function (error) {
-          if (error.aborted != true) {
+          if (error.aborted !== true) {
             reject(error)
           } else {
-            fulfil()
+            resolve()
           }
         })
       })
@@ -201,19 +203,19 @@ describe('httpism', function () {
 
       var request = http.get('/')
       request.abort()
-      return new Promise(function (fulfil, reject) {
+      return new Promise(function (resolve, reject) {
         request.then(function (response) {
           reject(new Error("didn't expect response"))
         }, function (error) {
-          if (error.aborted != true) {
+          if (error.aborted !== true) {
             reject(error)
           } else {
-            fulfil()
+            resolve()
           }
         })
       }).then(function () {
-        expect(middlewareRequest).to.be.true
-        expect(middlewareResponse).to.be.undefined
+        expect(middlewareRequest).to.equal(true)
+        expect(middlewareResponse).to.equal(undefined)
       })
     })
   })
@@ -221,7 +223,7 @@ describe('httpism', function () {
   describe('x-requested-with header', function () {
     it('sends the x-requested-with header', function () {
       return httpism.get('/').then(function (body) {
-        expect(body.xhr).to.be.true
+        expect(body.xhr).to.equal(true)
       })
     })
   })
@@ -230,7 +232,7 @@ describe('httpism', function () {
     it('can respond with 204 and empty body', function () {
       return httpism.delete('/delete', {response: true}).then(function (response) {
         expect(response.statusCode).to.equal(204)
-        expect(response.body).to.be.undefined
+        expect(response.body).to.equal(undefined)
       })
     })
   })
@@ -241,7 +243,7 @@ describe('httpism', function () {
         greeting: 'hi'
       }, {
         jsonReviver: function (key, value) {
-          if (key != 'greeting') return value
+          if (key !== 'greeting') return value
           return value + '!'
         }
       }).then(function (body) {

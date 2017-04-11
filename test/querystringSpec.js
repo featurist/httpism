@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 var qs = require('../querystring-lite')
 var chai = require('chai')
 var expect = chai.expect

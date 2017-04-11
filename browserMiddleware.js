@@ -64,7 +64,7 @@ middleware('jsonp', function (request, next) {
       var script = document.createElement('script')
       script.type = 'text/javascript'
       script.src = request.url
-      script.onerror = function (error) {
+      script.onerror = function () {
         reject(new Error('could not load script tag for JSONP request: ' + request.url))
       }
       document.head.appendChild(script)
@@ -137,11 +137,11 @@ function setHeaders (headers, xhr) {
 }
 
 function responseUrl (xhr, requestUrl) {
-  var origin = location.origin
+  var origin = window.location.origin
   var responseUrl = xhr.responseURL
 
   if (responseUrl) {
-    if (responseUrl.substring(0, origin.length) == origin) {
+    if (responseUrl.substring(0, origin.length) === origin) {
       return responseUrl.substring(origin.length)
     } else {
       return responseUrl
@@ -154,16 +154,16 @@ function responseUrl (xhr, requestUrl) {
 middleware('send', function (request) {
   var Xhr = request.options.xhr || window.XMLHttpRequest
   var xhr = new Xhr()
-  var reject
+  var rejectPromise
 
-  var promise = new Promise(function (fulfil, _reject) {
-    reject = _reject
+  var promise = new Promise(function (resolve, reject) {
+    rejectPromise = reject
     xhr.open(request.method, request.url, true)
     xhr.onload = function () {
       var statusCode = xhr.status
 
       var response = {
-        body: statusCode == 204 ? undefined : xhr.responseText,
+        body: statusCode === 204 ? undefined : xhr.responseText,
         headers: parseHeaders(xhr.getAllResponseHeaders()),
         statusCode: statusCode,
         url: responseUrl(xhr, request.url),
@@ -171,11 +171,11 @@ middleware('send', function (request) {
         statusText: xhr.statusText
       }
 
-      fulfil(response)
+      resolve(response)
     }
 
     xhr.onerror = function () {
-      reject(new Error('failed to connect to ' + request.method + ' ' + request.url))
+      rejectPromise(new Error('failed to connect to ' + request.method + ' ' + request.url))
     }
 
     if (!isCrossDomain(request.url) && !request.headers['x-requested-with']) {
@@ -192,7 +192,7 @@ middleware('send', function (request) {
     xhr.abort()
     var error = new Error('aborted connection to ' + request.method + ' ' + request.url)
     error.aborted = true
-    reject(error)
+    rejectPromise(error)
   }
   addAbortToPromise(promise, abort)
 
