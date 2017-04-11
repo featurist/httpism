@@ -1,24 +1,23 @@
-var middleware = require('./middleware')
-var httpism = require('./httpism')
+var client = require('./client')
 
-module.exports = httpism(
+module.exports = client(
   undefined,
   {},
   [
-    middleware.log,
-    middleware.exception,
-    middleware.text,
-    middleware.form,
-    middleware.json,
-    middleware.expandUrl,
-    middleware.querystring,
-    middleware.basicAuth,
-    middleware.redirect,
-    middleware.cookies,
-    middleware.streamContentType,
-    middleware.debugLog,
-    middleware.http
+    require('./middleware/log'),
+    require('./middleware/exception'),
+    require('./middleware/textServer'),
+    require('./middleware/formServer'),
+    require('./middleware/jsonServer'),
+    require('./middleware/expandUrl'),
+    require('./middleware/querystring'),
+    require('./middleware/basicAuth'),
+    require('./middleware/redirect'),
+    require('./middleware/cookies'),
+    require('./middleware/streamContentType'),
+    require('./middleware/debugLog'),
+    require('./middleware/http')
   ]
 )
 
-module.exports.raw = httpism(undefined, {}, [middleware.http])
+module.exports.raw = client(undefined, {}, [require('./middleware/http')])

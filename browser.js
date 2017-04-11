@@ -1,18 +1,19 @@
-var httpism = require('./httpism')
-var middleware = require('./browserMiddleware')
-var utils = require('./middlewareUtils')
+var client = require('./client')
+var xhr = require('./middleware/xhr')
 
-module.exports = httpism(
+module.exports = client(
   undefined,
   {},
   [
-    middleware.jsonp,
-    utils.exception,
-    middleware.form,
-    middleware.json,
-    middleware.text,
-    utils.expandUrl,
-    utils.querystring,
-    middleware.send
+    require('./middleware/jsonp'),
+    require('./middleware/exception'),
+    require('./middleware/formBrowser'),
+    require('./middleware/jsonBrowser'),
+    require('./middleware/textBrowser'),
+    require('./middleware/expandUrl'),
+    require('./middleware/querystring'),
+    xhr
   ]
 )
+
+module.exports.raw = client(undefined, {}, [xhr])
