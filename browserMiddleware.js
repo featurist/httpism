@@ -5,7 +5,9 @@ var randomString = require('random-string')
 
 function middleware (name, fn) {
   exports[name] = fn
-  fn.middleware = name
+  fn.httpismMiddleware = {
+    name: name
+  }
 }
 
 middleware('exception', utils.exception)

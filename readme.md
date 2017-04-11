@@ -399,7 +399,7 @@ var client = response.client([url], [options], [middleware]);
 Middleware commonly works like this:
 
 ```js
-function middleware(request, next, httpism) {
+function middleware(request, next, client) {
   // change request
   request.url = ...;
   return next().then(function (response) {
@@ -410,12 +410,14 @@ function middleware(request, next, httpism) {
 }
 ```
 
-Middlewares are ordered, and each one can have a name, and a preference to be placed before or after other named middleware. You can place the middleware `before` any of the middleware in an array, or `after` any of the middleware in an array.
+Middleware are ordered, and each one can have a name, and a preference to be placed before or after other named middleware. You can place the middleware `before` any of the middleware in an array, or `after` any of the middleware in an array.
 
 ```js
-middleware.middleware = 'middleware name';
-middleware.before = ['http', 'debugLog'];
-middleware.after = 'redirect';
+middleware.httpismMiddleware = {
+  name: 'name',
+  before: ['http', 'debugLog'],
+  after: 'redirect'
+}
 ```
 
 You can insert the middleware by passing it to `httpism.client()`, or by calling `client.use()`:
@@ -438,10 +440,12 @@ httpism.use(middleware);
     * `options` the [options](#options) as passed through from the request, either from the **client** or the individual request. E.g. `{exceptions: true}`.
     * `body` the body of the request. Will be `undefined` for `get()` etc, otherwise will be the object specified as the second argument to methods like `post()`.
 * `next([request])` is a function that passes control onto the next middleware, optionally taking a request parameter. If the request parameter is not given it uses the request passed in to the middleware. It returns a promise of the [response](#responses).
-* `httpism` is a **httpism client** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
+* `client` is a **httpism client** object, for which you can make further requests inside the middleware. For example, the redirect middleware uses this.
 * `middleware.middleware` is the name of the middleware, which can be referred to by other middlewares when adding themselves with `before` or `after`.
 * `middleware.before` ensure that the middleware is inserted just before the named middleware.
 * `middleware.after` ensure that the middleware is inserted just after the named middleware.
+
+Middleware is stored in an array `client.middleware`, you're free to this directly.
 
 ### Existing Middleware
 

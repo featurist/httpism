@@ -386,7 +386,9 @@ describe('httpism', function () {
             })
           }
 
-          cache.before = 'http'
+          cache.httpismMiddleware = {
+            before: 'http'
+          }
 
           var http = httpism.client(cache)
 
@@ -404,14 +406,16 @@ describe('httpism', function () {
             function middleware () {
             }
 
-            middleware.middleware = name
+            middleware.httpismMiddleware = {
+              name: name
+            }
 
             return middleware
           }
 
           beforeEach(function () {
             pipeline = httpism.raw.client()
-            pipeline.middlewares = [
+            pipeline.middleware = [
               a = middlwareNamed('a'),
               b = middlwareNamed('b')
             ]
@@ -420,48 +424,57 @@ describe('httpism', function () {
           describe('before', function () {
             it('can insert middleware before another', function () {
               var m = function () {}
-              m.before = 'a'
+              m.httpismMiddleware = {
+                before: 'b'
+              }
 
               var client = pipeline.client(m)
 
-              expect(client.middlewares).to.eql([
-                m,
+              expect(client.middleware).to.eql([
                 a,
+                m,
                 b
               ])
             })
 
             it('can insert middleware into same client before another', function () {
               var m = function () {}
-              m.before = 'a'
+              m.httpismMiddleware = {
+                before: 'b'
+              }
 
               pipeline.use(m)
 
-              expect(pipeline.middlewares).to.eql([
-                m,
+              expect(pipeline.middleware).to.eql([
                 a,
+                m,
                 b
               ])
             })
 
             it('inserts before the named middleware if at least one is found', function () {
               var m = function () {}
-              m.before = ['a', 'c']
+              m.httpismMiddleware = {
+                before: ['b', 'c']
+              }
+
               var client = pipeline.client(m)
-              expect(client.middlewares).to.eql([
-                m,
+              expect(client.middleware).to.eql([
                 a,
+                m,
                 b
               ])
             })
 
             it('inserts before all the named middleware if all are found', function () {
               var m = function () {}
-              m.before = ['a', 'b']
+              m.httpismMiddleware = {
+                before: ['b', 'b']
+              }
               var client = pipeline.client(m)
-              expect(client.middlewares).to.eql([
-                m,
+              expect(client.middleware).to.eql([
                 a,
+                m,
                 b
               ])
             })
@@ -470,9 +483,11 @@ describe('httpism', function () {
           describe('after', function () {
             it('can insert middleware after another', function () {
               var m = function () {}
-              m.after = 'a'
+              m.httpismMiddleware = {
+                after: 'a'
+              }
               var client = pipeline.client(m)
-              expect(client.middlewares).to.eql([
+              expect(client.middleware).to.eql([
                 a,
                 m,
                 b
@@ -481,9 +496,11 @@ describe('httpism', function () {
 
             it('inserts after the named middleware if at lesat one is found', function () {
               var m = function () {}
-              m.after = ['a', 'c']
+              m.httpismMiddleware = {
+                after: ['a', 'c']
+              }
               var client = pipeline.client(m)
-              expect(client.middlewares).to.eql([
+              expect(client.middleware).to.eql([
                 a,
                 m,
                 b
@@ -492,9 +509,11 @@ describe('httpism', function () {
 
             it('inserts after all the named middleware if all are found', function () {
               var m = function () {}
-              m.after = ['a', 'b']
+              m.httpismMiddleware = {
+                after: ['a', 'b']
+              }
               var client = pipeline.client(m)
-              expect(client.middlewares).to.eql([
+              expect(client.middleware).to.eql([
                 a,
                 b,
                 m
@@ -505,32 +524,40 @@ describe('httpism', function () {
           it('can remove middleware', function () {
             pipeline.remove('b')
 
-            expect(pipeline.middlewares).to.eql([
+            expect(pipeline.middleware).to.eql([
               a
             ])
           })
 
           it('throws if before middleware name cannot be found', function () {
             var m = function () {}
-            m.before = 'notfound'
+            m.httpismMiddleware = {
+              before: 'notfound'
+            }
             expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
 
           it('throws if none of the before middleware names can be found', function () {
             var m = function () {}
-            m.before = ['notfound']
+            m.httpismMiddleware = {
+              before: ['notfound']
+            }
             expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
 
           it('throws if after middleware name cannot be found', function () {
             var m = function () {}
-            m.after = 'notfound'
+            m.httpismMiddleware = {
+              after: 'notfound'
+            }
             expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
 
           it('throws if none of the after middleware names can be found', function () {
             var m = function () {}
-            m.after = ['notfound']
+            m.httpismMiddleware = {
+              after: ['notfound']
+            }
             expect(function () { httpism.client(m) }).to.throw('no such middleware: notfound')
           })
         })

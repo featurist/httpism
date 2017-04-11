@@ -1,14 +1,14 @@
 var merge = require('./merge')
 var resolveUrl = require('./resolveUrl')
 
-function client (url, options, middlewares) {
-  return new Httpism(url, options, middlewares)
+function client (url, options, middleware) {
+  return new Httpism(url, options, middleware)
 }
 
-function Httpism (url, options, middlewares) {
+function Httpism (url, options, middleware) {
   this.url = url
   this._options = options
-  this.middlewares = middlewares
+  this.middleware = middleware
 }
 
 Httpism.prototype.send = function (method, url, body, _options) {
@@ -30,8 +30,8 @@ Httpism.prototype.send = function (method, url, body, _options) {
   var self = this
 
   function sendToMiddleware (index, req) {
-    if (index < self.middlewares.length) {
-      var middleware = self.middlewares[index]
+    if (index < self.middleware.length) {
+      var middleware = self.middleware[index]
       return middleware(req, function (nextRequest) { return sendToMiddleware(index + 1, nextRequest || req) }, self)
     }
   }
@@ -108,10 +108,11 @@ function lowerCaseHeaders (headers) {
   return headers
 }
 
-function findMiddlewareIndexes (names, middlewares) {
+function findMiddlewareIndexes (names, middleware) {
   return names.map(function (name) {
-    for (var n = 0; n < middlewares.length; n++) {
-      if (middlewares[n].middleware === name) {
+    for (var n = 0; n < middleware.length; n++) {
+      var m = middleware[n]
+      if (m.httpismMiddleware && m.httpismMiddleware.name === name) {
         return n
       }
     }
@@ -122,21 +123,21 @@ function findMiddlewareIndexes (names, middlewares) {
   })
 }
 
-function insertMiddlewareIntoIndex (middlewares, m, index) {
-  middlewares.splice(index, 0, m)
+function insertMiddlewareIntoIndex (middleware, m, index) {
+  middleware.splice(index, 0, m)
 }
 
-Httpism.prototype.client = function (url, options, middlewares) {
-  var args = parseClientArguments(url, options, middlewares)
+Httpism.prototype.client = function (url, options, middleware) {
+  var args = parseClientArguments(url, options, middleware)
 
   var client = new Httpism(
     resolveUrl(this.url, args.url),
     merge(args.options, this._options),
-    this.middlewares.slice()
+    this.middleware.slice()
   )
 
-  if (args.middlewares) {
-    args.middlewares.forEach(function (m) {
+  if (args.middleware) {
+    args.middleware.forEach(function (m) {
       client.use(m)
     })
   }
@@ -144,9 +145,9 @@ Httpism.prototype.client = function (url, options, middlewares) {
   return client
 }
 
-Httpism.prototype.api = function (url, options, middlewares) {
+Httpism.prototype.api = function (url, options, middleware) {
   console.warn('httpism >= 3.0.0 renamed httpism.api() to httpism.client(), please update your usage')
-  return this.client(url, options, middlewares)
+  return this.client(url, options, middleware)
 }
 
 Httpism.prototype.insertMiddleware = function (m) {
@@ -155,29 +156,31 @@ Httpism.prototype.insertMiddleware = function (m) {
 }
 
 Httpism.prototype.use = function (m) {
-  if (m.before || m.after) {
-    var position = m.before || m.after
+  var meta = m.httpismMiddleware
+
+  if (meta && (meta.before || meta.after)) {
+    var position = meta.before || meta.after
     var names = typeof position === 'string' ? [position] : position
-    var indexes = findMiddlewareIndexes(names, this.middlewares)
+    var indexes = findMiddlewareIndexes(names, this.middleware)
     if (indexes.length) {
-      var index = m.before ? Math.min.apply(Math, indexes) : Math.max.apply(Math, indexes) + 1
+      var index = meta.before ? Math.min.apply(Math, indexes) : Math.max.apply(Math, indexes) + 1
 
       if (index >= 0) {
-        insertMiddlewareIntoIndex(this.middlewares, m, index)
+        insertMiddlewareIntoIndex(this.middleware, m, index)
         return
       }
     }
 
-    throw new Error('no such middleware: ' + (m.before || m.after))
+    throw new Error('no such middleware: ' + (meta.before || meta.after))
   } else {
-    this.middlewares.unshift(m)
+    this.middleware.unshift(m)
   }
 }
 
 Httpism.prototype.remove = function (name) {
-  var indexes = findMiddlewareIndexes([name], this.middlewares)
+  var indexes = findMiddlewareIndexes([name], this.middleware)
   for (var i = indexes.length - 1; i >= 0; i--) {
-    this.middlewares.splice(indexes[i], 1)
+    this.middleware.splice(indexes[i], 1)
   }
 }
 
@@ -202,7 +205,7 @@ addMethodWithBody('patch')
 addMethodWithBody('options')
 
 function parseClientArguments () {
-  var url, options, middlewares
+  var url, options, middleware
 
   for (var n = 0; n < arguments.length; n++) {
     var arg = arguments[n]
@@ -210,9 +213,9 @@ function parseClientArguments () {
     if (typeof arg === 'string') {
       url = arg
     } else if (typeof arg === 'function') {
-      middlewares = [arg]
+      middleware = [arg]
     } else if (arg instanceof Array) {
-      middlewares = arg
+      middleware = arg
     } else if (arg instanceof Object) {
       options = arg
     }
@@ -221,7 +224,7 @@ function parseClientArguments () {
   return {
     url: url,
     options: options,
-    middlewares: middlewares
+    middleware: middleware
   }
 }
 

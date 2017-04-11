@@ -16,7 +16,9 @@ var proxyForUrl = require('proxy-from-env').getProxyForUrl
 
 function middleware (name, fn) {
   exports[name] = fn
-  fn.middleware = name
+  fn.httpismMiddleware = {
+    name: name
+  }
 }
 
 middleware('exception', utils.exception)
