@@ -1554,4 +1554,17 @@ describe('httpism', function () {
       expect(obfuscated).to.equal('http://localhost:4000/a/:path/user:password/user:password.thing')
     })
   })
+
+  describe('timeouts', function () {
+    it('can set the timeout', function () {
+      app.get('/', function (req, res) {
+        // don't respond
+      })
+
+      var startTime = Date.now()
+      return expect(httpism.get(baseurl, {timeout: 20})).to.eventually.be.rejectedWith('timeout').then(function () {
+        expect(Date.now() - startTime).to.be.within(20, 50)
+      })
+    })
+  })
 })

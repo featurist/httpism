@@ -5,6 +5,7 @@ var proxyForUrl = require('proxy-from-env').getProxyForUrl
 var urlUtils = require('url')
 var merge = require('../merge')
 var HttpsProxyAgent = require('https-proxy-agent')
+var obfuscateUrlPassword = require('../obfuscateUrlPassword')
 
 function nodeRequest (request, options, protocol, withResponse) {
   if (protocol === 'https:') {
@@ -71,6 +72,15 @@ module.exports = middleware('http', function (request) {
         })
       }
     )
+
+    if (request.options.timeout) {
+      req.setTimeout(request.options.timeout)
+
+      req.on('timeout', function () {
+        var msg = request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => timeout (' + request.options.timeout + 'ms)'
+        reject(new Error(msg))
+      })
+    }
 
     req.on('error', function (e) {
       reject(e)
