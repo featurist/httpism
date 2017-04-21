@@ -367,6 +367,7 @@ promise.abort();
 * `jsonp`: to perform a JSONP request, set this to the name of the parameter to contain the callback function, often this is simply `callback`.
 * `xhr`: can be used to override `window.XMLHttpRequest` used to make the request, useful for mocking out requests during testing. It is expected to be used as a constructor, as in `new options.xhr()`.
 * `jsonReviver`: a [reviver function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) that is passed to `JSON.parse(string, [reviver])` to override how JSON response bodies are decoded.
+* `timeout`: the request timeout in milliseconds.
 
 ## Clients
 
