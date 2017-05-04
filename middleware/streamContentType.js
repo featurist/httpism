@@ -12,7 +12,10 @@ function contentTypeOfStream (stream) {
 
 module.exports = middleware('streamContentType', function (request, next) {
   if (isStream(request.body) && !request.headers['content-type']) {
-    request.headers['content-type'] = contentTypeOfStream(request.body)
+    var contentType = contentTypeOfStream(request.body)
+    if (contentType) {
+      request.headers['content-type'] = contentType
+    }
   }
   return next()
 })
