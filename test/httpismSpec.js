@@ -1555,6 +1555,24 @@ describe('httpism', function () {
     })
   })
 
+  describe('output', function () {
+    var filename = pathUtils.join(__dirname, 'streamfile.txt')
+
+    afterEach(function () {
+      return fs.unlink(filename)
+    })
+
+    it('can write to an output stream and wait for end', function () {
+      app.get('/', function (req, res) {
+        res.send('contents')
+      })
+
+      return httpism.get(baseurl, {output: fs.createWriteStream(filename)}).then(function () {
+        expect(fs.readFileSync(filename, 'utf-8')).to.equal('contents')
+      })
+    })
+  })
+
   describe('timeouts', function () {
     it('can set the timeout', function () {
       app.get('/', function (req, res) {

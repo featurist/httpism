@@ -12,6 +12,7 @@ module.exports = client([
   require('./middleware/basicAuth'),
   require('./middleware/redirect'),
   require('./middleware/cookies'),
+  require('./middleware/output'),
   require('./middleware/streamContentType'),
   require('./middleware/debugLog'),
   http
