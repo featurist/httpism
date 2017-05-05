@@ -310,36 +310,21 @@ Responses bodies are returned by all methods by default. To access other details
 Cookies on the server are not handled by default, but you can enable them by using `httpism.client` passing the `{cookies: true}` option:
 
 ```js
-var client = httpism.client('http://example.com/', {cookies: true});
+var client = httpism.client({cookies: true});
 
-client.post('/login', {username: 'jerome', password: 'password123'}, {form: true}).then(function () {
-  return client.get('/profile').then(function (profileResponseBody) {
-    console.log(profileResponseBody);
-  });
-});
+var creds = {
+  username: 'jerome',
+  password: 'password123'
+}
+
+client.post('http://example.com/login', creds, {form: true}).then(function () {
+  return client.get('/profile').then(function (profile) {
+    console.log(profile)
+  })
+})
 ```
 
-Different instances of httpism clients will use different cookie jars.
-
-Cookies are always on in the browser, using native browser cookies.
-
-## Hypermedia
-
-All responses are full `httpism` clients, just with their base URI set to the HREF of the response. They respond to all the HTTP methods, as well as `client()`, see [clients](#clients) below.
-
-```js
-httpism.get('http://example.com/api/').then(function (client) {
-  // client.body is:
-  // {
-  //   "documentsLink": "documents"
-  // }
-
-  // so we navigate to http://example.com/api/documents
-  client.get(client.body.documentsLink).then(function (documents) {
-    console.log('documents', documents.body);
-  });
-});
-```
+Different httpism clients will use different cookie jars. Cookies are always on in the browser, using native browser cookies.
 
 ## Cancel a request
 
