@@ -177,10 +177,10 @@ More information in debug's README.
 
 Httpism obeys the following environments variables:
 
-    * `http_proxy` `HTTP_PROXY` - for HTTP requests
-    * `https_proxy` `HTTPS_PROXY` - for HTTPS requests
-    * `all_proxy` `ALL_PROXY` - for HTTP or HTTPS requests
-    * `no_proxy` `NO_PROXY` - an comma separated list of hostnames (and optional ports) to not proxy
+  * `http_proxy` `HTTP_PROXY` - for HTTP requests
+  * `https_proxy` `HTTPS_PROXY` - for HTTPS requests
+  * `all_proxy` `ALL_PROXY` - for HTTP or HTTPS requests
+  * `no_proxy` `NO_PROXY` - an comma separated list of hostnames (and optional ports) to not proxy
 
 For more details please see [proxy-from-env](https://github.com/Rob--W/proxy-from-env).
 
