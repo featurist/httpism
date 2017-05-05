@@ -19,6 +19,14 @@ In addition, httpism supports:
 * CORS
 * JSONP
 
+## Upgrading from 2.x
+
+Httpism 3.x returns the body of the response by default, not the response. This is what you want 95% of the time, however, if you're upgrading from 2.x, or you want the response with headers, status code, etc, then you can do this:
+
+```js
+var httpism = require('httpism').client({response: true})
+```
+
 ## NPM: [httpism](https://www.npmjs.org/package/httpism)
 
 ```sh
