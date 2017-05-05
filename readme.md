@@ -39,7 +39,7 @@ Then
 var httpism = require('httpism');
 ```
 
-Compatible with browserify too!
+Compatible with browserify and webpack too!
 
 ## Browser Size
 
