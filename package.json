@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "debug": "2.6.3",
+    "end-of-stream": "1.4.0",
     "global": "4.3.1",
     "https-proxy-agent": "1.0.0",
     "mime-types": "2.1.14",
