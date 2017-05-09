@@ -183,6 +183,11 @@ Httpism.prototype.use = function (m) {
   }
 }
 
+Httpism.prototype.removeMiddleware = function (name) {
+  console.warn('httpism.removeMiddleware() is deprecated please use httpism.remove()')
+  this.remove(name)
+}
+
 Httpism.prototype.remove = function (name) {
   var indexes = findMiddlewareIndexes([name], this.middleware)
   for (var i = indexes.length - 1; i >= 0; i--) {
