@@ -1,4 +1,5 @@
 /* eslint-env mocha */
+/* global File, FormData */
 
 var chai = require('chai')
 var expect = chai.expect
@@ -155,6 +156,24 @@ describe('httpism', function () {
         expect(response.body.headers['content-type']).to.equal('application/x-www-form-urlencoded')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal('/')
+      })
+    })
+
+    it('can make a FormData request', function () {
+      var data = new FormData()
+      data.append('name', 'joe')
+      data.append('file', new File(['file content'], 'file.txt', {type: 'text/plain'}))
+      return httpism.post('/form', data).then(function (response) {
+        expect(response.body).to.eql({
+          name: 'joe',
+          file: {
+            contents: 'file content',
+            headers: {
+              'content-disposition': 'form-data; name="file"; filename="file.txt"',
+              'content-type': 'text/plain'
+            }
+          }
+        })
       })
     })
   })
