@@ -1402,7 +1402,7 @@ describe('httpism', function () {
         })
       })
 
-      afterEach(function () {
+      beforeEach(function () {
         delete process.env.NO_PROXY
         delete process.env.no_proxy
         delete process.env.HTTP_PROXY

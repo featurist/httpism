@@ -75,11 +75,10 @@ describe('httpism', function () {
       return expect(httpism.get(server + '/404', {jsonp: 'callback'})).to.be.rejectedWith(server + '/404')
     })
   })
-
   describe('cookies', function () {
     it('can send and receive cookies', function () {
       return httpism.get('/cookies', {params: {a: 'b'}}).then(function () {
-        expect(document.cookie).to.equal('a=b')
+        expect(document.cookie).to.include('a=b')
         return httpism.get('/').then(function (body) {
           expect(body.cookies.a).to.equal('b')
         })
