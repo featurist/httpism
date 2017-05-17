@@ -2,6 +2,9 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var corsMiddleware = require('cors')
 var cookieParser = require('cookie-parser')
+var multiparty = require('multiparty')
+var fs = require('fs-promise')
+var middleware = require('../../middleware')
 
 var app = express()
 app.use(bodyParser.json())
@@ -57,4 +60,30 @@ app.get('/jsonp', function (req, res) {
   res.send(req.query.callback + "({blah: 'blah'})")
 })
 
+app.post('/form', function (req, res) {
+  var form = new multiparty.Form()
+
+  form.parse(req, function (err, fields, files) {
+    if (err) {
+      console.log(err)
+      res.status(500).send({message: err.message})
+    }
+    var response = {}
+
+    Object.keys(fields).forEach(function (field) {
+      response[field] = fields[field][0]
+    })
+    Promise.all(Object.keys(files).map(function (field) {
+      var file = files[field][0]
+      return middleware.streamToString(fs.createReadStream(file.path)).then(function (contents) {
+        response[field] = {
+          contents: contents,
+          headers: file.headers
+        }
+      })
+    })).then(function () {
+      res.send(response)
+    })
+  })
+})
 module.exports = app

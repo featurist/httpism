@@ -157,6 +157,24 @@ describe('httpism', function () {
         expect(response.url).to.equal('/')
       })
     })
+
+    it('can make a FormData request', function () {
+      var data = new FormData()
+      data.append('name', 'joe')
+      data.append('file', new File(['file content'], 'file.txt', {type: 'text/plain'}))
+      return httpism.post('/form', data).then(function (response) {
+        expect(response.body).to.eql({
+          name: 'joe',
+          file: {
+            contents: 'file content',
+            headers: {
+              'content-disposition': 'form-data; name="file"; filename="file.txt"',
+              'content-type': 'text/plain'
+            }
+          }
+        })
+      })
+    })
   })
 
   describe('put', function () {
