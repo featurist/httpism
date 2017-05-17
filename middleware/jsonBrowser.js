@@ -1,3 +1,5 @@
+/* global FormData */
+
 var middleware = require('./middleware')
 
 var setHeaderTo = require('../setHeaderTo')

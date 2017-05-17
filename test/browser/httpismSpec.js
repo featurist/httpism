@@ -1,4 +1,5 @@
 /* eslint-env mocha */
+/* global File, FormData */
 
 var chai = require('chai')
 var expect = chai.expect
