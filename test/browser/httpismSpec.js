@@ -163,8 +163,8 @@ describe('httpism', function () {
       var data = new FormData()
       data.append('name', 'joe')
       data.append('file', new File(['file content'], 'file.txt', {type: 'text/plain'}))
-      return httpism.post('/form', data).then(function (response) {
-        expect(response.body).to.eql({
+      return httpism.post('/form', data).then(function (body) {
+        expect(body).to.eql({
           name: 'joe',
           file: {
             contents: 'file content',
