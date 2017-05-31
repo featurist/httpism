@@ -381,6 +381,24 @@ describe('httpism', function () {
         })
       })
 
+      it('makes requests with additional headers', function () {
+        app.get('/', function (req, res) {
+          res.send({
+            x: req.headers.x,
+            y: req.headers.y
+          })
+        })
+
+        var client = httpism.client({ headers: { x: '123' } })
+
+        return client.get(baseurl, { headers: { y: '456' } }).then(function (body) {
+          expect(body).to.eql({
+            x: '123',
+            y: '456'
+          })
+        })
+      })
+
       describe('cache example', function () {
         var filename = pathUtils.join(__dirname, 'cachefile.txt')
 
