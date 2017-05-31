@@ -23,7 +23,7 @@ Httpism.prototype.request = function (method, url, body, _options) {
   if (method instanceof Object) {
     request = method
   } else {
-    var options = merge(_options, this._options)
+    var options = mergeClientOptions(_options, this._options)
     request = {
       method: method,
       url: resolveUrl(this.url, url),
@@ -138,7 +138,7 @@ Httpism.prototype.client = function (url, options, middleware) {
 
   var client = new Httpism(
     resolveUrl(this.url, args.url),
-    merge(args.options, this._options),
+    mergeClientOptions(args.options, this._options),
     this.middleware.slice()
   )
 
@@ -237,6 +237,12 @@ function parseClientArguments () {
     options: options,
     middleware: middleware
   }
+}
+
+function mergeClientOptions (x, y) {
+  var z = merge(x, y)
+  if (z && z.headers) { z.headers = merge(x && x.headers, y && y.headers) }
+  return z
 }
 
 module.exports = client
