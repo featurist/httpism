@@ -1178,6 +1178,17 @@ describe('httpism', function () {
         })
       })
 
+      it("doesn't crash if username or password are undefined", function () {
+        return httpism.get(baseurl + '/secret', {
+          basicAuth: {
+          },
+          exceptions: false,
+          response: true
+        }).then(function (response) {
+          expect(response.statusCode).to.equal(401)
+        })
+      })
+
       it('fails to authenticate when password is incorrect', function () {
         return httpism.get(baseurl + '/secret', {
           basicAuth: {

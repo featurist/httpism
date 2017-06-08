@@ -8,7 +8,10 @@ function encodeBasicAuthorizationHeader (s) {
 module.exports = middleware('basicAuth', function (request, next) {
   function basicAuthorizationHeader () {
     if (request.options.basicAuth) {
-      return encodeBasicAuthorizationHeader(request.options.basicAuth.username.replace(/:/g, '') + ':' + request.options.basicAuth.password)
+      var username = request.options.basicAuth.username || ''
+      var password = request.options.basicAuth.password || ''
+
+      return encodeBasicAuthorizationHeader(username.replace(/:/g, '') + ':' + password)
     } else {
       var url = urlUtils.parse(request.url)
       if (url.auth) {
