@@ -1,11 +1,20 @@
 var debug = require('debug')('httpism:cache')
 var fileStore = require('./fileStore')
 var urlUtils = require('url')
+var pathUtils = require('path')
+
+function urlProtocol (url) {
+  if (pathUtils.isAbsolute(url)) {
+    return 'file'
+  } else {
+    var parsedUrl = urlUtils.parse(url)
+    return parsedUrl.protocol || 'file'
+  }
+}
 
 function createStore (options) {
   var url = typeof options === 'object' && options.hasOwnProperty('url') ? options.url : undefined
-  var parsedUrl = urlUtils.parse(url)
-  var protocol = parsedUrl.protocol || 'file'
+  var protocol = urlProtocol(url)
 
   var storeConstructor = storeTypes[protocol]
 
