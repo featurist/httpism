@@ -9,6 +9,7 @@ module.exports = client([
   require('./middleware/textBrowser'),
   require('./middleware/expandUrl'),
   require('./middleware/querystring'),
+  require('./middleware/basicAuth'),
   xhr
 ])
 
