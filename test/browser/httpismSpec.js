@@ -280,4 +280,18 @@ describe('httpism', function () {
       })
     })
   })
+
+  describe('basic auth', function () {
+    it('can specify basic authentication', function () {
+      return httpism.get('/private', {basicAuth: {username: 'user', password: 'good'}}).then(function (body) {
+        expect(body).to.equal('private')
+      })
+    })
+
+    it('returns 401 when unauthorized', function () {
+      return httpism.get('/private', {basicAuth: {username: 'user', password: 'bad'}, response: true, exceptions: false}).then(function (response) {
+        expect(response.statusCode).to.equal(401)
+      })
+    })
+  })
 })

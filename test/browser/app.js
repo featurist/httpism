@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser')
 var multiparty = require('multiparty')
 var fs = require('fs-promise')
 var middleware = require('../../middleware')
+var basicAuth = require('basic-auth-connect')
 
 var app = express()
 app.use(bodyParser.json())
@@ -37,6 +38,14 @@ app.delete('/delete', function (req, res) {
 app.get('/text', function (req, res) {
   res.set('Content-Type', 'text/plain')
   res.send(req.query.text)
+})
+
+var secret = basicAuth(function (user, pass) {
+  return user === 'user' && pass === 'good'
+})
+
+app.get('/private', secret, function (req, res) {
+  res.send('private')
 })
 
 app.get('/cookies', cors, function (req, res) {
