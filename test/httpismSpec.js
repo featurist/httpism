@@ -12,7 +12,8 @@ var https = require('https')
 var fs = require('fs-promise')
 var qs = require('qs')
 var middleware = require('../middleware')
-var basicAuth = require('basic-auth-connect')
+var basicAuthConnect = require('basic-auth-connect')
+var basicAuth = require('basic-auth')
 var cookieParser = require('cookie-parser')
 var toughCookie = require('tough-cookie')
 var httpProxy = require('http-proxy')
@@ -288,6 +289,10 @@ describe('httpism', function () {
 
     describe('params', function () {
       beforeEach(function () {
+        app.get('/auth', function (req, res) {
+          res.send(basicAuth(req) || {})
+        })
+
         app.get('*', function (req, res) {
           res.send(req.url)
         })
@@ -312,6 +317,17 @@ describe('httpism', function () {
           }
         }).then(function (body) {
           expect(body).to.eql('/a/long/path/bb')
+        })
+      })
+
+      it("doesn't replace credentials", function () {
+        return httpism.get('http://user:pass@localhost:' + port + '/auth', {
+          params: {
+            a: 'a/long/path',
+            b: 'bb'
+          }
+        }).then(function (body) {
+          expect(body).to.eql({name: 'user', pass: 'pass'})
         })
       })
 
@@ -1142,7 +1158,7 @@ describe('httpism', function () {
 
     describe('basic authentication', function () {
       beforeEach(function () {
-        app.use(basicAuth(function (user, pass) {
+        app.use(basicAuthConnect(function (user, pass) {
           return user === 'good user' && pass === 'good password!'
         }))
         return app.get('/secret', function (req, res) {

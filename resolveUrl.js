@@ -1,22 +1,6 @@
 // from https://gist.github.com/Yaffle/1088850
 
-/* jslint regexp: true, white: true, maxerr: 50, indent: 2 */
-
-function parseURI (url) {
-  var m = String(url).replace(/^\s+|\s+$/g, '').match(/^([^:/?#]+:)?(\/\/(?:[^:@]*(?::[^:@]*)?@)?(([^:/?#]*)(?::(\d*))?))?([^?#]*)(\?[^#]*)?(#[\s\S]*)?/)
-  // authority = '//' + user + ':' + pass '@' + hostname + ':' port
-  return (m ? {
-    href: m[0] || '',
-    protocol: m[1] || '',
-    authority: m[2] || '',
-    host: m[3] || '',
-    hostname: m[4] || '',
-    port: m[5] || '',
-    pathname: m[6] || '',
-    search: m[7] || '',
-    hash: m[8] || ''
-  } : null)
-}
+var parseUri = require('./parseUri')
 
 module.exports = function (base, href) { // RFC 3986
   function removeDotSegments (input) {
@@ -34,8 +18,8 @@ module.exports = function (base, href) { // RFC 3986
     return output.join('').replace(/^\//, input.charAt(0) === '/' ? '/' : '')
   }
 
-  href = parseURI(href || '')
-  base = parseURI(base || '')
+  href = parseUri(href || '')
+  base = parseUri(base || '')
 
   return !href || !base ? null : (href.protocol || base.protocol) +
          (href.protocol || href.authority ? href.authority : base.authority) +
