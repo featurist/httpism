@@ -7,7 +7,7 @@ module.exports = client([
   require('./middleware/textServer'),
   require('./middleware/formServer'),
   require('./middleware/jsonServer'),
-  require('./middleware/expandUrl'),
+  require('./middleware/params'),
   require('./middleware/querystring'),
   require('./middleware/basicAuth'),
   require('./middleware/redirect'),
