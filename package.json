@@ -4,6 +4,7 @@
   "description": "HTTP client with middleware and good defaults",
   "main": "index.js",
   "dependencies": {
+    "base-64": "0.1.0",
     "debug": "2.6.3",
     "end-of-stream": "1.4.0",
     "fs-promise": "2.0.1",

@@ -1,8 +1,9 @@
 var middleware = require('./middleware')
-var urlUtils = require('url')
+var parseUri = require('../parseUri')
+var base64 = require('base-64')
 
 function encodeBasicAuthorizationHeader (s) {
-  return 'Basic ' + Buffer.from(s).toString('base64')
+  return 'Basic ' + base64.encode(s)
 }
 
 module.exports = middleware('basicAuth', function (request, next) {
@@ -13,7 +14,7 @@ module.exports = middleware('basicAuth', function (request, next) {
 
       return encodeBasicAuthorizationHeader(username.replace(/:/g, '') + ':' + password)
     } else {
-      var url = urlUtils.parse(request.url)
+      var url = parseUri(request.url)
       if (url.auth) {
         return encodeBasicAuthorizationHeader(url.auth)
       }
