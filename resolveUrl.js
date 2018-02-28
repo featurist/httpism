@@ -6,15 +6,15 @@ module.exports = function (base, href) { // RFC 3986
   function removeDotSegments (input) {
     var output = []
     input.replace(/^(\.\.?(\/|$))+/, '')
-         .replace(/\/(\.(\/|$))+/g, '/')
-         .replace(/\/\.\.$/, '/../')
-         .replace(/\/?[^/]*/g, function (p) {
-           if (p === '/..') {
-             output.pop()
-           } else {
-             output.push(p)
-           }
-         })
+      .replace(/\/(\.(\/|$))+/g, '/')
+      .replace(/\/\.\.$/, '/../')
+      .replace(/\/?[^/]*/g, function (p) {
+        if (p === '/..') {
+          output.pop()
+        } else {
+          output.push(p)
+        }
+      })
     return output.join('').replace(/^\//, input.charAt(0) === '/' ? '/' : '')
   }
 
