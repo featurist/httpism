@@ -1302,7 +1302,7 @@ describe('httpism', function () {
               responseBody: 'stream',
               response: true
             }).then(function (response) {
-              expect(response.headers['content-type']).to.equal(contentType)
+              expect(response.headers['content-type']).to.contain(contentType)
               return middleware.streamToString(response.body).then(function (response) {
                 expect(response).to.equal('some content')
               })
