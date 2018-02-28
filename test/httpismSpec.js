@@ -1639,13 +1639,20 @@ describe('httpism', function () {
 
   describe('timeouts', function () {
     it('can set the timeout', function () {
+      var respond
+
       app.get('/', function (req, res) {
-        // don't respond
+        // don't respond yet
+        respond = function () {
+          res.send()
+        }
       })
 
       var startTime = Date.now()
       return expect(httpism.get(baseurl, {timeout: 20})).to.eventually.be.rejectedWith('timeout').then(function () {
         expect(Date.now() - startTime).to.be.within(20, 50)
+      }).then(function () {
+        respond()
       })
     })
   })
@@ -1696,7 +1703,7 @@ describe('httpism', function () {
       })
     })
 
-    function streamToBuffer (stream) {
+    function streamToBytes (stream) {
       return new Promise(function (resolve, reject) {
         var buffers = []
         stream.on('data', function (buffer) {
@@ -1704,7 +1711,7 @@ describe('httpism', function () {
         })
         stream.on('error', reject)
         stream.on('end', function () {
-          resolve(Buffer.concat(buffers))
+          resolve(Array.from(Buffer.concat(buffers))) // eslint-disable-line es5/no-es6-static-methods
         })
       })
     }
@@ -1713,26 +1720,26 @@ describe('httpism', function () {
       var http = httpism.client(cache({url: cachePath}), {response: true})
       return http.get(baseurl + '/binary').then(function (response) {
         expect(response.headers['x-version']).to.eql('1')
-        return streamToBuffer(response.body)
-      }).then(function (buffer) {
-        expect(Array.from(buffer.values())).to.eql([1, 3, 3, 7, 1])
+        return streamToBytes(response.body)
+      }).then(function (bytes) {
+        expect(bytes).to.eql([1, 3, 3, 7, 1])
       }).then(function () {
         version++
         return http.get(baseurl + '/binary')
       }).then(function (response) {
         expect(response.headers['x-version']).to.eql('1')
-        return streamToBuffer(response.body)
-      }).then(function (buffer) {
-        expect(Array.from(buffer.values())).to.eql([1, 3, 3, 7, 1])
+        return streamToBytes(response.body)
+      }).then(function (bytes) {
+        expect(bytes).to.eql([1, 3, 3, 7, 1])
       }).then(function () {
         return clearCache()
       }).then(function () {
         return http.get(baseurl + '/binary')
       }).then(function (response) {
         expect(response.headers['x-version']).to.eql('2')
-        return streamToBuffer(response.body)
-      }).then(function (buffer) {
-        expect(Array.from(buffer.values())).to.eql([1, 3, 3, 7, 2])
+        return streamToBytes(response.body)
+      }).then(function (bytes) {
+        expect(bytes).to.eql([1, 3, 3, 7, 2])
       })
     })
   })
