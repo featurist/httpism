@@ -398,6 +398,24 @@ describe('httpism', function () {
         })
       })
 
+      it('can make a new client that adds params by passing them to options', function () {
+        app.get('/', function (req, res) {
+          res.send({
+            x: req.query.x,
+            y: req.query.y
+          })
+        })
+
+        var client = httpism.client('/', { params: { x: '123' } }).client('/', { params: { y: '456' } })
+
+        return client.get(baseurl).then(function (body) {
+          expect(body).to.eql({
+            x: '123',
+            y: '456'
+          })
+        })
+      })
+
       it('makes requests with additional headers', function () {
         app.get('/', function (req, res) {
           res.send({

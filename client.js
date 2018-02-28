@@ -242,6 +242,7 @@ function parseClientArguments () {
 function mergeClientOptions (x, y) {
   var z = merge(x, y)
   if (z && z.headers) { z.headers = merge(x && x.headers, y && y.headers) }
+  if (z && z.params) { z.params = merge(x && x.params, y && y.params) }
   return z
 }
 
