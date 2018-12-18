@@ -1635,6 +1635,20 @@ describe('httpism', function () {
         expect(fs.readFileSync(filename, 'utf-8')).to.equal('contents')
       })
     })
+
+    it('can write to an output stream after following a redirect', function () {
+      app.get('/', function (req, res) {
+        res.redirect('/contents')
+      })
+
+      app.get('/contents', function (req, res) {
+        res.send('contents')
+      })
+
+      return httpism.get(baseurl, {output: fs.createWriteStream(filename)}).then(function () {
+        expect(fs.readFileSync(filename, 'utf-8')).to.equal('contents')
+      })
+    })
   })
 
   describe('timeouts', function () {

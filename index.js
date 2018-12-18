@@ -10,9 +10,9 @@ module.exports = client([
   require('./middleware/params'),
   require('./middleware/querystring'),
   require('./middleware/basicAuth'),
+  require('./middleware/output'),
   require('./middleware/redirect'),
   require('./middleware/cookies'),
-  require('./middleware/output'),
   require('./middleware/streamContentType'),
   require('./middleware/debugLog'),
   http

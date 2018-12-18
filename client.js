@@ -50,7 +50,7 @@ Httpism.prototype.request = function (method, url, body, _options) {
       return response.body
     }
   }, function (e) {
-    if (e.redirectResponse) {
+    if (e.isRedirectResponse) {
       return e.redirectResponse
     } else {
       throw e
