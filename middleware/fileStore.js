@@ -22,7 +22,7 @@ module.exports = function (options) {
     },
 
     responseExists: function (url) {
-      return fs.exists(this.filename(url))
+      return fs.exists(this.filename(url) + '.json')
     },
 
     writeResponse: function (url, response) {
@@ -38,11 +38,10 @@ module.exports = function (options) {
       return fs
         .mkdirs(path)
         .then(function () {
-          return fs.writeFile(filename + '.json', responseJson)
-        })
-        .then(function () {
           writeStreamToFile(filename, fileStream).catch(function (e) {
             console.error((e && e.stack) || e)
+          }).then(function () {
+            return fs.writeFile(filename + '.json', responseJson)
           })
 
           response.body = responseStream
