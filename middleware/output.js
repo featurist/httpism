@@ -7,6 +7,7 @@ module.exports = middleware('output', function (request, next) {
     return next().then(function (response) {
       return new Promise(function (resolve, reject) {
         eos(response.body.pipe(request.options.output), function (error, result) {
+          delete response.body
           if (error) reject(error)
           else resolve(response)
         })
