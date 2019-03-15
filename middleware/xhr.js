@@ -23,7 +23,7 @@ function isCrossDomain (url) {
 }
 
 function responseUrl (xhr, requestUrl) {
-  var origin = window.location.origin
+  var origin = window.location ? window.location.origin : ''
   var responseUrl = xhr.responseURL
 
   if (responseUrl) {
