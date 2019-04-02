@@ -1,4 +1,4 @@
-var merge = require('./merge')
+var deepExtend = require('./deepExtend')
 var resolveUrl = require('./resolveUrl')
 
 function client (url, options, middleware) {
@@ -23,7 +23,7 @@ Httpism.prototype.request = function (method, url, body, _options) {
   if (method instanceof Object) {
     request = method
   } else {
-    var options = mergeClientOptions(_options, this._options)
+    var options = mergeClientOptions(this._options, _options)
     request = {
       method: method,
       url: resolveUrl(this.url, url),
@@ -138,7 +138,7 @@ Httpism.prototype.client = function (url, options, middleware) {
 
   var client = new Httpism(
     resolveUrl(this.url, args.url),
-    mergeClientOptions(args.options, this._options),
+    mergeClientOptions(this._options, args.options),
     this.middleware.slice()
   )
 
@@ -240,9 +240,10 @@ function parseClientArguments () {
 }
 
 function mergeClientOptions (x, y) {
-  var z = merge(x, y)
-  if (z && z.headers) { z.headers = merge(x && x.headers, y && y.headers) }
-  return z
+  var r = {}
+  deepExtend(r, x || {})
+  deepExtend(r, y || {})
+  return r
 }
 
 module.exports = client

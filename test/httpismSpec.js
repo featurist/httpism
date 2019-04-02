@@ -361,57 +361,98 @@ describe('httpism', function () {
     })
 
     describe('.client()', function () {
-      it('can make a new client that adds headers', function () {
-        app.get('/', function (req, res) {
-          res.send({
-            joke: req.headers.joke
+      describe('options', function () {
+        it('can make a new client that adds headers', function () {
+          app.get('/', function (req, res) {
+            res.send({
+              joke: req.headers.joke
+            })
+          })
+
+          var client = httpism.client(function (request, next) {
+            request.headers.joke = 'a chicken...'
+            return next(request)
+          })
+
+          return client.get(baseurl).then(function (body) {
+            expect(body).to.eql({
+              joke: 'a chicken...'
+            })
           })
         })
 
-        var client = httpism.client(function (request, next) {
-          request.headers.joke = 'a chicken...'
-          return next(request)
-        })
-
-        return client.get(baseurl).then(function (body) {
-          expect(body).to.eql({
-            joke: 'a chicken...'
+        it('can make a new client that adds headers by passing them to options', function () {
+          app.get('/', function (req, res) {
+            res.send({
+              x: req.headers.x,
+              y: req.headers.y
+            })
           })
-        })
-      })
 
-      it('can make a new client that adds headers by passing them to options', function () {
-        app.get('/', function (req, res) {
-          res.send({
-            x: req.headers.x,
-            y: req.headers.y
-          })
-        })
+          var client = httpism.client('/', { headers: { x: '123' } }).client('/', { headers: { y: '456' } })
 
-        var client = httpism.client('/', { headers: { x: '123' } }).client('/', { headers: { y: '456' } })
-
-        return client.get(baseurl).then(function (body) {
-          expect(body).to.eql({
-            x: '123',
-            y: '456'
-          })
-        })
-      })
-
-      it('makes requests with additional headers', function () {
-        app.get('/', function (req, res) {
-          res.send({
-            x: req.headers.x,
-            y: req.headers.y
+          return client.get(baseurl).then(function (body) {
+            expect(body).to.eql({
+              x: '123',
+              y: '456'
+            })
           })
         })
 
-        var client = httpism.client({ headers: { x: '123' } })
+        it('can specify options in client, and override with another client', function () {
+          app.get('/', function (req, res) {
+            res.send({
+              x: req.query.x,
+              y: req.query.y
+            })
+          })
 
-        return client.get(baseurl, { headers: { y: '456' } }).then(function (body) {
-          expect(body).to.eql({
-            x: '123',
-            y: '456'
+          var client = httpism
+            .client('/', { params: { x: 'original x', y: 'original y' } })
+            .client('/', { params: { y: 'new y' } })
+
+          return client.get(baseurl).then(function (body) {
+            expect(body).to.eql({
+              x: 'original x',
+              y: 'new y'
+            })
+          })
+        })
+
+        it('can specify options in client, and override them when making request', function () {
+          app.get('/', function (req, res) {
+            res.send({
+              x: req.query.x,
+              y: req.query.y
+            })
+          })
+
+          var client = httpism
+            .client('/', { params: { x: 'original x', y: 'original y' } })
+
+          return client.get(baseurl, { params: { y: 'new y' } }).then(function (body) {
+            expect(body).to.eql({
+              x: 'original x',
+              y: 'new y'
+            })
+          })
+        })
+
+        it('makes requests with additional headers', function () {
+          app.get('/', function (req, res) {
+            res.send({
+              x: req.headers.x,
+              y: req.headers.y
+            })
+          })
+
+          var client = httpism.client({ headers: { x: '123' } })
+
+          return client.get(baseurl, { headers: { y: '456' } }).then(function (body) {
+            expect(body).to.eql({
+              x: '123',
+              y: '456'
+            })
           })
         })
       })
