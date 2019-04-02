@@ -4,16 +4,16 @@ var corsMiddleware = require('cors')
 var cookieParser = require('cookie-parser')
 var multiparty = require('multiparty')
 var fs = require('fs-promise')
-var middleware = require('../../middleware')
+var streamToString = require('../../streamToString')
 var basicAuth = require('basic-auth-connect')
 
 var app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.text())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-var cors = corsMiddleware({credentials: true, origin: true})
+var cors = corsMiddleware({ credentials: true, origin: true })
 
 function respond (req, res) {
   res.json({
@@ -75,7 +75,7 @@ app.post('/form', function (req, res) {
   form.parse(req, function (err, fields, files) {
     if (err) {
       console.log(err)
-      res.status(500).send({message: err.message})
+      res.status(500).send({ message: err.message })
     }
     var response = {}
 
@@ -84,7 +84,7 @@ app.post('/form', function (req, res) {
     })
     Promise.all(Object.keys(files).map(function (field) {
       var file = files[field][0]
-      return middleware.streamToString(fs.createReadStream(file.path)).then(function (contents) {
+      return streamToString(fs.createReadStream(file.path)).then(function (contents) {
         response[field] = {
           contents: contents,
           headers: file.headers

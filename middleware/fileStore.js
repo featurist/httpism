@@ -1,6 +1,5 @@
 var fs = require('fs-promise')
 var PassThrough = require('stream').PassThrough
-var urlUtils = require('url')
 
 function writeStreamToFile (filename, stream) {
   return new Promise(function (resolve, reject) {
@@ -12,9 +11,7 @@ function writeStreamToFile (filename, stream) {
 }
 
 module.exports = function (options) {
-  var url = typeof options === 'object' && options.hasOwnProperty('url') ? options.url : undefined
-  var parsedUrl = urlUtils.parse(url)
-  var path = parsedUrl.path
+  var path = typeof options === 'object' && options.hasOwnProperty('url') ? options.url : undefined
 
   return {
     filename: function (url) {

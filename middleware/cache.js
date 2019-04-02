@@ -1,13 +1,13 @@
 var debug = require('debug')('httpism:cache')
 var fileStore = require('./fileStore')
-var urlUtils = require('url')
+var URL = require('url').URL
 var pathUtils = require('path')
 
 function urlProtocol (url) {
   if (pathUtils.isAbsolute(url)) {
     return 'file'
   } else {
-    var parsedUrl = urlUtils.parse(url)
+    var parsedUrl = new URL(url)
     return parsedUrl.protocol || 'file'
   }
 }
