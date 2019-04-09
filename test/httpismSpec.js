@@ -11,7 +11,7 @@ var http = require('http')
 var https = require('https')
 var fs = require('fs-promise')
 var qs = require('qs')
-var middleware = require('../middleware')
+var streamToString = require('../streamToString')
 var basicAuthConnect = require('basic-auth-connect')
 var basicAuth = require('basic-auth')
 var cookieParser = require('cookie-parser')
@@ -280,7 +280,7 @@ describe('httpism', function () {
           req.pipe(res)
         })
 
-        return httpism.post(baseurl + '/text', 'content as string', {response: true}).then(function (response) {
+        return httpism.post(baseurl + '/text', 'content as string', { response: true }).then(function (response) {
           expect(response.headers['received-content-type']).to.equal('text/plain')
           expect(response.body).to.equal('content as string')
         })
@@ -327,7 +327,7 @@ describe('httpism', function () {
             b: 'bb'
           }
         }).then(function (body) {
-          expect(body).to.eql({name: 'user', pass: 'pass'})
+          expect(body).to.eql({ name: 'user', pass: 'pass' })
         })
       })
 
@@ -470,7 +470,7 @@ describe('httpism', function () {
 
         it('can insert a new middleware just before the http request, dealing with streams', function () {
           app.get('/', function (req, res) {
-            res.send({from: 'server'})
+            res.send({ from: 'server' })
           })
 
           var cache = function (req, next) {
@@ -487,7 +487,7 @@ describe('httpism', function () {
           var http = httpism.client(cache)
 
           return http.get(baseurl).then(function (body) {
-            expect(body).to.eql({from: 'cache'})
+            expect(body).to.eql({ from: 'cache' })
           })
         })
       })
@@ -511,7 +511,7 @@ describe('httpism', function () {
             })
 
             return client.get('/').then(function (response) {
-              expect(response).to.eql({param: 'hi'})
+              expect(response).to.eql({ param: 'hi' })
             })
           })
 
@@ -525,7 +525,7 @@ describe('httpism', function () {
             })
 
             return client.get('/').then(function (response) {
-              expect(response).to.eql({param: 'hi'})
+              expect(response).to.eql({ param: 'hi' })
             })
           })
 
@@ -874,9 +874,9 @@ describe('httpism', function () {
     describe('responses', function () {
       beforeEach(function () {
         app.get('/', function (req, res) {
-          res.set({'x-custom-header': 'header value'})
+          res.set({ 'x-custom-header': 'header value' })
           res.status(234)
-          res.send({data: 'data'})
+          res.send({ data: 'data' })
         })
       })
 
@@ -884,7 +884,7 @@ describe('httpism', function () {
         var response
 
         beforeEach(function () {
-          return httpism.get(baseurl, {response: true}).then(function (_response) {
+          return httpism.get(baseurl, { response: true }).then(function (_response) {
             response = _response
           })
         })
@@ -902,7 +902,7 @@ describe('httpism', function () {
         })
 
         it('contains the body', function () {
-          expect(response.body).to.eql({data: 'data'})
+          expect(response.body).to.eql({ data: 'data' })
         })
       })
 
@@ -929,12 +929,12 @@ describe('httpism', function () {
           })
 
           it('contains the body', function () {
-            expect(body.body).to.eql({data: 'data'})
+            expect(body.body).to.eql({ data: 'data' })
           })
         })
 
         it('returns the body', function () {
-          expect(body).to.eql({data: 'data'})
+          expect(body).to.eql({ data: 'data' })
         })
       })
     })
@@ -969,7 +969,7 @@ describe('httpism', function () {
       })
 
       it('follows redirects by default', function () {
-        return httpism.get(baseurl + '/redirect', {response: true}).then(function (response) {
+        return httpism.get(baseurl + '/redirect', { response: true }).then(function (response) {
           expect(response.body).to.eql({
             path: '/path/'
           })
@@ -984,7 +984,7 @@ describe('httpism', function () {
             res.status(statusCode).send()
           })
 
-          return httpism.get(baseurl + '/' + statusCode, {response: true}).then(function (response) {
+          return httpism.get(baseurl + '/' + statusCode, { response: true }).then(function (response) {
             expect(response.body).to.eql({
               path: '/path/'
             })
@@ -1002,7 +1002,7 @@ describe('httpism', function () {
       })
 
       it('follows a more than one redirect', function () {
-        return httpism.get(baseurl + '/redirecttoredirect', {response: true}).then(function (response) {
+        return httpism.get(baseurl + '/redirecttoredirect', { response: true }).then(function (response) {
           expect(response.body).to.eql({
             path: '/path/'
           })
@@ -1126,7 +1126,7 @@ describe('httpism', function () {
           }))
         })
 
-        return httpism.get(baseurl + '/form', {response: true}).then(function (response) {
+        return httpism.get(baseurl + '/form', { response: true }).then(function (response) {
           expect(response.body).to.eql({
             name: 'Betty Boop',
             address: 'one & two'
@@ -1153,7 +1153,7 @@ describe('httpism', function () {
             form.parse(req, function (err, fields, files) {
               if (err) {
                 console.log(err)
-                res.status(500).send({message: err.message})
+                res.status(500).send({ message: err.message })
               }
               var response = {}
 
@@ -1162,7 +1162,7 @@ describe('httpism', function () {
               })
               Promise.all(Object.keys(files).map(function (field) {
                 var file = files[field][0]
-                return middleware.streamToString(fs.createReadStream(file.path)).then(function (contents) {
+                return streamToString(fs.createReadStream(file.path)).then(function (contents) {
                   response[field] = {
                     contents: contents,
                     headers: file.headers
@@ -1310,16 +1310,16 @@ describe('httpism', function () {
     it('it guesses the Content-Type of the stream when created from a file', function () {
       var stream = fs.createReadStream(filename)
 
-      return httpism.post(baseurl + '/file', stream, {response: true}).then(function (response) {
+      return httpism.post(baseurl + '/file', stream, { response: true }).then(function (response) {
         expect(response.headers['received-content-type']).to.equal('text/plain')
         expect(response.body).to.equal('received: some content')
       })
     })
 
     it('can download a stream', function () {
-      return httpism.get(baseurl + '/file', {response: true}).then(function (response) {
+      return httpism.get(baseurl + '/file', { response: true }).then(function (response) {
         expect(response.headers['content-type']).to.equal('application/blah')
-        return middleware.streamToString(response.body).then(function (response) {
+        return streamToString(response.body).then(function (response) {
           expect(response).to.equal('some content')
         })
       })
@@ -1344,7 +1344,7 @@ describe('httpism', function () {
               response: true
             }).then(function (response) {
               expect(response.headers['content-type']).to.contain(contentType)
-              return middleware.streamToString(response.body).then(function (response) {
+              return streamToString(response.body).then(function (response) {
                 expect(response).to.equal('some content')
               })
             })
@@ -1479,8 +1479,8 @@ describe('httpism', function () {
           })
         })
 
-        return httpism.get(baseurl, {proxy: proxyUrl}).then(function (body) {
-          expect(body).to.eql({blah: 'blah'})
+        return httpism.get(baseurl, { proxy: proxyUrl }).then(function (body) {
+          expect(body).to.eql({ blah: 'blah' })
           expect(urlProxied).to.equal(baseurl)
         })
       })
@@ -1575,8 +1575,8 @@ describe('httpism', function () {
           })
         })
 
-        return httpism.get(baseurl, {proxy: secureProxyUrl}).then(function (body) {
-          expect(body).to.eql({blah: 'blah'})
+        return httpism.get(baseurl, { proxy: secureProxyUrl }).then(function (body) {
+          expect(body).to.eql({ blah: 'blah' })
           expect(urlProxied).to.equal(baseurl)
         })
       })
@@ -1605,14 +1605,14 @@ describe('httpism', function () {
 
       var client = httpism.raw.client(baseurl, function (request, next) {
         return next().then(function (res) {
-          return middleware.streamToString(res.body).then(function (response) {
+          return streamToString(res.body).then(function (response) {
             res.body = response
             return res
           })
         })
       })
 
-      return client.get(baseurl, {response: true}).then(function (response) {
+      return client.get(baseurl, { response: true }).then(function (response) {
         expect(response.statusCode).to.equal(400)
         expect(JSON.parse(response.body)).to.eql({
           blah: 'blah'
@@ -1634,7 +1634,7 @@ describe('httpism', function () {
         }
       })
 
-      return client.get(baseurl, {response: true}).then(function (response) {
+      return client.get(baseurl, { response: true }).then(function (response) {
         expect(response.statusCode).to.equal(200)
         expect(response.body).to.eql({
           blah: 'blah1234!'
@@ -1672,7 +1672,7 @@ describe('httpism', function () {
         res.send('contents')
       })
 
-      return httpism.get(baseurl, {output: fs.createWriteStream(filename)}).then(function () {
+      return httpism.get(baseurl, { output: fs.createWriteStream(filename) }).then(function () {
         expect(fs.readFileSync(filename, 'utf-8')).to.equal('contents')
       })
     })
@@ -1686,7 +1686,7 @@ describe('httpism', function () {
         res.send('contents')
       })
 
-      return httpism.get(baseurl, {output: fs.createWriteStream(filename)}).then(function () {
+      return httpism.get(baseurl, { output: fs.createWriteStream(filename) }).then(function () {
         expect(fs.readFileSync(filename, 'utf-8')).to.equal('contents')
       })
     })
@@ -1704,7 +1704,7 @@ describe('httpism', function () {
       })
 
       var startTime = Date.now()
-      return expect(httpism.get(baseurl, {timeout: 20})).to.eventually.be.rejectedWith('timeout').then(function () {
+      return expect(httpism.get(baseurl, { timeout: 20 })).to.eventually.be.rejectedWith('timeout').then(function () {
         expect(Date.now() - startTime).to.be.within(20, 50)
       }).then(function () {
         respond()
@@ -1722,7 +1722,7 @@ describe('httpism', function () {
 
       app.get('/', function (req, res) {
         res.set('x-version', version)
-        res.send({version: version})
+        res.send({ version: version })
       })
 
       app.get('/binary', function (req, res) {
@@ -1738,7 +1738,7 @@ describe('httpism', function () {
     }
 
     it('caches responses', function () {
-      var http = httpism.client(cache({url: cachePath}), {response: true})
+      var http = httpism.client(cache({ url: cachePath }), { response: true })
       return http.get(baseurl).then(function (response) {
         expect(response.headers['x-version']).to.eql('1')
         expect(response.body.version).to.equal(1)
@@ -1772,7 +1772,7 @@ describe('httpism', function () {
     }
 
     it('caches binary responses', function () {
-      var http = httpism.client(cache({url: cachePath}), {response: true})
+      var http = httpism.client(cache({ url: cachePath }), { response: true })
       return http.get(baseurl + '/binary').then(function (response) {
         expect(response.headers['x-version']).to.eql('1')
         return streamToBytes(response.body)

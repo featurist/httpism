@@ -29,7 +29,7 @@ describe('httpism', function () {
 
   describe('get', function () {
     it('can make a JSON GET request', function () {
-      return httpism.get('/', {response: true}).then(function (response) {
+      return httpism.get('/', { response: true }).then(function (response) {
         expect(response.body.method).to.equal('GET')
         expect(response.body.url).to.equal('/')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
@@ -38,9 +38,9 @@ describe('httpism', function () {
     })
 
     it('can GET with query string', function () {
-      return httpism.get('/', {response: true, params: {a: 'b', b: 'c', c: 'd'}}).then(function (response) {
+      return httpism.get('/', { response: true, params: { a: 'b', b: 'c', c: 'd' } }).then(function (response) {
         expect(response.body.method).to.equal('GET')
-        expect(response.body.query).to.eql({a: 'b', b: 'c', c: 'd'})
+        expect(response.body.query).to.eql({ a: 'b', b: 'c', c: 'd' })
         expect(response.body.url).to.equal('/?a=b&b=c&c=d')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal('/?a=b&b=c&c=d')
@@ -67,18 +67,18 @@ describe('httpism', function () {
 
   describe('jsonp', function () {
     it('can call JSONP', function () {
-      return httpism.get(server + '/jsonp', {jsonp: 'callback'}).then(function (body) {
-        expect(body).to.eql({blah: 'blah'})
+      return httpism.get(server + '/jsonp', { jsonp: 'callback' }).then(function (body) {
+        expect(body).to.eql({ blah: 'blah' })
       })
     })
 
     it('throws exception if there is an error', function () {
-      return expect(httpism.get(server + '/404', {jsonp: 'callback'})).to.be.rejectedWith(server + '/404')
+      return expect(httpism.get(server + '/404', { jsonp: 'callback' })).to.be.rejectedWith(server + '/404')
     })
   })
   describe('cookies', function () {
     it('can send and receive cookies', function () {
-      return httpism.get('/cookies', {params: {a: 'b'}}).then(function () {
+      return httpism.get('/cookies', { params: { a: 'b' } }).then(function () {
         expect(document.cookie).to.include('a=b')
         return httpism.get('/').then(function (body) {
           expect(body.cookies.a).to.equal('b')
@@ -88,11 +88,11 @@ describe('httpism', function () {
 
     describe('cross-domain', function () {
       beforeEach(function () {
-        return httpism.get(server + '/cookies', {params: {a: ''}, withCredentials: true})
+        return httpism.get(server + '/cookies', { params: { a: '' }, withCredentials: true })
       })
 
       it("by default, doesn't send cookies cross-domain", function () {
-        return httpism.get(server + '/cookies', {params: {a: 'b'}, withCredentials: true}).then(function () {
+        return httpism.get(server + '/cookies', { params: { a: 'b' }, withCredentials: true }).then(function () {
           return httpism.get(server + '/').then(function (body) {
             expect(body.cookies.a).to.equal(undefined)
           })
@@ -100,8 +100,8 @@ describe('httpism', function () {
       })
 
       it('withCredentials = true, sends cookies cross-domain', function () {
-        return httpism.get(server + '/cookies', {params: {a: 'b'}, withCredentials: true}).then(function () {
-          return httpism.get(server + '/', {withCredentials: true}).then(function (body) {
+        return httpism.get(server + '/cookies', { params: { a: 'b' }, withCredentials: true }).then(function () {
+          return httpism.get(server + '/', { withCredentials: true }).then(function (body) {
             expect(body.cookies.a).to.equal('b')
           })
         })
@@ -124,8 +124,8 @@ describe('httpism', function () {
 
   describe('post', function () {
     it('can make a json post request', function () {
-      return httpism.post('/', {data: 'hehey'}, {response: true}).then(function (response) {
-        expect(response.body.body).to.eql({data: 'hehey'})
+      return httpism.post('/', { data: 'hehey' }, { response: true }).then(function (response) {
+        expect(response.body.body).to.eql({ data: 'hehey' })
         expect(response.body.headers['content-type']).to.equal('application/json')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal('/')
@@ -133,8 +133,8 @@ describe('httpism', function () {
     })
 
     it('can make a cross-origin json post request', function () {
-      return httpism.post(server + '/', {data: 'hehey'}, {response: true}).then(function (response) {
-        expect(response.body.body).to.eql({data: 'hehey'})
+      return httpism.post(server + '/', { data: 'hehey' }, { response: true }).then(function (response) {
+        expect(response.body.body).to.eql({ data: 'hehey' })
         expect(response.body.headers['content-type']).to.equal('application/json')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal(server + '/')
@@ -142,7 +142,7 @@ describe('httpism', function () {
     })
 
     it('can make a text post request', function () {
-      return httpism.post('/', 'hehey', {response: true}).then(function (response) {
+      return httpism.post('/', 'hehey', { response: true }).then(function (response) {
         expect(response.body.body).to.eql('hehey')
         expect(response.body.headers['content-type']).to.equal('text/plain;charset=UTF-8')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
@@ -151,8 +151,8 @@ describe('httpism', function () {
     })
 
     it('can make a form post request', function () {
-      return httpism.post('/', {message: 'hehey', to: 'bob'}, {response: true, form: true}).then(function (response) {
-        expect(response.body.body).to.eql({message: 'hehey', to: 'bob'})
+      return httpism.post('/', { message: 'hehey', to: 'bob' }, { response: true, form: true }).then(function (response) {
+        expect(response.body.body).to.eql({ message: 'hehey', to: 'bob' })
         expect(response.body.headers['content-type']).to.equal('application/x-www-form-urlencoded')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal('/')
@@ -162,7 +162,7 @@ describe('httpism', function () {
     it('can make a FormData request', function () {
       var data = new FormData()
       data.append('name', 'joe')
-      data.append('file', new File(['file content'], 'file.txt', {type: 'text/plain'}))
+      data.append('file', new File(['file content'], 'file.txt', { type: 'text/plain' }))
       return httpism.post('/form', data).then(function (body) {
         expect(body).to.eql({
           name: 'joe',
@@ -180,8 +180,8 @@ describe('httpism', function () {
 
   describe('put', function () {
     it('can make a json put request', function () {
-      return httpism.put('/', {data: 'hehey'}, {response: true}).then(function (response) {
-        expect(response.body.body).to.eql({data: 'hehey'})
+      return httpism.put('/', { data: 'hehey' }, { response: true }).then(function (response) {
+        expect(response.body.body).to.eql({ data: 'hehey' })
         expect(response.body.headers['content-type']).to.equal('application/json')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal('/')
@@ -248,7 +248,7 @@ describe('httpism', function () {
 
   describe('delete', function () {
     it('can respond with 204 and empty body', function () {
-      return httpism.delete('/delete', {response: true}).then(function (response) {
+      return httpism.delete('/delete', { response: true }).then(function (response) {
         expect(response.statusCode).to.equal(204)
         expect(response.body).to.equal(undefined)
       })
@@ -273,9 +273,9 @@ describe('httpism', function () {
   describe('xhr option', function () {
     it('can override the XHR used in the request', function () {
       FakeXMLHttpRequest.prototype.onSend = function (xhr) {
-        xhr.respond(200, {'Content-Type': 'text/plain'}, 'faked response')
+        xhr.respond(200, { 'Content-Type': 'text/plain' }, 'faked response')
       }
-      return httpism.get('/', {xhr: FakeXMLHttpRequest}).then(function (body) {
+      return httpism.get('/', { xhr: FakeXMLHttpRequest }).then(function (body) {
         expect(body).to.equal('faked response')
       })
     })
@@ -283,13 +283,13 @@ describe('httpism', function () {
 
   describe('basic auth', function () {
     it('can specify basic authentication', function () {
-      return httpism.get('/private', {basicAuth: {username: 'user', password: 'good'}}).then(function (body) {
+      return httpism.get('/private', { basicAuth: { username: 'user', password: 'good' } }).then(function (body) {
         expect(body).to.equal('private')
       })
     })
 
     it('returns 401 when unauthorized', function () {
-      return httpism.get('/private', {basicAuth: {username: 'user', password: 'bad'}, response: true, exceptions: false}).then(function (response) {
+      return httpism.get('/private', { basicAuth: { username: 'user', password: 'bad' }, response: true, exceptions: false }).then(function (response) {
         expect(response.statusCode).to.equal(401)
       })
     })

@@ -34,7 +34,7 @@ function randomGlobal (value) {
   var name
 
   do {
-    name = '_' + randomString({length: 20})
+    name = '_' + randomString({ length: 20 })
   } while (typeof window[name] !== 'undefined')
 
   window[name] = value

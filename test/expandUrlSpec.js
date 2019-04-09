@@ -6,12 +6,12 @@ var expect = chai.expect
 
 describe('expandUrl', function () {
   it('overrides existing params', function () {
-    var url = expandUrl('https://example.com/?existing=asdf', {newparam: 'fdsa'})
+    var url = expandUrl('https://example.com/?existing=asdf', { newparam: 'fdsa' })
     expect(url).to.equal('https://example.com/?existing=asdf&newparam=fdsa')
   })
 
   it('replaces simple path params encoding as necessary', function () {
-    var url = expandUrl('https://example.com/path/:param/file', {param: 'one/two'})
+    var url = expandUrl('https://example.com/path/:param/file', { param: 'one/two' })
     expect(url).to.equal('https://example.com/path/one%2Ftwo/file')
   })
 
@@ -20,7 +20,7 @@ describe('expandUrl', function () {
   })
 
   it('replaces full path params', function () {
-    var url = expandUrl('https://example.com/path/:param*/file', {param: 'one/two'})
+    var url = expandUrl('https://example.com/path/:param*/file', { param: 'one/two' })
     expect(url).to.equal('https://example.com/path/one/two/file')
   })
 
