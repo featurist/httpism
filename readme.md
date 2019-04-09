@@ -237,6 +237,8 @@ A template contains two forms of parameter, varying on the way special character
 
 Any remaining parameters will be encoded in the query string, you can override how the query string is encoded using the `qs` option.
 
+The template interpolation will throw an error if one of the `:param` or `:param*` parameters are given an `undefined` value. 
+
 The template interpolation itself can be overridden with the `expandUrl` option, and is used as follows:
 
 ```js
