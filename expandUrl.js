@@ -11,12 +11,18 @@ module.exports = function expandUrl (pattern, _params, _qs) {
   var pathPattern = uri.pathname
   var path = pathPattern.replace(/:([a-z_][a-z0-9_]*)\*/gi, function (_, id) {
     var param = params[id]
+    if (param === undefined) {
+      throw new Error('No value for :' + id + '*')
+    }
     delete onlyQueryParams[id]
     return encodeURI(paramToString(param))
   })
 
   path = path.replace(/:([a-z_][a-z0-9_]*)/gi, function (_, id) {
     var param = params[id]
+    if (param === undefined) {
+      throw new Error('No value for :' + id)
+    }
     delete onlyQueryParams[id]
     return encodeURIComponent(paramToString(param))
   })

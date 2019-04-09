@@ -15,9 +15,17 @@ describe('expandUrl', function () {
     expect(url).to.equal('https://example.com/path/one%2Ftwo/file')
   })
 
+  it('throws an error when a simple path param is missing', function () {
+    expect(function () { expandUrl('https://example.com/path/:param/file', {}) }).to.throw('No value for :param')
+  })
+
   it('replaces full path params', function () {
     var url = expandUrl('https://example.com/path/:param*/file', {param: 'one/two'})
     expect(url).to.equal('https://example.com/path/one/two/file')
+  })
+
+  it('throws an error when a full path param is missing', function () {
+    expect(function () { expandUrl('https://example.com/path/:param*/file', {}) }).to.throw('No value for :param*')
   })
 
   it('maintains hash', function () {
