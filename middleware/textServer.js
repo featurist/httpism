@@ -2,7 +2,7 @@ var middleware = require('./middleware')
 var setBodyToString = require('../setBodyToString')
 var setHeaderTo = require('../setHeaderTo')
 var shouldParseAs = require('../shouldParseAs')
-var streamToString = require('../streamToString')
+var readBodyAsString = require('../readBodyAsString')
 
 module.exports = middleware('text', function (request, next) {
   if (typeof request.body === 'string') {
@@ -12,8 +12,8 @@ module.exports = middleware('text', function (request, next) {
 
   return next().then(function (response) {
     if (shouldParseAs(response, 'text', request)) {
-      return streamToString(response.body).then(function (body) {
-        response.body = body
+      return readBodyAsString(response).then(function () {
+        response.body = response.stringBody
         return response
       })
     } else {

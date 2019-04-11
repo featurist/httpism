@@ -3,7 +3,7 @@ var isStream = require('../isStream')
 var setBodyToString = require('../setBodyToString')
 var setHeaderTo = require('../setHeaderTo')
 var shouldParseAs = require('../shouldParseAs')
-var streamToString = require('../streamToString')
+var readBodyAsString = require('../readBodyAsString')
 var querystringLite = require('../querystring-lite')
 
 module.exports = middleware('form', function (request, next) {
@@ -15,9 +15,9 @@ module.exports = middleware('form', function (request, next) {
 
   return next().then(function (response) {
     if (shouldParseAs(response, 'form', request)) {
-      return streamToString(response.body).then(function (body) {
+      return readBodyAsString(response).then(function () {
         var querystring = request.options.qs || querystringLite
-        response.body = querystring.parse(body)
+        response.body = querystring.parse(response.stringBody)
         return response
       })
     } else {
