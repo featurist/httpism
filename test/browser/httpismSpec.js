@@ -58,7 +58,7 @@ describe('httpism', function () {
         throw new Error('expected to throw exception')
       }, function (response) {
         expect(response.message).to.eql('GET /status/404 => 404 Not Found')
-        expect(response.body.method).to.eql('GET')
+        expect(JSON.parse(response.body).method).to.eql('GET')
         expect(response.headers['content-type']).to.equal('application/json; charset=utf-8')
         expect(response.url).to.equal('/status/404')
       })
