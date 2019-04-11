@@ -1,12 +1,11 @@
 var obfuscateUrlPassword = require('../obfuscateUrlPassword')
-var isStream = require('../isStream')
 
 module.exports = function prepareForLogging (r) {
   return removeUndefined({
     method: r.method,
     url: r.url && obfuscateUrlPassword(r.url),
-    headers: obfuscateHeaders(r.headers),
-    body: isStream(r.logBody) ? '[Stream]' : r.logBody,
+    headers: r.headers && obfuscateHeaders(r.headers),
+    body: r.stringBody !== undefined ? r.stringBody : r.body ? '[Stream]' : undefined,
     statusCode: r.statusCode,
     statusText: r.statusText
   })

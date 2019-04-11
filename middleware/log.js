@@ -11,8 +11,6 @@ function logResponse (response) {
 }
 
 module.exports = middleware('log', function (request, next) {
-  request.logBody = request.body
-
   var promise = next()
 
   if (debugResponse.enabled) {

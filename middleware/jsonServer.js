@@ -3,7 +3,7 @@ var isStream = require('../isStream')
 var setBodyToString = require('../setBodyToString')
 var setHeaderTo = require('../setHeaderTo')
 var shouldParseAs = require('../shouldParseAs')
-var streamToString = require('../streamToString')
+var readBodyAsString = require('../readBodyAsString')
 
 module.exports = middleware('json', function (request, next) {
   if (request.body instanceof Object && !isStream(request.body)) {
@@ -15,8 +15,8 @@ module.exports = middleware('json', function (request, next) {
 
   return next().then(function (response) {
     if (shouldParseAs(response, 'json', request)) {
-      return streamToString(response.body).then(function (jsonString) {
-        response.body = JSON.parse(jsonString, request.options.jsonReviver)
+      return readBodyAsString(response).then(function () {
+        response.body = JSON.parse(response.stringBody, request.options.jsonReviver)
         return response
       })
     } else {
