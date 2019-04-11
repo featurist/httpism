@@ -1,6 +1,6 @@
 {
   "name": "httpism",
-  "version": "3.13.0",
+  "version": "3.14.0",
   "description": "HTTP client with middleware and good defaults",
   "main": "index.js",
   "dependencies": {
