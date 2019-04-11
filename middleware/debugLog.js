@@ -1,8 +1,14 @@
 var middleware = require('./middleware')
 var debug = require('debug')('httpism')
 var obfuscateUrlPassword = require('../obfuscateUrlPassword')
+var createDebug = require('debug')
+var debugRequest = createDebug('httpism:request')
+var prepareForLogging = require('./prepareForLogging')
 
 module.exports = middleware('debugLog', function (request, next) {
+  if (debugRequest.enabled) {
+    debugRequest(prepareForLogging(request))
+  }
   if (debug.enabled) {
     var startTime = Date.now()
     return next().then(function (response) {

@@ -62,7 +62,7 @@
   "scripts": {
     "test": "npm run test-mocha && npm run test-browser -- --single-run --browsers Electron && eslint .",
     "test-browser": "karma start",
-    "test-mocha": "mocha",
+    "test-mocha": "DEBUG=httpism* mocha",
     "size": "webpack browser.js _httpism.js && uglifyjs --compress warnings=false --mangle -- _httpism.js > _httpism.min.js && gzip < _httpism.min.js > _httpism.min.js.gz && ls -lh _httpism.*"
   },
   "repository": {

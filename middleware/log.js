@@ -1,16 +1,8 @@
 var middleware = require('./middleware')
 var extend = require('../extend')
-var obfuscateUrlPassword = require('../obfuscateUrlPassword')
 var createDebug = require('debug')
-var debugRequest = createDebug('httpism:request')
 var debugResponse = createDebug('httpism:response')
-var isStream = require('../isStream')
-
-function logRequest (request) {
-  if (debugRequest.enabled) {
-    debugRequest(prepareForLogging(request))
-  }
-}
+var prepareForLogging = require('./prepareForLogging')
 
 function logResponse (response) {
   if (!response.redirectResponse) {
@@ -18,29 +10,8 @@ function logResponse (response) {
   }
 }
 
-function prepareForLogging (r) {
-  return removeUndefined({
-    method: r.method,
-    url: r.url && obfuscateUrlPassword(r.url),
-    headers: r.headers,
-    body: isStream(r.body) ? '[Stream]' : r.body,
-    statusCode: r.statusCode,
-    statusText: r.statusText
-  })
-}
-
-function removeUndefined (obj) {
-  Object.keys(obj).map(function (key) {
-    if (typeof obj[key] === 'undefined') {
-      delete obj[key]
-    }
-  })
-
-  return obj
-}
-
 module.exports = middleware('log', function (request, next) {
-  logRequest(request)
+  request.logBody = request.body
 
   var promise = next()
 
@@ -58,5 +29,4 @@ module.exports = middleware('log', function (request, next) {
   }
 })
 
-module.exports.logRequest = logRequest
 module.exports.logResponse = logResponse

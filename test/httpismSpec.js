@@ -519,6 +519,7 @@ describe('httpism', function () {
             client.use(function (req, next) {
               return next({
                 url: req.url + '?param=hi',
+                method: 'get',
                 options: {},
                 headers: {}
               })
