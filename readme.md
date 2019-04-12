@@ -168,8 +168,10 @@ DEBUG=httpism* node app.js
 ```
 
 * `httpism` simple request => response, i.e. `GET http://www.example.com/api => 200 (40ms)`
-* `httpism:request` the request
-* `httpism:response` the response
+* `httpism:error` only errors, shown in simple request => response, i.e. `GET http://www.example.com/api => 500 (40ms)`
+* `httpism:request` the full request including body
+* `httpism:response` the full response including body
+* `httpism:response:error` only errors, the full response including body
 
 More information in debug's README.
 

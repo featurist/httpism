@@ -73,9 +73,11 @@ module.exports = middleware('xhr', function (request) {
     xhr.open(request.method, request.url, true)
     xhr.onload = function () {
       var statusCode = xhr.status
+      var body = statusCode === 204 ? undefined : xhr.responseText
 
       var response = {
-        body: statusCode === 204 ? undefined : xhr.responseText,
+        body: body,
+        stringBody: body,
         headers: parseHeaders(xhr.getAllResponseHeaders()),
         statusCode: statusCode,
         url: responseUrl(xhr, request.url),
