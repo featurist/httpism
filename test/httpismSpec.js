@@ -389,7 +389,7 @@ describe('httpism', function () {
             })
           })
 
-          var client = httpism.client('/', { headers: { x: '123' } }).client('/', { headers: { y: '456' } })
+          var client = httpism.client({ headers: { x: '123' } }).client({ headers: { y: '456' } })
 
           return client.get(baseurl).then(function (body) {
             expect(body).to.eql({
@@ -408,8 +408,8 @@ describe('httpism', function () {
           })
 
           var client = httpism
-            .client('/', { params: { x: 'original x', y: 'original y' } })
-            .client('/', { params: { y: 'new y' } })
+            .client({ params: { x: 'original x', y: 'original y' } })
+            .client({ params: { y: 'new y' } })
 
           return client.get(baseurl).then(function (body) {
             expect(body).to.eql({
@@ -428,7 +428,7 @@ describe('httpism', function () {
           })
 
           var client = httpism
-            .client('/', { params: { x: 'original x', y: 'original y' } })
+            .client({ params: { x: 'original x', y: 'original y' } })
 
           return client.get(baseurl, { params: { y: 'new y' } }).then(function (body) {
             expect(body).to.eql({

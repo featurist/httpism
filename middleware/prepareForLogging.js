@@ -14,8 +14,14 @@ module.exports = function prepareForLogging (r) {
 function obfuscateHeaders (headers) {
   var result = {}
   Object.keys(headers).forEach(function (key) {
-    if (key === 'authorization') {
-      result[key] = String(headers[key]).split(' ')[0] + ' ********'
+    if (key.toLowerCase() === 'authorization') {
+      var auth = headers[key].split(/\s*/g)
+
+      if (auth.length > 1) {
+        result[key] = String(headers[key]).split(' ')[0] + ' ********'
+      } else {
+        result[key] = '********'
+      }
     } else {
       result[key] = headers[key]
     }
