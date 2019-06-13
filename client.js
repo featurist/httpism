@@ -63,8 +63,8 @@ function responseCompatibility (response) {
     console.warn('httpism >= 3.0.0 returns the response body by default, please pass the {response: true} option if you want the whole response')
   }
 
-  if (response.body instanceof Object) {
-    if (response.body && !response.body.hasOwnProperty('body')) {
+  if (response.body instanceof Object && !Object.isFrozen(response.body)) {
+    if (!response.body.hasOwnProperty('body')) {
       Object.defineProperty(response.body, 'body', {
         get: function () {
           responseWarning()
@@ -73,7 +73,7 @@ function responseCompatibility (response) {
       })
     }
 
-    if (response.body && !response.body.hasOwnProperty('url')) {
+    if (!response.body.hasOwnProperty('url')) {
       Object.defineProperty(response.body, 'url', {
         get: function () {
           responseWarning()
@@ -82,7 +82,7 @@ function responseCompatibility (response) {
       })
     }
 
-    if (response.body && !response.body.hasOwnProperty('statusCode')) {
+    if (!response.body.hasOwnProperty('statusCode')) {
       Object.defineProperty(response.body, 'statusCode', {
         get: function () {
           responseWarning()
@@ -91,7 +91,7 @@ function responseCompatibility (response) {
       })
     }
 
-    if (response.body && !response.body.hasOwnProperty('headers')) {
+    if (!response.body.hasOwnProperty('headers')) {
       Object.defineProperty(response.body, 'headers', {
         get: function () {
           responseWarning()
