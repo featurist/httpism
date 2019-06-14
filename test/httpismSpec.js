@@ -543,6 +543,20 @@ describe('httpism', function () {
               expect(response).to.eql('body')
             })
           })
+
+          it('can do its own parsing and respond with a frozen body', function () {
+            client.use(function (req, next) {
+              return next().then(function (response) {
+                var body = { ice: 'cold' }
+                Object.freeze(body)
+                return { body: body }
+              })
+            })
+
+            return client.get('/', { responseBody: 'text' }).then(function (response) {
+              expect(response.ice).to.eql('cold')
+            })
+          })
         })
 
         describe('inserting middleware', function () {
