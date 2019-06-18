@@ -797,7 +797,7 @@ describe('httpism', function () {
         }).catch(function (e) {
           expect(e.message).to.equal('GET ' + baseurl + '/400 => 400 Bad Request')
           expect(e.statusCode).to.equal(400)
-          expect(e.body).to.equal('{"message":"oh dear"}')
+          expect(e.body.message).to.equal('oh dear')
         })
       })
 
@@ -808,7 +808,7 @@ describe('httpism', function () {
           expect(e.message).to.equal('GET http://user:********@localhost:' + port + '/400 => 400 Bad Request')
           expect(e.url).to.equal('http://user:********@localhost:' + port + '/400')
           expect(e.statusCode).to.equal(400)
-          expect(e.body).to.equal('{"message":"oh dear"}')
+          expect(e.body.message).to.equal('oh dear')
         })
       })
 
@@ -829,7 +829,7 @@ describe('httpism', function () {
           }).catch(function (e) {
             expect(e.message).to.equal('GET ' + baseurl + '/400 => 400 Bad Request')
             expect(e.statusCode).to.equal(400)
-            expect(e.body).to.equal('{"message":"oh dear"}')
+            expect(e.body.message).to.equal('oh dear')
           })
         })
 
