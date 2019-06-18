@@ -46,7 +46,7 @@ Httpism.prototype.request = function (method, url, body, _options) {
     if (request.options.response === true) {
       return response
     } else {
-      responseCompatibility(response)
+      responseCompatibility(response, request.options)
       return response.body
     }
   }, function (e) {
@@ -58,9 +58,11 @@ Httpism.prototype.request = function (method, url, body, _options) {
   })
 }
 
-function responseCompatibility (response) {
+function responseCompatibility (response, options) {
   function responseWarning () {
-    console.warn('httpism >= 3.0.0 returns the response body by default, please pass the {response: true} option if you want the whole response')
+    if (options.response !== false) {
+      console.warn('httpism >= 3.0.0 returns the response body by default, please pass the {response: true} option if you want the whole response')
+    }
   }
 
   if (response.body instanceof Object && !Object.isFrozen(response.body)) {
