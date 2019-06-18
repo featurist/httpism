@@ -11,11 +11,13 @@ module.exports = middleware('exception', function (request, next) {
     var isException = exceptions === false ? false : typeof exceptions === 'function' ? exceptions(response) : response.statusCode >= 400
 
     if (isException) {
-      var msg = request.method.toUpperCase() + ' ' + obfuscateUrlPassword(request.url) + ' => ' + response.statusCode + ' ' + response.statusText
+      var obfuscatedUrl = obfuscateUrlPassword(request.url)
+      var msg = request.method.toUpperCase() + ' ' + obfuscatedUrl + ' => ' + response.statusCode + ' ' + response.statusText
       logError(msg)
       var logResponse = prepareForLogging(response)
       logDetailError(logResponse)
-      var error = extend(new Error(msg), logResponse)
+      var error = extend(new Error(msg), response)
+      error.url = obfuscatedUrl
       throw error
     } else {
       return response
