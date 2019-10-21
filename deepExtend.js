@@ -10,7 +10,7 @@ module.exports = function deepExtend (x, y) {
     var yValue = y[key]
     var xValue = x[key]
 
-    if (x.hasOwnProperty(key) && isObject(xValue) && isObject(yValue)) {
+    if (Object.prototype.hasOwnProperty.call(x, key) && isObject(xValue) && isObject(yValue)) {
       var r = {}
       deepExtend(r, xValue)
       deepExtend(r, yValue)

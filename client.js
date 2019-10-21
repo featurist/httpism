@@ -64,7 +64,7 @@ function responseCompatibility (response) {
   }
 
   if (response.body instanceof Object && !Object.isFrozen(response.body)) {
-    if (!response.body.hasOwnProperty('body')) {
+    if (!Object.prototype.hasOwnProperty.call(response.body, 'body')) {
       Object.defineProperty(response.body, 'body', {
         get: function () {
           responseWarning()
@@ -73,7 +73,7 @@ function responseCompatibility (response) {
       })
     }
 
-    if (!response.body.hasOwnProperty('url')) {
+    if (!Object.prototype.hasOwnProperty.call(response.body, 'url')) {
       Object.defineProperty(response.body, 'url', {
         get: function () {
           responseWarning()
@@ -82,7 +82,7 @@ function responseCompatibility (response) {
       })
     }
 
-    if (!response.body.hasOwnProperty('statusCode')) {
+    if (!Object.prototype.hasOwnProperty.call(response.body, 'statusCode')) {
       Object.defineProperty(response.body, 'statusCode', {
         get: function () {
           responseWarning()
@@ -91,7 +91,7 @@ function responseCompatibility (response) {
       })
     }
 
-    if (!response.body.hasOwnProperty('headers')) {
+    if (!Object.prototype.hasOwnProperty.call(response.body, 'headers')) {
       Object.defineProperty(response.body, 'headers', {
         get: function () {
           responseWarning()

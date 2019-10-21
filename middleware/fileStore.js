@@ -11,7 +11,7 @@ function writeStreamToFile (filename, stream) {
 }
 
 module.exports = function (options) {
-  var path = typeof options === 'object' && options.hasOwnProperty('url') ? options.url : undefined
+  var path = typeof options === 'object' && Object.prototype.hasOwnProperty.call(options, 'url') ? options.url : undefined
 
   return {
     filename: function (url) {
