@@ -13,7 +13,7 @@ function urlProtocol (url) {
 }
 
 function createStore (options) {
-  var url = typeof options === 'object' && options.hasOwnProperty('url') ? options.url : undefined
+  var url = typeof options === 'object' && Object.prototype.hasOwnProperty.call(options, 'url') ? options.url : undefined
   var protocol = urlProtocol(url)
 
   var storeConstructor = storeTypes[protocol]
@@ -28,7 +28,7 @@ function createStore (options) {
 module.exports = function (options) {
   var store = createStore(options)
   var isResponseCachable = typeof options === 'object' &&
-    options.hasOwnProperty('isResponseCachable')
+    Object.prototype.hasOwnProperty.call(options, 'isResponseCachable')
     ? options.isResponseCachable
     : function (response) {
       return response.statusCode >= 200 && response.statusCode < 400
