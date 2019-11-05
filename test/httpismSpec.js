@@ -251,6 +251,26 @@ describe('httpism', function () {
           expect(body['x-header']).to.equal('haha')
         })
       })
+
+      it('headers are not mutated during the request', function () {
+        app.post('/', function (req, res) {
+          res.send({
+            'x-header': req.headers['x-header']
+          })
+        })
+
+        var headers = {
+          'x-header': 'haha'
+        }
+
+        return httpism.post(baseurl, { body: 'my body' }, {
+          headers: headers
+        }).then(function (body) {
+          expect(headers).to.eql({
+            'x-header': 'haha'
+          })
+        })
+      })
     })
 
     describe('text', function () {

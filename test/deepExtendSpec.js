@@ -62,4 +62,34 @@ describe('deepExtend', function () {
       }
     })
   })
+
+  it('copied fields are cloned', function () {
+    var left = {
+    }
+
+    var right = {
+      nested: {
+        common: 'right',
+        override: 'right'
+      }
+    }
+
+    deepExtend(left, right)
+
+    expect(left).to.eql({
+      nested: {
+        common: 'right',
+        override: 'right'
+      }
+    })
+
+    left.nested.common = 'modified'
+
+    expect(right).to.eql({
+      nested: {
+        common: 'right',
+        override: 'right'
+      }
+    })
+  })
 })
