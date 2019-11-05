@@ -15,6 +15,8 @@ module.exports = function deepExtend (x, y) {
       deepExtend(r, xValue)
       deepExtend(r, yValue)
       x[key] = r
+    } else if (isObject(yValue)) {
+      x[key] = deepExtend({}, yValue)
     } else {
       x[key] = yValue
     }
