@@ -3,7 +3,7 @@ var http = require('./middleware/http')
 
 module.exports = client([
   require('./middleware/log'),
-  require('./middleware/exception'),
+  require('./middleware/serverException'),
   require('./middleware/textServer'),
   require('./middleware/formServer'),
   require('./middleware/jsonServer'),

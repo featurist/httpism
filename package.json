@@ -26,6 +26,7 @@
     "cookie-parser": "1.4.4",
     "cors": "2.8.5",
     "electron": "6.0.12",
+    "es-check": "^5.0.0",
     "es6-promise": "4.2.8",
     "eslint": "6.5.1",
     "eslint-config-standard": "14.1.0",
@@ -54,16 +55,19 @@
     "uglify-js": "3.6.3",
     "url-template": "2.0.8",
     "watchify": "3.11.1",
-    "webpack": "4.41.2"
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
   },
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "npm run test-mocha && npm run test-browser -- --single-run --browsers Electron && eslint .",
+    "test": "npm run test-mocha && npm run test-browser -- --single-run --browsers Electron && eslint . && yarn test-es5",
     "test-browser": "karma start",
+    "test-es5": "yarn webpack-build && es-check es5 _httpism.js && rm _httpism.js",
     "test-mocha": "DEBUG=httpism* mocha",
-    "size": "webpack browser.js _httpism.js && uglifyjs --compress warnings=false --mangle -- _httpism.js > _httpism.min.js && gzip < _httpism.min.js > _httpism.min.js.gz && ls -lh _httpism.*"
+    "webpack-build": "webpack-cli browser.js --mode production --output _httpism.js",
+    "size": "yarn webpack-build && uglifyjs --compress --mangle -- _httpism.js > _httpism.min.js && gzip < _httpism.min.js > _httpism.min.js.gz && ls -lh _httpism.* && rm _httpism.*"
   },
   "repository": {
     "type": "git",

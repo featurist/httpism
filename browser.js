@@ -3,7 +3,7 @@ var xhr = require('./middleware/xhr')
 
 module.exports = client([
   require('./middleware/jsonp'),
-  require('./middleware/exception'),
+  require('./middleware/browserException'),
   require('./middleware/formBrowser'),
   require('./middleware/jsonBrowser'),
   require('./middleware/textBrowser'),
