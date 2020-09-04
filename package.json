@@ -38,7 +38,7 @@
     "express": "4.17.1",
     "fake-xml-http-request": "2.0.1",
     "form-data": "2.5.1",
-    "http-proxy": "1.18.0",
+    "http-proxy": "1.18.1",
     "karma": "4.4.1",
     "karma-browserify": "6.1.0",
     "karma-browserstack-launcher": "1.5.1",
