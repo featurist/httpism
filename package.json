@@ -35,7 +35,7 @@
     "eslint-plugin-node": "10.0.0",
     "eslint-plugin-promise": "4.2.1",
     "eslint-plugin-standard": "4.0.1",
-    "express": "4.17.1",
+    "express": "4.17.3",
     "fake-xml-http-request": "2.0.1",
     "form-data": "2.5.1",
     "http-proxy": "1.18.0",
